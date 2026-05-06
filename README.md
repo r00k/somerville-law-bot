@@ -54,6 +54,7 @@ Expected outputs:
 - `somerville-zoning.raw.html`
 - `somerville-zoning.images.json`
 - `somerville-zoning.readable.html`
+- `somerville-law-combined.md` (regenerated automatically whenever either fetch script runs, when both source Markdown files are present)
 
 ## Known Limitations
 
