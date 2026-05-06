@@ -21,6 +21,7 @@ The generated outputs are committed to this repo — no need to run anything. Op
 - **Markdown (best for search, diffing, LLM ingestion):**
   - [somerville-law-non-zoning.md](somerville-law-non-zoning.md)
   - [somerville-zoning.md](somerville-zoning.md)
+  - [somerville-law-combined.md](somerville-law-combined.md) — both of the above concatenated, regenerated automatically by the fetch scripts
 - **Raw HTML (auditable, as fetched from enCodePlus):**
   - [somerville-law-non-zoning.raw.html](somerville-law-non-zoning.raw.html)
   - [somerville-zoning.raw.html](somerville-zoning.raw.html)

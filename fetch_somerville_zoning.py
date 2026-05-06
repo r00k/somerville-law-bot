@@ -703,6 +703,10 @@ def main() -> int:
         f"[ok] Section marker completeness: raw_total={len(raw_ids)} md_total={len(md_ids)} sequence_exact={raw_ids == md_ids}"
     )
 
+    from combine_law import combine, DEFAULT_OUTPUT, DEFAULT_NON_ZONING
+
+    combine(Path(DEFAULT_NON_ZONING), md_output, Path(DEFAULT_OUTPUT))
+
     return 0
 
 

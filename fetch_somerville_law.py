@@ -555,6 +555,10 @@ def main() -> int:
     print(f"[ok] Saved markdown: {md_output}")
     print(f"[ok] Top-level sections extracted across all documents: {section_count}")
 
+    from combine_law import combine, DEFAULT_OUTPUT, DEFAULT_ZONING
+
+    combine(md_output, Path(DEFAULT_ZONING), Path(DEFAULT_OUTPUT))
+
     return 0
 
 
