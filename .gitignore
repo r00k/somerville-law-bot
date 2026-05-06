@@ -11,5 +11,3 @@ venv/
 .idea/
 .vscode/
 
-
-server.log
