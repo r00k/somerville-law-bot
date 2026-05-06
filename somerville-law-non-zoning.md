@@ -3,7 +3,7 @@
 This document consolidates Somerville's **Part I Charter**, **Part II Code of Ordinances**, and **Appendices B, D, and E** from the enCodePlus municipal code publication.
 
 - Source publication root: `https://online.encodeplus.com/regs/somerville-ma-coo/doc-viewer.aspx?tocid=001`
-- Retrieved: `2026-03-06T14:36:48+00:00`
+- Retrieved: `2026-05-06T16:39:46+00:00`
 - Scope: `PART I + PART II + APPENDICES B, D, E` (non-zoning)
 - Excluded: Separate Somerville zoning publication
 
@@ -634,7 +634,7 @@ The City of Somerville may by ordinance establish a licensing commission and fro
 <!-- secid:91 -->
 ###### Sec. 2. Composition; appointment.
 
-Notwithstanding any general or special law to the contrary, the licensing commission of the city of Somerville shall consist of 3 persons who shall be appointed without regard to political affiliation.
+Notwithstanding section 4 of chapter 138 of the General Laws or any other general or special law to the contrary, the licensing commission of the city of Somerville shall consist of 3 members and 1 alternate member, each of whom shall be appointed by the mayor, subject to confirmation by the city council, without regard to political affiliation. The alternate member shall sit on the various cases where the alternate member may fulfill the obligations of any member incapacitated by conflict of interest, inability to act or absence. For the purpose of deliberations of the licensing commission, the alternate member may participate in any discussion on any matters before the commission regardless of whether the alternate member will be designated to vote on the particular matter.
 
 <!-- secid:92 -->
 ##### ARTICLE IV. BOARD OF ELECTION COMMISSIONERS
