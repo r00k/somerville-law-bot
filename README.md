@@ -65,4 +65,4 @@ Expected outputs:
 
 ## Legal Disclaimer
 
-This repository is for informational and research use only and does not constitute legal advice.
+This repository is for informational and research use only and does not constitute legal advice. Check the official municipal code before doing something serious with this information.
