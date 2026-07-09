@@ -1,0 +1,212 @@
+# Eval questions for the Somerville law Q&A agent (app/agent.py).
+#
+# Every expect_* value below was verified against the live corpus by running
+# app.law_tools.search_law / get_sections and grepping the source markdown —
+# see the summary in the eval-authoring conversation for citations. Section
+# keys are corpus-qualified ("coo:N" / "zon:N") per DESIGN.md.
+#
+# Fields:
+#   id                          unique slug
+#   question                    the question text sent to agent.ask()
+#   expect_answer_contains_any  (optional) case-insensitive substring OR-match
+#                                against answer_markdown
+#   expect_cited_sections_any   (optional) case-insensitive glob OR-match
+#                                against EITHER a citation's section_key or
+#                                its section title (fetched via get_sections)
+#   expect_confidence_at_least  (optional) low < medium < high
+#   expect_confidence_at_most   (optional) low < medium < high
+#   allow_no_citations          (optional, default false) skip the "≥1
+#                                verified citation" check
+
+- id: leaf-blower-july
+  question: Can I use a gas-powered leaf blower in July?
+  # coo:1948 (secid split of Sec. 9-120): "the use of leaf blowers is
+  # prohibited except between March 15 and May 31 and between October 1 and
+  # December 15" -- July falls outside both windows.
+  expect_answer_contains_any: ["no", "not permitted", "prohibited"]
+  expect_cited_sections_any: ["coo:826", "coo:194*", "*leaf blower*"]
+  expect_confidence_at_least: medium
+
+- id: raise-chickens
+  question: Can I raise chickens in my backyard in Somerville?
+  # coo:2180 ("Board of Health Regulations for the Keeping of Hens"):
+  # keeping hens is allowed with a Board of Health permit, max 6 hens,
+  # roosters not allowed. This is the exact "chickens -> domestic fowl/hens"
+  # synonym gap DESIGN.md calls out.
+  expect_answer_contains_any: ["hen", "permit", "board of health"]
+  expect_cited_sections_any: ["coo:2178", "coo:2179", "coo:2180", "*hens*", "*keeping of hens*"]
+  expect_confidence_at_least: medium
+
+- id: mayor-term
+  question: How long is the mayor's term of office in Somerville?
+  # coo:2600 ("SECTION 3-1: MAYOR..."): "The term of office for mayor shall
+  # be 2 years, beginning on the first business day in January following the
+  # municipal election."
+  expect_answer_contains_any: ["2 years", "two years", "two-year", "2-year"]
+  expect_cited_sections_any: ["coo:2600", "*mayor*term*"]
+  expect_confidence_at_least: high
+
+- id: snow-shoveling
+  question: How soon after it snows do I need to shovel my sidewalk?
+  # coo:981 (Sec. 12-8): "may not place snow or ice... on an abutting
+  # sidewalk for more than six hours between sunrise and sunset... to
+  # provide a path of travel with a minimum width of thirty-six inches."
+  expect_answer_contains_any: ["six hours", "6 hours", "36 inches", "thirty-six inches"]
+  expect_cited_sections_any: ["coo:981", "*snow and ice on sidewalks*"]
+  expect_confidence_at_least: medium
+
+- id: parking-permit
+  question: How do I get a residential parking permit in Somerville?
+  # coo:2374 (Section 15-2.1): residents with a vehicle registered/garaged
+  # in Somerville may apply, providing proof of residency, registration,
+  # and a current utility bill.
+  expect_answer_contains_any: ["residency", "registration", "parking clerk", "apply"]
+  expect_cited_sections_any: ["coo:2374", "coo:2247", "*residential permit parking*"]
+  expect_confidence_at_least: medium
+
+- id: trash-put-out-time
+  question: What time can I put my trash out for collection?
+  # coo:1286 (Sec. 11-31(g), "Time of placement"): "All refuse shall be
+  # placed upon the sidewalk not earlier than 4:00 p.m. of the day prior to
+  # collection and no later than 7:00 a.m. on collection day."
+  expect_answer_contains_any: ["4:00 p.m.", "4 p.m.", "7:00 a.m.", "not earlier than"]
+  expect_cited_sections_any: ["coo:1286", "coo:888"]
+  expect_confidence_at_least: medium
+
+- id: dog-leash
+  question: Does my dog need to be on a leash in Somerville?
+  # coo:426 (Sec. 3-34, "Dogs at-large"): dogs off the owner's premises must
+  # be "under control by means of a chain or leash, not longer than six
+  # feet" (except in posted off-leash areas).
+  expect_answer_contains_any: ["leash", "six feet", "6 feet", "at-large", "restrained"]
+  expect_cited_sections_any: ["coo:426", "*dogs at-large*"]
+  expect_confidence_at_least: medium
+
+- id: fence-height
+  question: How tall can I build a fence in my backyard?
+  # zon:730 (10.5.1 Fences): interior lots -- fences in the frontage area up
+  # to 4 ft (50% opaque); behind the frontage area, internal to the lot, up
+  # to 6 ft.
+  expect_answer_contains_any: ["four feet", "4 feet", "six feet", "6 feet", "four (4) feet", "six (6) feet"]
+  expect_cited_sections_any: ["zon:730", "*fences*"]
+  expect_confidence_at_least: medium
+
+- id: third-story-addition
+  question: Can I add a third story to my house?
+  # No single "third story" rule -- max building height/stories is set per
+  # zoning district (e.g. zon:352/356/360 "General Building" story limits,
+  # zon:465/478 district Character Descriptions, zon:462 Massing & Height).
+  # A correct answer is conditional on the property's zoning district;
+  # kept permissive per DESIGN.md.
+  expect_answer_contains_any: ["district", "zoning district", "depends"]
+  expect_cited_sections_any:
+    - "zon:352"
+    - "zon:356"
+    - "zon:360"
+    - "zon:462"
+    - "zon:465"
+    - "zon:478"
+    - "*general building*"
+    - "*character description*"
+    - "*massing*height*"
+
+- id: short-term-rental
+  question: What are the rules for operating a short-term rental (like Airbnb) in Somerville?
+  # coo:1653/coo:1654 (Article X, Short-Term Rentals): registration
+  # (certificate from ISD) required; unit must be the operator's primary
+  # residence; limits on guests/listings.
+  expect_answer_contains_any: ["primary residence", "registration", "register", "certificate of registration"]
+  expect_cited_sections_any: ["coo:1653", "coo:1654", "*short-term rental*"]
+  expect_confidence_at_least: medium
+
+- id: smoking-in-parks
+  question: Can I smoke a cigarette in a public park in Somerville?
+  # coo:1172 (Sec. 6-3, "Smoking in parks"): smoking tobacco products is
+  # unlawful "in, and within 50 feet of, all school grounds, playgrounds,
+  # public parks, and tot-lots."
+  expect_answer_contains_any: ["no", "unlawful", "prohibited", "50 feet"]
+  expect_cited_sections_any: ["coo:1172", "*smoking in parks*"]
+  expect_confidence_at_least: medium
+
+- id: plastic-bags
+  question: Can stores in Somerville give me a plastic shopping bag at checkout?
+  # coo:1494 (Sec. 9-105.2): "No retail establishment shall provide a
+  # disposable plastic shopping bag to any customer for the purpose of
+  # enabling the customer to carry away goods from the point of sale."
+  expect_answer_contains_any: ["no", "prohibited", "banned", "not allowed"]
+  expect_cited_sections_any: ["coo:1494", "*disposable plastic shopping bags*"]
+  expect_confidence_at_least: medium
+
+- id: noise-at-night
+  question: What hours are considered quiet hours for noise complaints in Somerville?
+  # coo:822 (Sec. 9-116, "Noise disturbances"): e.g. domestic power tools
+  # outdoors in residential areas are a disturbance "between the hours of
+  # 9:00 p.m. and 7:00 a.m. on weekdays, or between 9:00 p.m. and 9:00 a.m.
+  # on Saturdays, Sundays..."; coo:823 sets the general noise-level table.
+  expect_answer_contains_any: ["9:00 p.m.", "9 p.m.", "7:00 a.m.", "night"]
+  expect_cited_sections_any: ["coo:822", "coo:823", "*noise disturbances*", "*noise levels*"]
+  expect_confidence_at_least: medium
+
+- id: yard-sale-permit
+  question: Do I need a permit to hold a yard sale at my house?
+  # No yard-sale-specific licensing ordinance found anywhere in either
+  # corpus (grepped both source .md files for "yard sale"/"garage sale");
+  # the only hit is zon:745 (10.8.4 Exempt Signs), which exempts "yard sale
+  # & garage sale signs" from sign permitting -- i.e. nothing in the corpus
+  # requires a permit for the sale itself.
+  expect_answer_contains_any: ["no permit", "not require", "exempt", "no license"]
+  expect_cited_sections_any: ["zon:745", "*exempt signs*"]
+
+- id: own-a-tiger
+  question: Can I own a pet tiger in Somerville?
+  # Out-of-corpus: coo:1355 (Sec. 3-39) only covers public *display* of
+  # non-domesticated animals (circuses/carnivals), not private ownership of
+  # exotic pets; grepped both corpora for "tiger" / "exotic animal" with no
+  # relevant hits. The agent should not fabricate an answer.
+  allow_no_citations: true
+  expect_confidence_at_most: low
+
+- id: beekeeping
+  question: Can I keep beehives in my yard in Somerville?
+  # coo:2177 ("Board of Health Policy Regulations for the Keeping of Honey
+  # Bees"): permit from the Board of Health required; "A maximum of 2
+  # colonies may be kept on a lot."
+  expect_answer_contains_any: ["permit", "board of health", "two colonies", "2 colonies"]
+  expect_cited_sections_any: ["coo:2177", "coo:2176", "*honeybees*", "*honey bees*"]
+  expect_confidence_at_least: medium
+
+- id: fireworks
+  question: Can I legally set off fireworks in Somerville?
+  # coo:781 (Sec. 9-88, "Fireworks and guns"): discharging fireworks is
+  # unlawful "without permission from the city council."
+  expect_answer_contains_any: ["no", "prohibited", "not permitted", "permission from the city council"]
+  expect_cited_sections_any: ["coo:781", "coo:782", "*fireworks*"]
+  expect_confidence_at_least: medium
+
+- id: graffiti-removal
+  question: If graffiti appears on my building, am I responsible for removing it?
+  # coo:1141 (Sec. 9-61): "The prompt removal of graffiti shall be the
+  # responsibility of the owner"; private owners must remove it within ten
+  # days of written notice.
+  expect_answer_contains_any: ["yes", "owner", "responsible", "ten days"]
+  expect_cited_sections_any: ["coo:1141", "*graffiti*"]
+  expect_confidence_at_least: medium
+
+- id: snow-emergency-parking
+  question: Can I park on the street during a declared snow emergency in Somerville?
+  # coo:2328 (Section 10-10, "Snow emergency tow zone"): once an emergency
+  # is declared and announced, "no motor vehicle shall be allowed to park or
+  # stand within the limits of any of the ways" named in the schedule;
+  # vehicles are subject to towing.
+  expect_answer_contains_any: ["no", "prohibited", "towed", "not allowed"]
+  expect_cited_sections_any: ["coo:2328", "*snow emergency*"]
+  expect_confidence_at_least: medium
+
+- id: abandoned-vehicle
+  question: What happens if I abandon a car on the street in Somerville?
+  # coo:784 (Sec. 9-91): "Whoever abandons or discards a motor vehicle or
+  # parts of a motor vehicle on public or private property within the city
+  # shall be punished in accordance with section 1-11."
+  expect_answer_contains_any: ["fine", "penalt", "punished", "1-11"]
+  expect_cited_sections_any: ["coo:784", "*abandoned automobiles*"]
+  expect_confidence_at_least: medium
