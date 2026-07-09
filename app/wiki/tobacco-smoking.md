@@ -1,0 +1,15 @@
+---
+slug: tobacco-smoking
+title: Tobacco & Smoking
+synonyms: smoking ban, vaping, e-cigarette, smoke free, cigarettes
+sections: coo:1172, coo:1249, coo:2127, coo:2128, coo:2129, coo:2130, coo:2131, coo:2132, coo:2133, coo:2134, coo:2135, coo:2136, coo:2137, coo:2138, coo:2139, coo:2140, coo:2141, coo:2142, coo:2143, coo:2144, coo:2145, coo:2146, coo:2147, coo:2148, coo:2149, coo:2150, coo:2151, coo:2152, coo:2153, coo:2154, coo:2155, coo:2156, coo:2157, coo:2158, coo:2159, coo:2481
+---
+Somerville regulates both where you can smoke and how tobacco products may be sold.
+
+**Where smoking is banned.** Under Sec. 6-3, smoking any tobacco product is unlawful in and within 50 feet of all school grounds, playgrounds, public parks, and tot-lots on city-controlled property; within 50 feet of anyone at a scheduled event (athletic, artistic, musical, festival, concert, etc.) in a city park; and within 50 feet of any monument or memorial on public property. "Smoking" and "tobacco product" are defined broadly to include cigarettes, cigars, chewing tobacco, and electronic/vaping devices regardless of nicotine content — but not FDA-approved cessation products. Enforcement is by police, the health department, and inspectional services, with fines set in Sec. 1-11(b). Sec. 13-93 also bans smoking in livery vehicles, which must post a "No Smoking" sign.
+
+**Selling tobacco.** The Board of Health regulation (Appendix D, effective February 1, 2022) governs retail sales. Key rules: no sales to anyone under 21, with ID verification required (Sec. D); a Board of Health Tobacco Product Sales Permit is required, one per location, non-transferable, with mandatory signage and inspections (Sec. E); no new permit within 500 feet of a school. Flavored tobacco products (including menthol) are prohibited except limited categories in adult-only tobacco stores (Sec. H). E-cigarettes/vapes may only be sold in adult-only retail tobacco stores (Sec. I), and elsewhere nicotine content is capped at 35 mg/mL (Sec. J). Smoking bars, blunt wraps, vending machines, self-service displays, roll-your-own machines, free samples, coupons, and multi-pack discounts are all banned (Secs. F, K, L, N, O, P). Health care and educational institutions may not sell tobacco (Secs. Q, R), and cigarettes must be sold in packs of at least 20 (Sec. M). Violation fines run $1,000–$5,000 with permit suspensions (Sec. U).
+
+**Gotchas.** The definitions treat vaping and e-cigarettes as tobacco products for both the smoking ban and sales rules. The public-smoking ban applies only to city-controlled public property; it does not address private property or general sidewalks. The regulation does not set a personal penalty for buyers under 21 — compliance responsibility falls on the retailer/permit holder, not employees. For marijuana-related devices, see the "Smoke Accessories" rules (Sec. S), which limit such sales to 21-and-over businesses away from schools.
+
+*This summary is for general orientation only. The cited section text above is authoritative — always verify anything that matters against the linked sections, not this summary.*
