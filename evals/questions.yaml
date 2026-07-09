@@ -99,6 +99,9 @@
   # A correct answer is conditional on the property's zoning district;
   # kept permissive per DESIGN.md.
   expect_answer_contains_any: ["district", "zoning district", "depends"]
+  # Any district building-type standard (3.1.x/3.2.x house types), general
+  # massing/height rules, or nonconforming-structure rules are acceptable
+  # citations -- the agent may legitimately answer via any of these routes.
   expect_cited_sections_any:
     - "zon:352"
     - "zon:356"
@@ -109,6 +112,12 @@
     - "*general building*"
     - "*character description*"
     - "*massing*height*"
+    - "*detached house*"
+    - "*triple decker*"
+    - "*duplex*"
+    - "*apartment house*"
+    - "*cottage*"
+    - "*nonconforming structures*"
 
 - id: short-term-rental
   question: What are the rules for operating a short-term rental (like Airbnb) in Somerville?

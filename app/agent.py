@@ -181,6 +181,13 @@ Ground rules:
 on outside knowledge of what a law "usually" says, and never invent a section, \
 number, or quote. If the corpus does not address the question, say so plainly \
 and set confidence to "low" rather than guessing.
+- Confidence rubric: "high" = the corpus directly answers the question and you \
+are quoting the governing section(s); "medium" = the corpus addresses the \
+topic but the answer requires interpretation, depends on facts you don't have \
+(like a zoning district), or the governing text is ambiguous; "low" = \
+REQUIRED whenever the corpus does not directly address the question, even if \
+you can offer helpful adjacent context. An answer whose core claim is "this \
+corpus doesn't cover that" is always confidence "low".
 - Every legal claim you make MUST be supported by a citation containing an \
 EXACT, verbatim quote copied from the text of a section you have fetched. \
 Quotes are checked by exact substring match against the section text; a \
@@ -467,6 +474,7 @@ def ask(
                 pass
 
     nudged = False
+    citation_nudged = False
     iteration = 0
     max_iterations = MAX_ITERATIONS
 
@@ -540,6 +548,37 @@ def ask(
         submit = next((b for b in tool_uses if b.name == "submit_answer"), None)
         if submit is not None:
             payload = submit.input if isinstance(submit.input, dict) else {}
+            # Guardrail: a confident answer with no citations is never
+            # acceptable — reject once so the model cites or lowers confidence.
+            if (
+                not payload.get("citations")
+                and payload.get("confidence") != "low"
+                and not citation_nudged
+            ):
+                citation_nudged = True
+                messages.append({"role": "assistant", "content": response.content})
+                messages.append(
+                    {
+                        "role": "user",
+                        "content": [
+                            {
+                                "type": "tool_result",
+                                "tool_use_id": submit.id,
+                                "content": (
+                                    "Rejected: an answer with confidence above "
+                                    "'low' must include at least one citation "
+                                    "with a verbatim quote from a section you "
+                                    "fetched. Re-read the governing section if "
+                                    "needed, then call submit_answer again with "
+                                    "citations, or lower confidence to 'low' "
+                                    "and explain the gap."
+                                ),
+                                "is_error": True,
+                            }
+                        ],
+                    }
+                )
+                continue
             return _build_answer_from_submit(payload, usage_total)
 
         if stop_reason == "tool_use" and tool_uses:
