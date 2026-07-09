@@ -30,6 +30,8 @@ from urllib.parse import urljoin
 import requests
 from bs4 import BeautifulSoup, NavigableString, Tag
 
+from combine_law import combine, DEFAULT_OUTPUT, DEFAULT_ZONING
+
 BASE_URL = "https://online.encodeplus.com/regs/somerville-ma-coo"
 PART_II_TOCID = "001.004"
 
@@ -554,8 +556,6 @@ def main() -> int:
     md_output.write_text(markdown, encoding="utf-8")
     print(f"[ok] Saved markdown: {md_output}")
     print(f"[ok] Top-level sections extracted across all documents: {section_count}")
-
-    from combine_law import combine, DEFAULT_OUTPUT, DEFAULT_ZONING
 
     combine(md_output, Path(DEFAULT_ZONING), Path(DEFAULT_OUTPUT))
 

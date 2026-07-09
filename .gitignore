@@ -1,9 +1,10 @@
-DS_Store
+.DS_Store
 Thumbs.db
 
 __pycache__/
 *.py[cod]
 *.pyo
+.pytest_cache/
 
 .venv/
 venv/
@@ -11,3 +12,4 @@ venv/
 .idea/
 .vscode/
 
+*.log

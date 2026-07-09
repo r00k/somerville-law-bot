@@ -26,6 +26,8 @@ from urllib.parse import urljoin
 import requests
 from bs4 import BeautifulSoup, NavigableString, Tag
 
+from combine_law import combine, DEFAULT_OUTPUT, DEFAULT_NON_ZONING
+
 BASE_URL = "https://online.encodeplus.com/regs/somerville-ma"
 ROOT_TOCID = "001"
 MEDIA_TAGS = {"img", "figure", "svg", "object", "embed", "iframe"}
@@ -702,8 +704,6 @@ def main() -> int:
     print(
         f"[ok] Section marker completeness: raw_total={len(raw_ids)} md_total={len(md_ids)} sequence_exact={raw_ids == md_ids}"
     )
-
-    from combine_law import combine, DEFAULT_OUTPUT, DEFAULT_NON_ZONING
 
     combine(Path(DEFAULT_NON_ZONING), md_output, Path(DEFAULT_OUTPUT))
 

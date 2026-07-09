@@ -25,6 +25,8 @@ The generated outputs are committed to this repo — no need to run anything. Op
 - **Raw HTML (auditable, as fetched from enCodePlus):**
   - [somerville-law-non-zoning.raw.html](somerville-law-non-zoning.raw.html)
   - [somerville-zoning.raw.html](somerville-zoning.raw.html)
+- **PDF:**
+  - [rules-of-the-council.pdf](rules-of-the-council.pdf) — Rules of the City Council (Appendix B), exported from enCodePlus
 
 Check the commit history to see when the law was last refreshed.
 
@@ -43,7 +45,12 @@ python3 render_markdown_html.py \
   --input somerville-zoning.md \
   --output somerville-zoning.readable.html \
   --title 'Somerville Zoning Ordinance (Readable Edition)'
+
+# Combined corpus (also regenerated automatically by each fetch script)
+python3 combine_law.py
 ```
+
+Pass `--skip-pdf-attempt` to `fetch_somerville_law.py` to skip the best-effort host PDF export and only produce Markdown/HTML.
 
 Expected outputs:
 
