@@ -1,6 +1,6 @@
 # Somerville Municipal Law Consolidation
 
-Consolidated, machine-friendly extracts of Somerville municipal law from enCodePlus.
+Consolidated, machine-friendly extracts of Somerville municipal law from enCodePlus — plus an LLM-powered Q&A web app for asking questions about it.
 
 ## What This Is
 
@@ -62,6 +62,32 @@ Expected outputs:
 - `somerville-zoning.images.json`
 - `somerville-zoning.readable.html`
 - `somerville-law-combined.md` (regenerated automatically whenever either fetch script runs, when both source Markdown files are present)
+
+## Ask Somerville Law (Q&A web app)
+
+`app/` contains a web app where residents ask plain-language questions ("Can I use a gas-powered leaf blower in July?", "Can I raise chickens?") and get answers grounded in the corpus. Every legal claim carries a citation whose quote is verified verbatim against the ordinance text before display, deep-linked into the readable editions. Powered by Claude Opus 4.8 via the Anthropic API.
+
+```bash
+uv sync
+export ANTHROPIC_API_KEY=sk-ant-...
+
+# One-time (already committed, rerun after a corpus refresh):
+uv run python -m app.indexer          # rebuild section index
+uv run python -m app.wiki_build       # regenerate topic wiki pages (costs API tokens)
+
+# Run the app
+uv run uvicorn app.server:app         # then open http://127.0.0.1:8000
+
+# Ask from the CLI
+uv run python -m app.agent "How long is the mayor's term?"
+
+# Run the eval suite (20 live questions, costs API tokens)
+uv run python evals/run.py
+```
+
+Architecture: `app/indexer.py` parses both corpora into a 3,346-section index; `app/law_tools.py` provides BM25 search and section fetch as agent tools; `app/wiki/` holds 44 pregenerated topic pages that map resident vocabulary ("chickens") to legal vocabulary ("domestic fowl") and route the agent across corpora; `app/agent.py` runs the tool loop and rejects any citation whose quote doesn't appear verbatim in the cited section; `app/server.py` serves the frontend with SSE progress streaming, per-IP rate limits, and JSONL question logging. See `app/DESIGN.md` for the full spec.
+
+After refreshing the law corpus, rerun the indexer, regenerate wiki pages for changed topics (see `CHANGELOG.md`), and rerun the evals.
 
 ## Known Limitations
 
