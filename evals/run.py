@@ -21,6 +21,7 @@ import argparse
 import fnmatch
 import json
 import sys
+import time
 from dataclasses import asdict, dataclass, field
 from datetime import date
 from pathlib import Path
@@ -71,6 +72,7 @@ class EvalOutcome:
     usage: dict = field(default_factory=dict)
     answer_markdown: str = ""
     error: str | None = None
+    latency_s: float = 0.0
 
 
 def load_questions(only: set[str] | None = None) -> list[dict]:
@@ -253,6 +255,7 @@ def run_evals(specs: list[dict]) -> list[EvalOutcome]:
 
     outcomes: list[EvalOutcome] = []
     for spec in specs:
+        t0 = time.monotonic()
         try:
             answer = ask(spec["question"])
             outcome = evaluate(spec, answer)
@@ -263,6 +266,7 @@ def run_evals(specs: list[dict]) -> list[EvalOutcome]:
                 passed=False,
                 error=f"{type(exc).__name__}: {exc}",
             )
+        outcome.latency_s = round(time.monotonic() - t0, 2)
         outcomes.append(outcome)
         status = "PASS" if outcome.passed else "FAIL"
         print(f"[{status}] {spec['id']}")

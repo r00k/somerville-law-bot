@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
 import unicodedata
 from dataclasses import dataclass, field
@@ -24,7 +25,8 @@ import anthropic
 from . import law_tools
 
 # --- API usage constants (see app/DESIGN.md Component 3) ---
-MODEL = "claude-opus-4-8"
+# LAW_QA_MODEL overrides the answering model (e.g. for A/B testing).
+MODEL = os.environ.get("LAW_QA_MODEL", "claude-opus-4-8")
 MAX_TOKENS = 16_000
 MAX_ITERATIONS = 12
 NUDGE_EXTRA_ITERATIONS = 2
@@ -519,15 +521,24 @@ def _build_answer_from_submit(payload: dict, usage: dict) -> Answer:
 
     citations, dropped = _verify_citations(raw_citations)
 
-    # If citations were offered but every one failed verification, we cannot
-    # stand behind the legal claims — downgrade and warn.
-    if raw_citations and not citations:
+    # Hard floor: no verified citation, no confidence. Whether the model
+    # offered none (and survived the one rejection retry) or all of them
+    # failed verification, an uncited legal answer is never presented as
+    # better than "low".
+    if not citations and confidence != "low":
         confidence = "low"
-        note = (
-            "None of the provided citations could be verified against the "
-            "official section text, so this answer could not be confirmed. "
-            "Please verify against the official code."
-        )
+        if raw_citations:
+            note = (
+                "None of the provided citations could be verified against the "
+                "official section text, so this answer could not be confirmed. "
+                "Please verify against the official code."
+            )
+        else:
+            note = (
+                "This answer was produced without verifiable citations to the "
+                "official section text, so it could not be confirmed. Please "
+                "verify against the official code."
+            )
         caveats = f"{caveats}\n\n{note}" if caveats else note
 
     return Answer(
