@@ -26,7 +26,9 @@ from . import law_tools
 
 # --- API usage constants (see app/DESIGN.md Component 3) ---
 # LAW_QA_MODEL overrides the answering model (e.g. for A/B testing).
-MODEL = os.environ.get("LAW_QA_MODEL", "claude-opus-4-8")
+# Sonnet 5 won the 2026-07-09 A/B vs Opus 4.8: equal eval pass rate,
+# ~33% cheaper, much better tail latency (p90 38s vs 59s).
+MODEL = os.environ.get("LAW_QA_MODEL", "claude-sonnet-5")
 MAX_TOKENS = 16_000
 MAX_ITERATIONS = 12
 NUDGE_EXTRA_ITERATIONS = 2
