@@ -4,7 +4,7 @@ This document is a text-first extract of Somerville's zoning ordinance from enCo
 
 - Source publication root: `https://online.encodeplus.com/regs/somerville-ma/doc-viewer.aspx#secid--1`
 - Source tocid: `001`
-- Retrieved: `2026-03-06T15:07:00+00:00`
+- Retrieved: `2026-07-09T13:30:13+00:00`
 - Section count extracted: `886`
 - Image placeholders emitted: `1340`
 
@@ -8545,7 +8545,9 @@ The Assembly Square district is characterized by a variety of mid- and high-rise
 ##### 8.1.2 Purpose
 
 1. a. To permit the development of buildings that provide all dwelling units as affordable dwelling units .
-2. b. To permit additional residential use intensity, additional building height, and additional tolerance for dimensional standards to incentive the development of affordable dwelling units.
+2. b. To permit additional residential use intensity, additional building height, and additional tolerance for dimensional standards to incentivize the development of affordable dwelling units.
+
+(Ord. 2026-03 , 05/14/2026)
 
 <!-- secid:653 -->
 ##### 8.1.3 Applicability
@@ -8574,35 +8576,51 @@ The Assembly Square district is characterized by a variety of mid- and high-rise
 <!-- secid:656 -->
 ##### 8.1.6 Mid-Rise Districts
 
-1. a. Building Types i. The following building types are permitted by right : a). Apartment Building b). General Building ii. The standards of Table 8.1.6 supersede or supplement the dimensional standards for the specified building types permitted by the underlying zoning district.
-2. b. Dimensional Compliance i. Development of any Apartment Building or General Building may deviate by up to five percent (5%) from the numeric value of the following dimensional standards of the underlying zoning district: a). Lot coverage (max) b). Green score (min) c). Open space (min) d). Front building setbacks (min & max) e). Side building setbacks for lots abutting any non-NR or LHD lot (min) f). Facade build outs (min) g). Floor plate (max)
-3. c. Use Provisions i. Uses from the following principal use categories are permitted by right : a). Residential Housing ii. Development is exempt from any minimum gross floor area per dwelling unit specified elsewhere in this Ordinance. iii. The use of any upper story of a general building is limited to the following principal use categories and specific uses: a). Community Center b). Library c). Public Service d). Religious & Educational Uses Protected by M.G.L. 40A. Sec. 3 e). Day Care Services f). Health Care Services g). Residential Housing h). Institutional Housing iv. At least forty percent (40%) of the gross floor area of any general building must be occupied by uses from the Residential principal use categories. v. All dwelling units must be affordable dwelling units .
+1. a. Building Types i. The following building types are permitted by right : a). Apartment Building b). General Building ii. The standards of Table 8.1.6 supersede all of the standards of a. Lot Standards, b. Building Placement, c. Massing & Height, and d. Uses & Features for the specified building types permitted by the underlying zoning district.
+2. b. Dimensional Compliance i. Development of any Apartment Building or General Building may deviate by up to five percent (5%) from the numeric value of the dimensional standards of Table 8.1.6.
+3. c. Use Provisions i. Uses from the following principal use categories are permitted by right : a). Residential Housing ii. Development is exempt from any minimum gross floor area per dwelling unit specified elsewhere in this Ordinance. iii. Development is exempt from providing any required leasable floor area for uses from the Arts & Creative Enterprise use categories specified elsewhere in this Ordinance. iv. The use of any upper story of a general building is limited to the following principal use categories and specific uses: a). Community Center b). Library c). Public Service d). Religious & Educational Uses Protected by M.G.L. 40A. Sec. 3 e). Day Care Services f). Health Care Services g). Residential Housing h). Institutional Housing v. At least forty percent (40%) of the gross floor area of any general building must be occupied by uses from the Residential principal use categories. vi. All dwelling units must be affordable dwelling units .
 4. d. Parking & Mobility i. Development may deviate by up to five percent (5%) from the minimum number of bicycle parking spaces required per dwelling unit.
 
-| Table 8.1.6 Dimensional Standards |  |  |
+| Table 8.1.6 Superseding Dimensional Standards |  |  |
 | --- | --- | --- |
 |  | Apartment Building | General Building |
+| Lot Development |  |  |
+| Lot Coverage (max) | 100% | 100% |
+| Green Score | -- | -- |
+| Minimum | 0.20 | 0.20 |
+| Ideal | 0.25 | 0.25 |
+| Open Space (min) | 10% | 10% |
 | Building Setbacks |  |  |
+| Curb Setback (min) | 12 ft | 12 ft |
+| Primary Front Setback (min/max) | 0 ft 15 ft | 0 ft 15 ft |
+| Secondary Front Setback (min/max) | 0 ft 15 ft | 0 ft 15 ft |
 | Side Setback (min) | -- | -- |
-| 4th - 7th Story abutting NR or LHD |  |  |
+| Abutting an Alley or R-ROW | 0 ft | 0 ft |
+| Abutting any non-NR or LHD | 0 ft | 0 ft |
+| 1st - 3rd Story Abutting NR or LHD | 10 ft | 10 ft |
+| 4th - 8th Story abutting NR or LHD | -- | -- |
 | Lot Width < 100 ft | 20 ft | 20 ft |
-| Lot Depth > 100 ft | 30 ft | 30 ft |
+| Lot Width ≥ 100 ft | 30 ft | 30 ft |
 | Rear Setback (min) | -- | -- |
-| 4th - 7th Story abutting NR or LHD |  |  |
+| Abutting an Alley or R-ROW | 0 ft | 0 ft |
+| Abutting any non-NR or LHD | 10 ft | 10 ft |
+| 1st - 3rd Story Abutting NR or LHD | 20 ft | 20 ft |
+| 4th - 8th Story abutting NR or LHD | -- | -- |
 | Lot Depth < 100 ft | 20 ft | 20 ft |
-| Lot Depth > 100 ft | 30 ft | 30 ft |
+| Lot Depth ≥ 100 ft | 30 ft | 30 ft |
 | Main Massing |  |  |
 | Number of Stories (max) | -- | -- |
 | Mid-Rise 3 abutting NR | 4 | 4 |
-| All other MR3-MR6 lots | 7 | 7 |
-| Step-Back , Top Story (min) |  |  |
-| 4 or less stories | none | none |
-| 5 or more stories | 10 ft | 10 ft |
+| All other MR3-MR6 lots | 8 | 8 |
 | Building Height, Feet (max) | -- | -- |
 | Mid-Rise 3 abutting NR | 50 ft | 52 ft |
-| All other MR3-MR6 lots | 86 ft | 88 ft |
+| All other MR3-MR6 lots | 96 ft | 100 ft |
+| Façade Composition |  |  |
+| Fenestration (min/max) | 15%/50% | 15%/50% |
+| Use & Occupancy |  |  |
+| Ground Story Commercial Unit (min) | n/a | 1 |
 
-(Ord. 2023-15 , 06/22/2023; Ord. 2023-25 , 11/21/2023)
+(Ord. 2023-15 , 06/22/2023; Ord. 2023-25 , 11/21/2023; Ord. 2026-03 , 05/14/2026)
 
 <!-- secid:392 -->
 #### 8.2 SMALL BUSINESS (SB)
@@ -11690,3 +11708,4 @@ This section contains a record of all ordinances amending the Somerville, MA Zon
 | 2025-20 | 2025/12/11 12/11/2025 | Home-Based Child Day Care | 4.1.13 , 4.2.13 , 4.3.13 , 4.4.13 , 5.1.14 , 7.2.7 , 7.4.8 , 8.4.16 , Table 9.1.1 |
 | 2025-21 | 2025/12/11 12/11/2025 | Pre-Submittal Meeting | 10.10.3 , 15.1.2 , 15.1.6 , 15.1.8 , 15.2.1 , 15.2.2 , 15.2.3 , 15.2.4 , 15.3.1 , 15.3.2 , 15.5.2 |
 | 2025-22 | 2025/12/11 12/11/2025 | Zoning Map 363 Highland Avenue | Map Changes |
+| 2026-03 | 2026/05/14 05/14/2026 | Affordable Housing | 8.1.2 , 8.1.6 |
