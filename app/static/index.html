@@ -1,0 +1,719 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ask Somerville Law</title>
+<style>
+  :root {
+    color-scheme: light dark;
+    --color-bg: #f5f7fb;
+    --color-surface: #ffffff;
+    --color-surface-alt: #eef3f9;
+    --color-text: #1b2430;
+    --color-muted: #5b6b7c;
+    --color-primary: #1d4e89;
+    --color-primary-strong: #123a68;
+    --color-border: #dbe3ee;
+    --color-shadow: rgba(20, 30, 50, 0.08);
+    --serif: Georgia, "Iowan Old Style", "Palatino Linotype", Palatino, serif;
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --radius: 10px;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --color-bg: #10151d;
+      --color-surface: #171e29;
+      --color-surface-alt: #1c2635;
+      --color-text: #e6ebf2;
+      --color-muted: #96a5b6;
+      --color-primary: #7fb0e8;
+      --color-primary-strong: #9dc4f0;
+      --color-border: #2a3546;
+      --color-shadow: rgba(0, 0, 0, 0.45);
+    }
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--color-bg);
+    color: var(--color-text);
+    font-family: var(--sans);
+    line-height: 1.55;
+  }
+
+  .page {
+    max-width: 44rem;
+    margin: 0 auto;
+    padding: 2.5rem 1.25rem 4rem;
+  }
+
+  .site-header h1 {
+    font-family: var(--serif);
+    font-size: 2rem;
+    margin: 0 0 0.35rem;
+    color: var(--color-primary-strong);
+    letter-spacing: -0.01em;
+  }
+
+  .subtitle {
+    margin: 0 0 2rem;
+    color: var(--color-muted);
+    font-size: 1.05rem;
+    max-width: 38rem;
+  }
+
+  .visually-hidden {
+    position: absolute;
+    width: 1px; height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+
+  .ask-panel {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    padding: 1.5rem;
+    box-shadow: 0 1px 3px var(--color-shadow);
+  }
+
+  .chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 1.1rem;
+  }
+
+  .chip {
+    font: inherit;
+    font-size: 0.85rem;
+    background: var(--color-surface-alt);
+    color: var(--color-primary-strong);
+    border: 1px solid var(--color-border);
+    border-radius: 999px;
+    padding: 0.4rem 0.85rem;
+    cursor: pointer;
+    transition: background 0.15s ease;
+  }
+
+  .chip:hover:not(:disabled) { background: var(--color-border); }
+  .chip:disabled { opacity: 0.55; cursor: not-allowed; }
+
+  textarea {
+    width: 100%;
+    font: inherit;
+    font-size: 1rem;
+    color: var(--color-text);
+    background: var(--color-bg);
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+    padding: 0.75rem 0.9rem;
+    resize: vertical;
+    min-height: 4.5rem;
+  }
+
+  textarea:focus {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 1px;
+  }
+
+  .form-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 0.6rem;
+  }
+
+  .char-count {
+    color: var(--color-muted);
+    font-size: 0.8rem;
+  }
+
+  button[type="submit"] {
+    font: inherit;
+    font-weight: 600;
+    background: var(--color-primary);
+    color: #ffffff;
+    border: none;
+    border-radius: 8px;
+    padding: 0.55rem 1.3rem;
+    cursor: pointer;
+    transition: background 0.15s ease;
+  }
+
+  button[type="submit"]:hover:not(:disabled) { background: var(--color-primary-strong); }
+  button[type="submit"]:disabled { opacity: 0.6; cursor: not-allowed; }
+
+  .progress {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    color: var(--color-muted);
+    font-size: 0.92rem;
+    margin: 1rem 0 0;
+  }
+
+  .progress-dot {
+    width: 0.55em;
+    height: 0.55em;
+    border-radius: 50%;
+    background: var(--color-primary);
+    animation: pulse 1.4s ease-in-out infinite;
+    flex-shrink: 0;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 0.3; transform: scale(0.85); }
+    50% { opacity: 1; transform: scale(1); }
+  }
+
+  .error-message {
+    margin: 1rem 0 0;
+    padding: 0.75rem 1rem;
+    background: var(--color-surface-alt);
+    border: 1px solid var(--color-border);
+    border-left: 4px solid #b3441e;
+    border-radius: 6px;
+    color: var(--color-text);
+    font-size: 0.95rem;
+  }
+
+  .answer {
+    margin-top: 1.75rem;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    padding: 1.5rem;
+    box-shadow: 0 1px 3px var(--color-shadow);
+  }
+
+  .answer-header {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 0.5rem;
+  }
+
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.25em 0.8em;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  .badge-high { background: #dff3e6; color: #1c7a42; }
+  .badge-medium { background: #fbf0cf; color: #8a6100; }
+  .badge-low { background: #e6eaf0; color: #5b6b7c; }
+
+  @media (prefers-color-scheme: dark) {
+    .badge-high { background: #163826; color: #7ee3a4; }
+    .badge-medium { background: #3a2f0d; color: #f0cf6b; }
+    .badge-low { background: #232c39; color: #b7c3d1; }
+  }
+
+  .answer-body { font-size: 1.02rem; }
+  .answer-body p { margin: 0 0 0.9rem; }
+  .answer-body ul { margin: 0 0 0.9rem 1.2rem; padding: 0; }
+  .answer-body li { margin: 0.2rem 0; }
+  .answer-body code {
+    background: var(--color-surface-alt);
+    padding: 0.1em 0.35em;
+    border-radius: 4px;
+    font-size: 0.92em;
+  }
+  .answer-body a { color: var(--color-primary); }
+
+  .caveats {
+    margin: 0.5rem 0 1.25rem;
+    padding: 0.75rem 1rem;
+    background: var(--color-surface-alt);
+    border-left: 4px solid var(--color-primary);
+    border-radius: 6px;
+    font-size: 0.92rem;
+    color: var(--color-text);
+  }
+
+  .citations {
+    display: flex;
+    flex-direction: column;
+    gap: 0.9rem;
+    margin-top: 1rem;
+  }
+
+  .no-citations {
+    color: var(--color-muted);
+    font-size: 0.92rem;
+  }
+
+  .citation-card {
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+    padding: 0.9rem 1rem;
+    background: var(--color-bg);
+  }
+
+  .citation-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    margin-bottom: 0.4rem;
+  }
+
+  .citation-header a {
+    font-weight: 600;
+    color: var(--color-primary-strong);
+    text-decoration: none;
+  }
+  .citation-header a:hover { text-decoration: underline; }
+
+  .verified-tick {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: #1c7a42;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .verified-tick { color: #7ee3a4; }
+  }
+
+  .citation-card blockquote {
+    margin: 0 0 0.5rem;
+    padding: 0.5rem 0.9rem;
+    border-left: 3px solid var(--color-border);
+    font-family: var(--serif);
+    font-style: italic;
+    color: var(--color-text);
+  }
+
+  .why-relevant {
+    margin: 0;
+    color: var(--color-muted);
+    font-size: 0.9rem;
+  }
+
+  .site-footer {
+    margin-top: 3rem;
+    padding-top: 1.25rem;
+    border-top: 1px solid var(--color-border);
+    color: var(--color-muted);
+    font-size: 0.82rem;
+    line-height: 1.6;
+  }
+
+  .site-footer a { color: var(--color-muted); }
+
+  [hidden] { display: none !important; }
+</style>
+</head>
+<body>
+<div class="page">
+  <header class="site-header">
+    <h1>Ask Somerville Law</h1>
+    <p class="subtitle">
+      Ask a plain-language question about Somerville's Code of Ordinances or
+      Zoning Ordinance. Answers are drawn from and cited to the actual law text.
+    </p>
+  </header>
+
+  <main>
+    <section class="ask-panel">
+      <div class="chips" id="chips">
+        <button type="button" class="chip" data-question="Can I use a gas-powered leaf blower in July?">Leaf blower in July</button>
+        <button type="button" class="chip" data-question="Can I raise chickens in my backyard?">Raise chickens</button>
+        <button type="button" class="chip" data-question="How long is the mayor's term of office?">Mayor's term</button>
+        <button type="button" class="chip" data-question="Am I required to shovel snow from my sidewalk?">Shovel sidewalk snow</button>
+      </div>
+
+      <form id="ask-form">
+        <label for="question" class="visually-hidden">Your question</label>
+        <textarea
+          id="question"
+          name="question"
+          rows="3"
+          maxlength="1000"
+          placeholder="Ask about noise rules, permits, snow shoveling, pets, parking…"
+          required
+        ></textarea>
+        <div class="form-row">
+          <span class="char-count" id="char-count">0 / 1000</span>
+          <button type="submit" id="ask-button">Ask</button>
+        </div>
+      </form>
+
+      <p class="progress" id="progress" hidden>
+        <span class="progress-dot" aria-hidden="true"></span>
+        <span id="progress-text">Thinking…</span>
+      </p>
+
+      <p class="error-message" id="error-message" hidden></p>
+    </section>
+
+    <section class="answer" id="answer" hidden aria-live="polite">
+      <div class="answer-header">
+        <span class="badge" id="confidence-badge"></span>
+      </div>
+      <div class="answer-body" id="answer-body"></div>
+      <div class="caveats" id="caveats" hidden></div>
+      <div class="citations" id="citations"></div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <p>
+      This tool provides informational summaries generated by an AI assistant
+      from Somerville's published ordinances. It is <strong>not legal
+      advice</strong> and may be incomplete or out of date. Always verify
+      current requirements against the
+      <a href="https://online.encodeplus.com/regs/somerville-ma-coo/" target="_blank" rel="noopener noreferrer">official Code of Ordinances</a>.
+      Source code and the underlying law corpus are on
+      <a href="https://github.com/r00k/somerville-ordinances" target="_blank" rel="noopener noreferrer">GitHub</a>.
+    </p>
+  </footer>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  var form = document.getElementById("ask-form");
+  var textarea = document.getElementById("question");
+  var askButton = document.getElementById("ask-button");
+  var progressEl = document.getElementById("progress");
+  var progressText = document.getElementById("progress-text");
+  var errorEl = document.getElementById("error-message");
+  var answerSection = document.getElementById("answer");
+  var answerBody = document.getElementById("answer-body");
+  var citationsEl = document.getElementById("citations");
+  var caveatsEl = document.getElementById("caveats");
+  var confidenceBadge = document.getElementById("confidence-badge");
+  var charCount = document.getElementById("char-count");
+  var chips = document.getElementById("chips");
+
+  textarea.addEventListener("input", function () {
+    charCount.textContent = textarea.value.length + " / 1000";
+  });
+
+  chips.addEventListener("click", function (e) {
+    var btn = e.target.closest(".chip");
+    if (!btn || btn.disabled) return;
+    textarea.value = btn.dataset.question;
+    charCount.textContent = textarea.value.length + " / 1000";
+    form.requestSubmit();
+  });
+
+  form.addEventListener("submit", function (e) {
+    e.preventDefault();
+    var question = textarea.value.trim();
+    if (!question) return;
+    askQuestion(question);
+  });
+
+  function setBusy(busy) {
+    askButton.disabled = busy;
+    askButton.textContent = busy ? "Asking…" : "Ask";
+    textarea.disabled = busy;
+    var chipButtons = chips.querySelectorAll(".chip");
+    for (var i = 0; i < chipButtons.length; i++) {
+      chipButtons[i].disabled = busy;
+    }
+  }
+
+  function resetUI() {
+    errorEl.hidden = true;
+    errorEl.textContent = "";
+    answerSection.hidden = true;
+    answerBody.innerHTML = "";
+    citationsEl.innerHTML = "";
+    caveatsEl.hidden = true;
+    caveatsEl.textContent = "";
+    progressEl.hidden = false;
+    progressText.textContent = "Thinking…";
+  }
+
+  function showError(message) {
+    progressEl.hidden = true;
+    errorEl.hidden = false;
+    errorEl.textContent = message;
+  }
+
+  function askQuestion(question) {
+    resetUI();
+    setBusy(true);
+
+    fetch("/api/ask", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ question: question })
+    })
+      .then(function (response) {
+        if (!response.ok) {
+          return response
+            .json()
+            .catch(function () { return null; })
+            .then(function (data) {
+              var message =
+                (data && data.message) ||
+                "Something went wrong (HTTP " + response.status + ").";
+              showError(message);
+              return null;
+            });
+        }
+        return consumeStream(response);
+      })
+      .catch(function () {
+        showError("Could not reach the server. Check your connection and try again.");
+      })
+      .finally(function () {
+        setBusy(false);
+        progressEl.hidden = true;
+      });
+  }
+
+  function consumeStream(response) {
+    var reader = response.body.getReader();
+    var decoder = new TextDecoder();
+    var buffer = "";
+
+    function pump() {
+      return reader.read().then(function (result) {
+        if (result.done) return;
+        buffer += decoder.decode(result.value, { stream: true });
+
+        var sepIndex;
+        while ((sepIndex = buffer.indexOf("\n\n")) !== -1) {
+          var rawEvent = buffer.slice(0, sepIndex);
+          buffer = buffer.slice(sepIndex + 2);
+          handleRawEvent(rawEvent);
+        }
+        return pump();
+      });
+    }
+
+    return pump();
+  }
+
+  function handleRawEvent(rawEvent) {
+    var lines = rawEvent.split("\n");
+    var dataLine = null;
+    for (var i = 0; i < lines.length; i++) {
+      if (lines[i].indexOf("data:") === 0) {
+        dataLine = lines[i];
+        break;
+      }
+    }
+    if (!dataLine) return;
+    var jsonText = dataLine.slice(5).trim();
+    if (!jsonText) return;
+    var payload;
+    try {
+      payload = JSON.parse(jsonText);
+    } catch (err) {
+      return;
+    }
+    handleEvent(payload);
+  }
+
+  function handleEvent(payload) {
+    switch (payload.type) {
+      case "thinking":
+        progressText.textContent = "Thinking…";
+        break;
+      case "tool":
+        progressText.textContent = describeTool(payload);
+        break;
+      case "answer":
+        renderAnswer(payload);
+        break;
+      case "error":
+        showError(payload.message || "Something went wrong while answering your question.");
+        break;
+      case "done":
+        progressEl.hidden = true;
+        break;
+      default:
+        break;
+    }
+  }
+
+  function describeTool(payload) {
+    var detail = payload.detail || "";
+    switch (payload.name) {
+      case "search_law":
+        return "Searching: " + detail + "…";
+      case "get_sections":
+        return "Reading " + detail + "…";
+      case "get_wiki_page":
+        return "Checking topic guide: " + detail + "…";
+      default:
+        return detail ? payload.name + ": " + detail + "…" : "Working…";
+    }
+  }
+
+  function renderAnswer(answer) {
+    progressEl.hidden = true;
+    answerSection.hidden = false;
+
+    confidenceBadge.textContent = confidenceLabel(answer.confidence);
+    confidenceBadge.className = "badge " + confidenceClass(answer.confidence);
+
+    answerBody.innerHTML = renderMarkdown(answer.answer_markdown || "");
+
+    if (answer.caveats) {
+      caveatsEl.hidden = false;
+      caveatsEl.innerHTML = "<strong>Note:</strong> " + escapeHtml(answer.caveats);
+    } else {
+      caveatsEl.hidden = true;
+    }
+
+    citationsEl.innerHTML = "";
+    var citations = Array.isArray(answer.citations) ? answer.citations : [];
+    if (!citations.length) {
+      var p = document.createElement("p");
+      p.className = "no-citations";
+      p.textContent = "No verified citations were found for this answer.";
+      citationsEl.appendChild(p);
+    } else {
+      for (var i = 0; i < citations.length; i++) {
+        citationsEl.appendChild(renderCitationCard(citations[i]));
+      }
+    }
+  }
+
+  function confidenceLabel(confidence) {
+    if (confidence === "high") return "High confidence";
+    if (confidence === "medium") return "Medium confidence";
+    return "Low confidence";
+  }
+
+  function confidenceClass(confidence) {
+    if (confidence === "high") return "badge-high";
+    if (confidence === "medium") return "badge-medium";
+    return "badge-low";
+  }
+
+  function formatSectionLabel(key) {
+    if (!key) return "Section";
+    var parts = key.split(":");
+    var corpus = parts[0];
+    var id = parts[1];
+    var corpusName =
+      corpus === "coo" ? "Code of Ordinances" : corpus === "zon" ? "Zoning Ordinance" : corpus;
+    return id ? corpusName + " — Sec. " + id : key;
+  }
+
+  function renderCitationCard(citation) {
+    var card = document.createElement("article");
+    card.className = "citation-card";
+
+    var header = document.createElement("div");
+    header.className = "citation-header";
+
+    var link = document.createElement("a");
+    link.href = citation.url || "#";
+    link.target = "_blank";
+    link.rel = "noopener noreferrer";
+    link.textContent = citation.section_title || formatSectionLabel(citation.section_key);
+    header.appendChild(link);
+
+    if (citation.verified) {
+      var tick = document.createElement("span");
+      tick.className = "verified-tick";
+      tick.textContent = "✓ Verified";
+      header.appendChild(tick);
+    }
+
+    card.appendChild(header);
+
+    if (citation.quote) {
+      var quote = document.createElement("blockquote");
+      quote.textContent = citation.quote;
+      card.appendChild(quote);
+    }
+
+    if (citation.why_relevant) {
+      var why = document.createElement("p");
+      why.className = "why-relevant";
+      why.textContent = citation.why_relevant;
+      card.appendChild(why);
+    }
+
+    return card;
+  }
+
+  // --- minimal markdown renderer: paragraphs, **bold**, *em*, `code`, - lists, [links](...) ---
+
+  function escapeHtml(text) {
+    return String(text)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#39;");
+  }
+
+  function renderInline(text) {
+    var out = text.replace(/`([^`]+)`/g, function (m, code) {
+      return "<code>" + code + "</code>";
+    });
+    out = out.replace(/\[([^\]]+)\]\(([^)\s]+)\)/g, function (m, label, url) {
+      if (/^https?:\/\//i.test(url)) {
+        return '<a href="' + url + '" target="_blank" rel="noopener noreferrer">' + label + "</a>";
+      }
+      return label;
+    });
+    out = out.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
+    out = out.replace(/\*([^*]+)\*/g, "<em>$1</em>");
+    return out;
+  }
+
+  function renderMarkdown(markdown) {
+    var escaped = escapeHtml(markdown);
+    var lines = escaped.split(/\r?\n/);
+    var html = "";
+    var paragraph = [];
+    var i = 0;
+
+    function flushParagraph() {
+      if (paragraph.length) {
+        html += "<p>" + paragraph.join(" ") + "</p>";
+        paragraph = [];
+      }
+    }
+
+    while (i < lines.length) {
+      var line = lines[i];
+      if (/^\s*$/.test(line)) {
+        flushParagraph();
+        i += 1;
+        continue;
+      }
+      if (/^-\s+/.test(line)) {
+        flushParagraph();
+        var items = [];
+        while (i < lines.length && /^-\s+/.test(lines[i])) {
+          items.push("<li>" + renderInline(lines[i].replace(/^-\s+/, "")) + "</li>");
+          i += 1;
+        }
+        html += "<ul>" + items.join("") + "</ul>";
+        continue;
+      }
+      paragraph.push(renderInline(line));
+      i += 1;
+    }
+    flushParagraph();
+    return html;
+  }
+})();
+</script>
+</body>
+</html>
