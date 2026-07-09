@@ -172,13 +172,25 @@ def chunk_toc(toc_text: str, chunk_lines: int) -> list[str]:
 
 
 def build_assign_schema(topics: list[Topic]) -> dict:
+    # A per-topic property schema blows past the grammar-size limit at ~44
+    # topics; a flat assignments array keeps the compiled grammar small.
     return {
         "type": "object",
         "additionalProperties": False,
-        "required": [t.slug for t in topics],
+        "required": ["assignments"],
         "properties": {
-            t.slug: {"type": "array", "items": {"type": "string"}}
-            for t in topics
+            "assignments": {
+                "type": "array",
+                "items": {
+                    "type": "object",
+                    "additionalProperties": False,
+                    "required": ["topic", "sections"],
+                    "properties": {
+                        "topic": {"type": "string"},
+                        "sections": {"type": "array", "items": {"type": "string"}},
+                    },
+                },
+            }
         },
     }
 
@@ -272,9 +284,10 @@ def phase1_assign(
         track_usage(usage_totals, ASSIGN_MODEL, response.usage)
         text = next(b.text for b in response.content if b.type == "text")
         data = json.loads(text)
-        for slug, keys in data.items():
+        for entry in data.get("assignments", []):
+            slug = entry.get("topic")
             if slug in assignments:
-                assignments[slug].update(keys)
+                assignments[slug].update(entry.get("sections", []))
 
     return {slug: sorted(keys) for slug, keys in assignments.items()}
 
