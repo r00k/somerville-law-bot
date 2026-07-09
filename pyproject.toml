@@ -1,0 +1,16 @@
+[project]
+name = "somerville-law-qa"
+version = "0.1.0"
+description = "Q&A web app over the Somerville municipal law corpus"
+requires-python = ">=3.11"
+dependencies = [
+    "anthropic>=0.116",
+    "fastapi>=0.115",
+    "uvicorn>=0.34",
+    "pyyaml>=6.0",
+    "requests>=2.32,<3",
+    "beautifulsoup4>=4.12,<5",
+]
+
+[tool.uv]
+package = false
