@@ -28,7 +28,7 @@ The generated outputs are committed to this repo — no need to run anything. Op
 - **PDF:**
   - [rules-of-the-council.pdf](rules-of-the-council.pdf) — Rules of the City Council (Appendix B), exported from enCodePlus
 
-Check the commit history to see when the law was last refreshed.
+Check the commit history to see when the law was last refreshed, and [CHANGELOG.md](CHANGELOG.md) for a summary of substantive legal changes observed between refreshes.
 
 ## Quick Start
 
