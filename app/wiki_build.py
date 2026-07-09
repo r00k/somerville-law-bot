@@ -37,7 +37,7 @@ WIKI_DIR = APP_DIR / "wiki"
 ASSIGN_MODEL = "claude-sonnet-5"
 WRITE_MODEL = "claude-opus-4-8"
 
-TOC_CHUNK_LINES = 1500
+TOC_CHUNK_LINES = 400
 MAX_SECTION_TEXT_CHARS = 120_000
 MAX_RATE_LIMIT_ATTEMPTS = 3
 
@@ -269,6 +269,8 @@ def phase1_assign(
     ]
 
     assignments: dict[str, set[str]] = {t.slug: set() for t in topics}
+    total_dropped_sections = 0
+    unknown_slugs_seen: set[str] = set()
 
     for i, chunk in enumerate(chunks, start=1):
         print(f"  [assign] chunk {i}/{len(chunks)} ({len(chunk.splitlines())} lines)...")
@@ -282,12 +284,39 @@ def phase1_assign(
             output_config={"format": {"type": "json_schema", "schema": schema}},
         )
         track_usage(usage_totals, ASSIGN_MODEL, response.usage)
+        if response.stop_reason == "max_tokens":
+            raise RuntimeError(
+                f"Assignment output truncated at max_tokens on chunk {i}; "
+                f"lower TOC_CHUNK_LINES below {TOC_CHUNK_LINES} and re-run."
+            )
         text = next(b.text for b in response.content if b.type == "text")
         data = json.loads(text)
         for entry in data.get("assignments", []):
-            slug = entry.get("topic")
+            raw_slug = entry.get("topic")
+            # Normalize before lookup: the model can return a slug with
+            # incidental whitespace or casing that doesn't match our table
+            # exactly even though it means the same topic.
+            slug = (raw_slug or "").strip().lower()
+            section_keys = entry.get("sections", []) or []
             if slug in assignments:
-                assignments[slug].update(entry.get("sections", []))
+                assignments[slug].update(section_keys)
+            else:
+                dropped = len(section_keys)
+                total_dropped_sections += dropped
+                unknown_slugs_seen.add(raw_slug or "")
+                print(
+                    f"  [WARNING] chunk {i}: unknown topic slug {raw_slug!r} "
+                    f"— dropping {dropped} section key(s): {section_keys}",
+                    file=sys.stderr,
+                )
+
+    if total_dropped_sections:
+        print(
+            f"\n[WARNING] Phase 1 total: dropped {total_dropped_sections} "
+            f"section key assignment(s) across {len(unknown_slugs_seen)} "
+            f"unknown topic slug(s): {sorted(unknown_slugs_seen)}",
+            file=sys.stderr,
+        )
 
     return {slug: sorted(keys) for slug, keys in assignments.items()}
 
@@ -318,7 +347,14 @@ def phase2_write(
     section_keys: list[str],
     sections: dict,
     usage_totals: dict,
-) -> str:
+) -> str | None:
+    """Generate one topic page's body markdown, or None if generation failed.
+
+    Returns None (after printing a warning) if the response was truncated at
+    max_tokens or contained no text block. A truncated or missing page must
+    never be written to disk — callers should skip writing and can
+    regenerate the topic later with --topics.
+    """
     sections_text, truncated = build_sections_text(sections, section_keys)
     if truncated:
         sections_text += (
@@ -347,7 +383,22 @@ def phase2_write(
         messages=[{"role": "user", "content": user}],
     )
     track_usage(usage_totals, WRITE_MODEL, response.usage)
-    text = next(b.text for b in response.content if b.type == "text")
+    if response.stop_reason == "max_tokens":
+        print(
+            f"  [WARNING] {topic.slug}: response truncated at max_tokens; "
+            f"skipping page write. Regenerate later with "
+            f"--topics {topic.slug} (consider raising max_tokens).",
+            file=sys.stderr,
+        )
+        return None
+    text = next((b.text for b in response.content if b.type == "text"), None)
+    if text is None:
+        print(
+            f"  [WARNING] {topic.slug}: response contained no text block; "
+            "skipping page write.",
+            file=sys.stderr,
+        )
+        return None
     return text.strip()
 
 
@@ -434,6 +485,9 @@ def main(argv: list[str] | None = None) -> None:
         keys = assignments.get(t.slug, [])
         print(f"  [write] {t.slug} ({len(keys)} section(s))...")
         body = phase2_write(client, t, keys, sections, usage_totals)
+        if body is None:
+            skipped += 1
+            continue
         out_path.write_text(render_page(t, keys, body))
         written += 1
 

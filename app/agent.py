@@ -302,9 +302,12 @@ _TRANSLATION = {ord(k): v for k, v in _CHAR_MAP.items()}
 def _normalize(text: str) -> str:
     """Normalize for substring comparison.
 
-    Unifies unicode (NFKC), curly quotes/apostrophes and dashes/hyphens,
-    non-breaking spaces, strips markdown emphasis chars (* _ `), collapses all
-    whitespace runs to a single space, and casefolds.
+    A citation counts as "verified" iff its quote matches the section text
+    verbatim, modulo: whitespace-run collapse, punctuation-glyph unification
+    (curly quotes/apostrophes, dashes/hyphens, and non-breaking spaces mapped
+    to their plain-ASCII equivalents via NFKC plus an explicit char map), and
+    stripped markdown emphasis markers (* _ `). Case is NOT normalized —
+    quotes must match the section text's original casing.
     """
     if not text:
         return ""
@@ -312,7 +315,7 @@ def _normalize(text: str) -> str:
     text = text.translate(_TRANSLATION)
     text = text.translate(_EMPHASIS_CHARS)
     text = " ".join(text.split())
-    return text.casefold()
+    return text
 
 
 def _verify_citations(
@@ -557,10 +560,18 @@ def ask(
             ):
                 citation_nudged = True
                 messages.append({"role": "assistant", "content": response.content})
-                messages.append(
-                    {
-                        "role": "user",
-                        "content": [
+                # The assistant turn may contain OTHER tool_use blocks besides
+                # submit_answer (e.g. a search_law call issued in parallel).
+                # Every tool_use needs a matching tool_result in the follow-up
+                # message or the API 400s — so execute the non-submit tools
+                # normally (same as the regular tool-execution path below,
+                # including on_event) and use the rejection message as
+                # submit_answer's own (is_error) result. All results go in
+                # this single user message.
+                tool_results = []
+                for block in tool_uses:
+                    if block.id == submit.id:
+                        tool_results.append(
                             {
                                 "type": "tool_result",
                                 "tool_use_id": submit.id,
@@ -575,9 +586,19 @@ def ask(
                                 ),
                                 "is_error": True,
                             }
-                        ],
-                    }
-                )
+                        )
+                        continue
+                    detail = _tool_detail(block.name, block.input or {})
+                    emit({"type": "tool", "name": block.name, "detail": detail})
+                    result = _execute_tool(block.name, block.input or {})
+                    tool_results.append(
+                        {
+                            "type": "tool_result",
+                            "tool_use_id": block.id,
+                            "content": result,
+                        }
+                    )
+                messages.append({"role": "user", "content": tool_results})
                 continue
             return _build_answer_from_submit(payload, usage_total)
 
@@ -606,7 +627,12 @@ def ask(
                 MAX_ITERATIONS + NUDGE_EXTRA_ITERATIONS,
                 iteration + NUDGE_EXTRA_ITERATIONS,
             )
-            messages.append({"role": "assistant", "content": response.content})
+            # An assistant turn with an EMPTY content list is itself invalid
+            # on the next API call (400) — only append it when non-empty; the
+            # API allows consecutive user messages, so the nudge alone is
+            # fine on its own.
+            if response.content:
+                messages.append({"role": "assistant", "content": response.content})
             messages.append(
                 {"role": "user", "content": "Reply by calling submit_answer."}
             )
