@@ -220,6 +220,18 @@
   }
 
   .answer-body { font-size: 1.02rem; }
+  .answer-body.streaming { opacity: 0.72; }
+  .answer-body.streaming::after {
+    content: "▍";
+    display: inline;
+    margin-left: 1px;
+    color: var(--color-primary);
+    animation: blink 1s steps(2, start) infinite;
+  }
+
+  @keyframes blink {
+    50% { opacity: 0; }
+  }
   .answer-body p { margin: 0 0 0.9rem; }
   .answer-body ul { margin: 0 0 0.9rem 1.2rem; padding: 0; }
   .answer-body li { margin: 0.2rem 0; }
@@ -399,6 +411,8 @@
   var charCount = document.getElementById("char-count");
   var chips = document.getElementById("chips");
 
+  var provisionalAnswer = "";
+
   textarea.addEventListener("input", function () {
     charCount.textContent = textarea.value.length + " / 1000";
   });
@@ -433,9 +447,13 @@
     errorEl.textContent = "";
     answerSection.hidden = true;
     answerBody.innerHTML = "";
+    answerBody.classList.remove("streaming");
+    provisionalAnswer = "";
     citationsEl.innerHTML = "";
     caveatsEl.hidden = true;
     caveatsEl.textContent = "";
+    confidenceBadge.textContent = "";
+    confidenceBadge.className = "badge";
     progressEl.hidden = false;
     progressText.textContent = "Thinking…";
   }
@@ -531,6 +549,12 @@
       case "tool":
         progressText.textContent = describeTool(payload);
         break;
+      case "answer_delta":
+        appendAnswerDelta(payload.text || "");
+        break;
+      case "answer_reset":
+        resetProvisionalAnswer();
+        break;
       case "answer":
         renderAnswer(payload);
         break;
@@ -559,9 +583,31 @@
     }
   }
 
+  function appendAnswerDelta(text) {
+    // Provisional answer streaming in: hide the progress line, reveal the
+    // answer area, and re-render the accumulated markdown, marked in-progress.
+    progressEl.hidden = true;
+    answerSection.hidden = false;
+    provisionalAnswer += text;
+    answerBody.classList.add("streaming");
+    answerBody.innerHTML = renderMarkdown(provisionalAnswer);
+  }
+
+  function resetProvisionalAnswer() {
+    // A streamed answer was rejected by the citation guardrail — clear it so
+    // the retry streams fresh deltas onto a clean slate.
+    provisionalAnswer = "";
+    answerBody.innerHTML = "";
+    answerBody.classList.add("streaming");
+  }
+
   function renderAnswer(answer) {
     progressEl.hidden = true;
     answerSection.hidden = false;
+
+    // Replace any provisional streamed rendering with the authoritative answer.
+    provisionalAnswer = "";
+    answerBody.classList.remove("streaming");
 
     confidenceBadge.textContent = confidenceLabel(answer.confidence);
     confidenceBadge.className = "badge " + confidenceClass(answer.confidence);

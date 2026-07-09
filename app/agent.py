@@ -56,6 +56,147 @@ class Answer:
 
 
 # ---------------------------------------------------------------------------
+# Incremental streaming extractor for the answer_markdown field
+# ---------------------------------------------------------------------------
+
+_WS = " \t\n\r"
+
+
+class AnswerMarkdownExtractor:
+    """Incrementally extract the value of the JSON string field
+    ``"answer_markdown"`` from a stream of ``input_json_delta`` fragments.
+
+    Feed each ``partial_json`` chunk to :meth:`feed`; it returns the newly
+    completed, JSON-unescaped portion of the answer string (possibly ""). A
+    trailing incomplete escape sequence (``\\``, ``\\uXXXX``, or a lone high
+    surrogate awaiting its low surrogate) is held back until the next chunk
+    completes it. Extraction stops at the closing unescaped quote.
+
+    Pure and self-contained: no I/O, no dependency on the SDK. Tested in the
+    scratchpad against realistic submit_answer JSON split at every boundary.
+    """
+
+    _KEY = '"answer_markdown"'
+    _ESCAPES = {
+        '"': '"',
+        "\\": "\\",
+        "/": "/",
+        "b": "\b",
+        "f": "\f",
+        "n": "\n",
+        "r": "\r",
+        "t": "\t",
+    }
+
+    def __init__(self) -> None:
+        self._buf = ""
+        self._pos = 0
+        self._state = "search"  # search -> instring -> done
+
+    @property
+    def done(self) -> bool:
+        return self._state == "done"
+
+    def feed(self, partial_json: str) -> str:
+        if self._state == "done":
+            return ""
+        self._buf += partial_json
+        if self._state == "search":
+            start = self._find_value_start()
+            if start is None:
+                return ""
+            self._pos = start
+            self._state = "instring"
+        if self._state == "instring":
+            return self._consume_string()
+        return ""
+
+    def _find_value_start(self) -> int | None:
+        """Index just after the opening quote of the answer_markdown value, or
+        None if the key/colon/opening-quote have not all arrived yet."""
+        buf = self._buf
+        ki = buf.find(self._KEY)
+        if ki == -1:
+            return None
+        j = ki + len(self._KEY)
+        n = len(buf)
+        while j < n and buf[j] in _WS:
+            j += 1
+        if j >= n or buf[j] != ":":
+            return None
+        j += 1
+        while j < n and buf[j] in _WS:
+            j += 1
+        if j >= n:
+            return None
+        if buf[j] != '"':
+            return None
+        return j + 1
+
+    def _consume_string(self) -> str:
+        buf = self._buf
+        n = len(buf)
+        i = self._pos
+        out: list[str] = []
+        while i < n:
+            c = buf[i]
+            if c == '"':
+                self._pos = i + 1
+                self._state = "done"
+                break
+            if c != "\\":
+                out.append(c)
+                i += 1
+                continue
+            # escape sequence starting at i
+            if i + 1 >= n:
+                break  # incomplete: hold back the lone backslash
+            e = buf[i + 1]
+            if e != "u":
+                out.append(self._ESCAPES.get(e, e))
+                i += 2
+                continue
+            # \uXXXX
+            if i + 6 > n:
+                break  # incomplete hex escape
+            hi = _parse_hex(buf[i + 2 : i + 6])
+            if hi is None:
+                out.append(buf[i : i + 6])  # malformed; emit literally
+                i += 6
+                continue
+            if 0xD800 <= hi <= 0xDBFF:
+                # high surrogate: need the following \uXXXX low surrogate
+                if i + 12 > n:
+                    break  # hold back the whole surrogate pair
+                if buf[i + 6] == "\\" and buf[i + 7] == "u":
+                    lo = _parse_hex(buf[i + 8 : i + 12])
+                    if lo is not None and 0xDC00 <= lo <= 0xDFFF:
+                        cp = 0x10000 + ((hi - 0xD800) << 10) + (lo - 0xDC00)
+                        out.append(chr(cp))
+                        i += 12
+                        continue
+                out.append(chr(hi))  # lone high surrogate
+                i += 6
+                continue
+            out.append(chr(hi))
+            i += 6
+        else:
+            # loop exhausted without a closing quote
+            self._pos = i
+            return "".join(out)
+        if self._state != "done":
+            self._pos = i
+        return "".join(out)
+
+
+def _parse_hex(s: str) -> int | None:
+    try:
+        return int(s, 16)
+    except ValueError:
+        return None
+
+
+# ---------------------------------------------------------------------------
 # Tool definitions exposed to the model
 # ---------------------------------------------------------------------------
 
@@ -156,13 +297,21 @@ TOOLS = [
         "name": "submit_answer",
         "description": (
             "Submit your final answer. Call this exactly once, when you have "
-            "read the relevant sections and are ready to answer. Every legal "
-            "claim in answer_markdown must be backed by a citation whose "
-            "'quote' is copied VERBATIM from the fetched section text (quotes "
-            "are verified by exact substring match — paraphrases are dropped)."
+            "read the relevant sections and are ready to answer. Provide the "
+            "'answer_markdown' field FIRST, before 'citations', 'confidence', "
+            "and 'caveats' — the answer text is streamed to the reader as you "
+            "write it, so emitting it first lets them start reading sooner. "
+            "Every legal claim in answer_markdown must be backed by a citation "
+            "whose 'quote' is copied VERBATIM from the fetched section text "
+            "(quotes are verified by exact substring match — paraphrases are "
+            "dropped)."
         ),
         "input_schema": SUBMIT_ANSWER_SCHEMA,
         "strict": True,
+        # Fine-grained tool streaming (NOT a beta): stream input_json_delta
+        # fragments eagerly so answer_markdown reaches the reader token by
+        # token. Coexists with strict: true.
+        "eager_input_streaming": True,
     },
 ]
 
@@ -196,6 +345,9 @@ answer. Quote only from section text you have actually retrieved with \
 get_sections.
 - Write for residents: clear, direct, plain language. Lead with the bottom-line \
 answer, then the supporting detail.
+- Be brief. Lead with the bottom line, and keep the whole answer under about \
+250 words unless the law genuinely requires more detail. Do not restate the \
+question or pad the answer with generic advice.
 - This is general legal information, not legal advice. Note that in your \
 answer, and tell the reader to verify against the official code.
 - State-law questions (Massachusetts General Laws, "M.G.L.") are outside this \
@@ -455,6 +607,48 @@ def _text_from_content(content) -> str:
 # ---------------------------------------------------------------------------
 
 
+def _stream_turn(client, request_params: dict, emit: Callable[[dict], None]):
+    """Run one streaming model turn.
+
+    Consumes the SDK stream events, and while the terminal ``submit_answer``
+    tool's input streams in, incrementally extracts its ``answer_markdown``
+    string and emits ``{"type": "answer_delta", "text": ...}`` events so the UI
+    can render the answer as it is written. Only ``submit_answer`` triggers
+    deltas — other tool_use blocks are ignored by the extractor.
+
+    Returns ``(final_message, streamed_answer)`` where ``final_message`` is the
+    fully-accumulated response (so all existing post-loop logic — tool handling,
+    citation verification, usage accumulation — works unchanged) and
+    ``streamed_answer`` is True iff at least one answer_delta was emitted.
+    """
+    extractor: AnswerMarkdownExtractor | None = None
+    submit_index = None
+    streamed = False
+
+    with client.messages.stream(**request_params) as stream:
+        for event in stream:
+            etype = getattr(event, "type", None)
+            if etype == "content_block_start":
+                block = getattr(event, "content_block", None)
+                if (
+                    getattr(block, "type", None) == "tool_use"
+                    and getattr(block, "name", None) == "submit_answer"
+                ):
+                    extractor = AnswerMarkdownExtractor()
+                    submit_index = getattr(event, "index", None)
+            elif etype == "content_block_delta":
+                if extractor is not None and getattr(event, "index", None) == submit_index:
+                    delta = getattr(event, "delta", None)
+                    if getattr(delta, "type", None) == "input_json_delta":
+                        text = extractor.feed(getattr(delta, "partial_json", "") or "")
+                        if text:
+                            streamed = True
+                            emit({"type": "answer_delta", "text": text})
+        response = stream.get_final_message()
+
+    return response, streamed
+
+
 def ask(
     question: str,
     history: list[dict] | None = None,
@@ -486,13 +680,18 @@ def ask(
         emit({"type": "thinking"})
 
         try:
-            response = client.messages.create(
-                model=MODEL,
-                max_tokens=MAX_TOKENS,
-                thinking={"type": "adaptive"},
-                system=system_blocks,
-                tools=TOOLS,
-                messages=messages,
+            response, streamed_answer = _stream_turn(
+                client,
+                {
+                    "model": MODEL,
+                    "max_tokens": MAX_TOKENS,
+                    "thinking": {"type": "adaptive"},
+                    "output_config": {"effort": "medium"},
+                    "system": system_blocks,
+                    "tools": TOOLS,
+                    "messages": messages,
+                },
+                emit,
             )
         except anthropic.APIError as exc:
             return Answer(
@@ -559,6 +758,10 @@ def ask(
                 and not citation_nudged
             ):
                 citation_nudged = True
+                # Provisional answer text was already streamed to the UI; clear
+                # it so the retry streams fresh deltas onto a clean slate.
+                if streamed_answer:
+                    emit({"type": "answer_reset"})
                 messages.append({"role": "assistant", "content": response.content})
                 # The assistant turn may contain OTHER tool_use blocks besides
                 # submit_answer (e.g. a search_law call issued in parallel).
