@@ -200,6 +200,48 @@ def _parse_hex(s: str) -> int | None:
         return None
 
 
+# Markers of a submit_answer document spilled into the answer_markdown string
+# (the model occasionally writes "answer text</answer_markdown><citations>[…]"
+# inside the field instead of using the separate fields).
+_SPILL_MARKERS = ("</answer_markdown>", "<citations>", "<confidence>", "<caveats>")
+
+
+class AnswerStreamGuard:
+    """Filter streamed answer text so pseudo-XML spillover never reaches the
+    reader.
+
+    Feed each chunk of extracted answer_markdown text to :meth:`feed`; it
+    returns the chunk with everything from the first spill marker onward
+    suppressed. A trailing partial marker (e.g. ``"</answ"`` split across
+    chunks) is held back until it either completes into a marker or turns out
+    to be ordinary text.
+    """
+
+    def __init__(self) -> None:
+        self._tail = ""
+        self.tripped = False
+
+    def feed(self, text: str) -> str:
+        if self.tripped:
+            return ""
+        buf = self._tail + text
+        cut = min(
+            (i for i in (buf.find(m) for m in _SPILL_MARKERS) if i != -1),
+            default=None,
+        )
+        if cut is not None:
+            self.tripped = True
+            self._tail = ""
+            return buf[:cut]
+        hold = 0
+        longest = max(len(m) for m in _SPILL_MARKERS)
+        for k in range(1, min(len(buf), longest - 1) + 1):
+            if any(m.startswith(buf[-k:]) for m in _SPILL_MARKERS):
+                hold = k
+        self._tail = buf[-hold:] if hold else ""
+        return buf[:-hold] if hold else buf
+
+
 # ---------------------------------------------------------------------------
 # Tool definitions exposed to the model
 # ---------------------------------------------------------------------------
@@ -523,6 +565,45 @@ def _verify_citations(
     return kept, dropped
 
 
+def _salvage_spilled_payload(payload: dict) -> dict:
+    """Recover a submit_answer payload whose answer_markdown contains the
+    whole pseudo-XML document ("answer…</answer_markdown><citations>[…]…")
+    instead of just the answer text.
+
+    The spilled citations/confidence/caveats are parsed out of the string and
+    used to fill fields the model left empty, so the answer flows through the
+    normal citation-verification path instead of showing raw markup to the
+    reader — and instead of tripping the no-citations guardrail retry.
+    """
+    text = payload.get("answer_markdown") or ""
+    if not any(m in text for m in _SPILL_MARKERS):
+        return payload
+    doc = text if "<answer_markdown>" in text else "<answer_markdown>" + text
+    pseudo = _parse_pseudo_submit(doc)
+    if pseudo is None:
+        return payload
+    merged = dict(payload)
+    # If the spill had no closing </answer_markdown> tag the parsed body still
+    # carries the trailing markup — cut it at the first remaining marker.
+    body = pseudo["answer_markdown"]
+    cut = min(
+        (i for i in (body.find(m) for m in _SPILL_MARKERS) if i != -1),
+        default=None,
+    )
+    if cut is not None:
+        body = body[:cut].rstrip()
+    merged["answer_markdown"] = body
+    if not merged.get("citations") and pseudo.get("citations"):
+        merged["citations"] = pseudo["citations"]
+    if not merged.get("caveats") and pseudo.get("caveats"):
+        merged["caveats"] = pseudo["caveats"]
+    # _parse_pseudo_submit defaults confidence to "low"; only take its value
+    # when the spill actually carried a <confidence> tag.
+    if "<confidence>" in text:
+        merged["confidence"] = pseudo["confidence"]
+    return merged
+
+
 def _build_answer_from_submit(payload: dict, usage: dict) -> Answer:
     """Turn a validated submit_answer payload into a verified Answer."""
     answer_markdown = payload.get("answer_markdown", "") or ""
@@ -685,6 +766,7 @@ def _stream_turn(client, request_params: dict, emit: Callable[[dict], None]):
     ``streamed_answer`` is True iff at least one answer_delta was emitted.
     """
     extractor: AnswerMarkdownExtractor | None = None
+    guard = AnswerStreamGuard()
     submit_index = None
     streamed = False
 
@@ -698,12 +780,15 @@ def _stream_turn(client, request_params: dict, emit: Callable[[dict], None]):
                     and getattr(block, "name", None) == "submit_answer"
                 ):
                     extractor = AnswerMarkdownExtractor()
+                    guard = AnswerStreamGuard()
                     submit_index = getattr(event, "index", None)
             elif etype == "content_block_delta":
                 if extractor is not None and getattr(event, "index", None) == submit_index:
                     delta = getattr(event, "delta", None)
                     if getattr(delta, "type", None) == "input_json_delta":
                         text = extractor.feed(getattr(delta, "partial_json", "") or "")
+                        if text:
+                            text = guard.feed(text)
                         if text:
                             streamed = True
                             emit({"type": "answer_delta", "text": text})
@@ -817,6 +902,7 @@ def ask(
         submit = next((b for b in tool_uses if b.name == "submit_answer"), None)
         if submit is not None:
             payload = submit.input if isinstance(submit.input, dict) else {}
+            payload = _salvage_spilled_payload(payload)
             # Guardrail: a confident answer with no citations is never
             # acceptable — reject once so the model cites or lowers confidence.
             if (
@@ -938,7 +1024,11 @@ def _parse_pseudo_submit(text: str) -> dict | None:
         return None
     payload: dict = {"answer_markdown": m.group(1)}
 
-    cite_match = re.search(r"<citations>\s*(.*?)\s*</citations>", text, re.DOTALL)
+    cite_match = re.search(
+        r"<citations>\s*(.*?)\s*(?:</citations>|(?=<(?:confidence|caveats)>)|\Z)",
+        text,
+        re.DOTALL,
+    )
     if cite_match:
         try:
             citations = json.loads(cite_match.group(1))

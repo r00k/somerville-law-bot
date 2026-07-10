@@ -94,6 +94,40 @@ def _glob_match_any(patterns: list[str], candidates: list[str]) -> bool:
     return False
 
 
+# Raw submit_answer markup that must never reach a rendered answer. Seen in
+# the wild when the model writes the whole pseudo-XML document inside the
+# answer_markdown string instead of using the separate fields.
+_MARKUP_MARKERS = (
+    "<answer_markdown>",
+    "</answer_markdown>",
+    "<citations>",
+    "</citations>",
+    "<confidence>",
+    "<caveats>",
+    '"section_key"',
+)
+
+
+def _check_well_formed(answer_markdown: str, caveats: str | None) -> list[str]:
+    """Structural checks applied to EVERY question, regardless of its spec:
+    no raw submit_answer markup in the rendered fields, and no trailing
+    Note:/Caveat: paragraph duplicating what belongs in the caveats field."""
+    reasons: list[str] = []
+    for name, blob in (("answer_markdown", answer_markdown or ""), ("caveats", caveats or "")):
+        marker = next((m for m in _MARKUP_MARKERS if m in blob), None)
+        if marker:
+            reasons.append(f"{name} contains raw submit_answer markup ({marker!r})")
+    paragraphs = [p.strip() for p in (answer_markdown or "").split("\n\n") if p.strip()]
+    if paragraphs:
+        last = paragraphs[-1].lstrip("*_ ").lower()
+        if last.startswith(("note:", "notes:", "caveat:", "caveats:")):
+            reasons.append(
+                "answer_markdown ends with a Note:/Caveat: paragraph "
+                "(question-specific caveats belong in the caveats field)"
+            )
+    return reasons
+
+
 def _check_answer_contains(spec: dict, answer_markdown: str) -> str | None:
     """Returns a failure reason string, or None if the check passes/is absent."""
     expected = spec.get("expect_answer_contains_any")
@@ -168,6 +202,8 @@ def evaluate(spec: dict, answer: Any) -> EvalOutcome:
     citations = _get(answer, "citations", []) or []
     dropped_citations = _get(answer, "dropped_citations", 0) or 0
     usage = _get(answer, "usage", {}) or {}
+
+    reasons.extend(_check_well_formed(answer_markdown, _get(answer, "caveats", None)))
 
     if reason := _check_answer_contains(spec, answer_markdown):
         reasons.append(reason)
