@@ -587,11 +587,32 @@ def _execute_tool(name: str, tool_input: dict) -> str:
         return json.dumps({"error": f"{type(exc).__name__}: {exc}"}, ensure_ascii=False)
 
 
+def _section_label(key: str) -> str:
+    """Human-readable label for a section key, for progress display.
+
+    Uses the last heading in the section's heading path (for headerless
+    sections that is the nearest real ancestor heading, which reads far
+    better than the fallback body-text title).
+    """
+    recs = law_tools.get_sections([key])
+    rec = recs[0] if recs else {}
+    if not rec or rec.get("error"):
+        return key
+    path = rec.get("heading_path") or []
+    label = (path[-1] if path else "") or rec.get("title") or key
+    label = label.strip().rstrip(".")
+    return label if len(label) <= 60 else label[:57] + "…"
+
+
 def _tool_detail(name: str, tool_input: dict) -> str:
     if name == "search_law":
         return str(tool_input.get("query", ""))
     if name == "get_sections":
-        return ", ".join(tool_input.get("keys", []) or [])
+        keys = tool_input.get("keys", []) or []
+        labels = [_section_label(k) for k in keys[:3]]
+        if len(keys) > 3:
+            labels.append(f"+{len(keys) - 3} more")
+        return ", ".join(labels)
     if name == "get_wiki_page":
         return str(tool_input.get("topic_slug", ""))
     return ""

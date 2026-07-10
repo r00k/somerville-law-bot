@@ -664,7 +664,7 @@
   function handleEvent(payload) {
     switch (payload.type) {
       case "thinking":
-        tracePush("reasoning…");
+        tracePush("researching…");
         break;
       case "tool":
         tracePush(describeTool(payload));
@@ -695,9 +695,9 @@
       case "search_law":
         return 'search_law "' + detail + '"';
       case "get_sections":
-        return "get_sections " + detail;
+        return "Reading " + detail;
       case "get_wiki_page":
-        return "topic_guide " + detail;
+        return "Reading topic: " + detail.replace(/-/g, " ");
       default:
         return detail ? payload.name + " " + detail : payload.name || "working…";
     }
