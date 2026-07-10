@@ -44,11 +44,13 @@
     }
     .toc h2 { margin: 0 0 0.75rem 0; font-size: 1rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); }
     .toc ul { list-style: none; margin: 0; padding: 0; }
+    .toc ul ul { padding-left: 0.9rem; }
     .toc li { margin: 0.25rem 0; font-size: 0.9rem; }
-    .toc li.lvl-2 { margin-left: 0.55rem; }
-    .toc li.lvl-3 { margin-left: 1.1rem; }
     .toc a { color: #134e7a; text-decoration: none; }
     .toc a:hover { text-decoration: underline; }
+    .toc details { margin: 0; }
+    .toc summary { cursor: pointer; }
+    .toc summary::marker { color: var(--muted); font-size: 0.8em; }
     main {
       background: var(--paper);
       border: 1px solid var(--rule);
@@ -121,26 +123,782 @@
     <nav class="toc" aria-label="On this page">
       <h2>Navigation</h2>
       <ul>
-        <li class="lvl-1"><a href="#somerville-zoning-ordinance">Somerville Zoning Ordinance</a></li>
 <li class="lvl-2"><a href="#somerville-ma-zoning-ordinance">SOMERVILLE, MA ZONING ORDINANCE</a></li>
-<li class="lvl-3"><a href="#1-introductory-provisions">1. INTRODUCTORY PROVISIONS</a></li>
-<li class="lvl-3"><a href="#2-glossary-overview">2. GLOSSARY &amp; OVERVIEW</a></li>
-<li class="lvl-3"><a href="#3-residence-districts">3. RESIDENCE DISTRICTS</a></li>
-<li class="lvl-3"><a href="#4-mid-rise-districts">4. MID-RISE DISTRICTS</a></li>
-<li class="lvl-3"><a href="#5-high-rise-districts">5. HIGH-RISE DISTRICTS</a></li>
-<li class="lvl-3"><a href="#6-commercial-districts">6. COMMERCIAL DISTRICTS</a></li>
-<li class="lvl-3"><a href="#7-special-districts">7. SPECIAL DISTRICTS</a></li>
-<li class="lvl-3"><a href="#8-overlay-districts">8. OVERLAY DISTRICTS</a></li>
-<li class="lvl-3"><a href="#9-use-provisions">9. USE PROVISIONS</a></li>
-<li class="lvl-3"><a href="#10-development-standards">10. DEVELOPMENT STANDARDS</a></li>
-<li class="lvl-3"><a href="#11-parking-mobility">11. PARKING &amp; MOBILITY</a></li>
-<li class="lvl-3"><a href="#12-development-benefits">12. DEVELOPMENT BENEFITS</a></li>
-<li class="lvl-3"><a href="#13-public-realm">13. PUBLIC REALM</a></li>
-<li class="lvl-3"><a href="#14-nonconformance">14. NONCONFORMANCE</a></li>
-<li class="lvl-3"><a href="#15-administration">15. ADMINISTRATION</a></li>
+<li class="lvl-3"><details><summary><a href="#1-introductory-provisions">1. INTRODUCTORY PROVISIONS</a></summary>
+<ul>
+<li class="lvl-4"><details><summary><a href="#11-general">1.1 GENERAL</a></summary>
+<ul>
+<li class="lvl-5"><a href="#111-title">1.1.1 Title</a></li>
+<li class="lvl-5"><a href="#112-authority">1.1.2 Authority</a></li>
+<li class="lvl-5"><a href="#113-applicability">1.1.3 Applicability</a></li>
+<li class="lvl-5"><a href="#114-intent">1.1.4 Intent</a></li>
+<li class="lvl-5"><a href="#115-regulatory-scope">1.1.5 Regulatory Scope</a></li>
+<li class="lvl-5"><a href="#116-compliance">1.1.6 Compliance</a></li>
+<li class="lvl-5"><a href="#117-fines-and-penalties">1.1.7 Fines and Penalties</a></li>
+<li class="lvl-5"><a href="#118-conflicting-provisions">1.1.8 Conflicting Provisions</a></li>
+<li class="lvl-5"><a href="#119-meaning-intent">1.1.9 Meaning &amp; Intent</a></li>
+<li class="lvl-5"><a href="#1110-text-graphics">1.1.10 Text &amp; Graphics</a></li>
+<li class="lvl-5"><a href="#1111-severability-invalidity">1.1.11 Severability &amp; Invalidity</a></li>
+</ul>
+</details></li>
+<li class="lvl-4"><details><summary><a href="#12-adoption-effect">1.2 ADOPTION &amp; EFFECT</a></summary>
+<ul>
+<li class="lvl-5"><a href="#121-adoption-date">1.2.1 Adoption Date</a></li>
+<li class="lvl-5"><a href="#122-applicability">1.2.2 Applicability</a></li>
+<li class="lvl-5"><a href="#123-published-notice">1.2.3 Published Notice</a></li>
+<li class="lvl-5"><a href="#124-claim-of-invalidity">1.2.4 Claim of Invalidity</a></li>
+</ul>
+</details></li>
+<li class="lvl-4"><details><summary><a href="#13-official-maps">1.3 OFFICIAL MAPS</a></summary>
+<ul>
+<li class="lvl-5"><a href="#131-zoning-atlas">1.3.1 Zoning Atlas</a></li>
+<li class="lvl-5"><a href="#132-zoning-districts-map">1.3.2 Zoning Districts Map</a></li>
+<li class="lvl-5"><a href="#133-transit-areas-map">1.3.3 Transit Areas Map</a></li>
+<li class="lvl-5"><a href="#134-pedestrian-streets-map">1.3.4 Pedestrian Streets Map</a></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+<li class="lvl-3"><details><summary><a href="#2-glossary-overview">2. GLOSSARY &amp; OVERVIEW</a></summary>
+<ul>
+<li class="lvl-4"><details><summary><a href="#21-glossary">2.1 GLOSSARY</a></summary>
+<ul>
+<li class="lvl-5"><a href="#211-general">2.1.1 General</a></li>
+</ul>
+</details></li>
+<li class="lvl-4"><details><summary><a href="#22-zoning-atlas-overview">2.2 ZONING ATLAS OVERVIEW</a></summary>
+<ul>
+<li class="lvl-5"><a href="#221-zoning-districts">2.2.1 Zoning Districts</a></li>
+<li class="lvl-5"><a href="#222-transit-areas">2.2.2 Transit Areas</a></li>
+<li class="lvl-5"><a href="#223-pedestrian-streets">2.2.3 Pedestrian Streets</a></li>
+</ul>
+</details></li>
+<li class="lvl-4"><details><summary><a href="#23-building-types-overview">2.3 BUILDING TYPES OVERVIEW</a></summary>
+<ul>
+<li class="lvl-5"><a href="#231-general">2.3.1 General</a></li>
+<li class="lvl-5"><a href="#232-building-assembly">2.3.2 Building Assembly</a></li>
+<li class="lvl-5"><a href="#233-understanding-the-building-type-pages">2.3.3 Understanding the Building Type Pages</a></li>
+</ul>
+</details></li>
+<li class="lvl-4"><details><summary><a href="#24-standards-measurements">2.4 STANDARDS &amp; MEASUREMENTS</a></summary>
+<ul>
+<li class="lvl-5"><a href="#241-general">2.4.1 General</a></li>
+<li class="lvl-5"><a href="#242-lot-standards">2.4.2 Lot Standards</a></li>
+<li class="lvl-5"><a href="#243-building-placement">2.4.3 Building Placement</a></li>
+<li class="lvl-5"><a href="#244-massing-height">2.4.4 Massing &amp; Height</a></li>
+<li class="lvl-5"><a href="#245-uses-and-features">2.4.5 Uses and Features</a></li>
+<li class="lvl-5"><a href="#246-building-components">2.4.6 Building Components</a></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+<li class="lvl-3"><details><summary><a href="#3-residence-districts">3. RESIDENCE DISTRICTS</a></summary>
+<ul>
+<li class="lvl-4"><details><summary><a href="#31-neighborhood-residence-nr">3.1 NEIGHBORHOOD RESIDENCE (NR)</a></summary>
+<ul>
+<li class="lvl-5"><a href="#311-character-description">3.1.1 Character Description</a></li>
+<li class="lvl-5"><a href="#312-intent">3.1.2 Intent</a></li>
+<li class="lvl-5"><a href="#313-purpose">3.1.3 Purpose</a></li>
+<li class="lvl-5"><a href="#314-applicability">3.1.4 Applicability</a></li>
+<li class="lvl-5"><a href="#315-development-review">3.1.5 Development Review</a></li>
+<li class="lvl-5"><a href="#316-building-types">3.1.6 Building Types</a></li>
+<li class="lvl-5"><a href="#317-cottage">3.1.7 Cottage</a></li>
+<li class="lvl-5"><a href="#318-detached-house">3.1.8 Detached House</a></li>
+<li class="lvl-5"><a href="#319-semi-detached-house">3.1.9 Semi-Detached House</a></li>
+<li class="lvl-5"><a href="#3110-duplex">3.1.10 Duplex</a></li>
+<li class="lvl-5"><a href="#3111-detached-triple-decker">3.1.11 Detached Triple Decker</a></li>
+<li class="lvl-5"><a href="#3112-backyard-cottage">3.1.12 Backyard Cottage</a></li>
+<li class="lvl-5"><a href="#3113-building-components">3.1.13 Building Components</a></li>
+<li class="lvl-5"><a href="#3114-building-design-standards">3.1.14 Building Design Standards</a></li>
+<li class="lvl-5"><a href="#3115-architectural-design-guidelines">3.1.15 Architectural Design Guidelines</a></li>
+<li class="lvl-5"><a href="#3116-use-provisions">3.1.16 Use Provisions</a></li>
+<li class="lvl-5"><a href="#3117-development-standards">3.1.17 Development Standards</a></li>
+<li class="lvl-5"><a href="#3118-parking-mobility">3.1.18 Parking &amp; Mobility</a></li>
+<li class="lvl-5"><a href="#3119-public-realm">3.1.19 Public Realm</a></li>
+</ul>
+</details></li>
+<li class="lvl-4"><details><summary><a href="#32-urban-residence-ur">3.2 URBAN RESIDENCE (UR)</a></summary>
+<ul>
+<li class="lvl-5"><a href="#321-character-description">3.2.1 Character Description</a></li>
+<li class="lvl-5"><a href="#322-intent">3.2.2 Intent</a></li>
+<li class="lvl-5"><a href="#323-purpose">3.2.3 Purpose</a></li>
+<li class="lvl-5"><a href="#324-applicability">3.2.4 Applicability</a></li>
+<li class="lvl-5"><a href="#325-development-review">3.2.5 Development Review</a></li>
+<li class="lvl-5"><a href="#326-building-types">3.2.6 Building Types</a></li>
+<li class="lvl-5"><a href="#327-semi-detached-triple-decker">3.2.7 Semi-Detached Triple Decker</a></li>
+<li class="lvl-5"><a href="#328-multi-plex">3.2.8 Multi-Plex</a></li>
+<li class="lvl-5"><a href="#329-apartment-house">3.2.9 Apartment House</a></li>
+<li class="lvl-5"><a href="#3210-apartment-building">3.2.10 Apartment Building</a></li>
+<li class="lvl-5"><a href="#3211-row-houses">3.2.11 Row Houses</a></li>
+<li class="lvl-5"><a href="#3212-building-components">3.2.12 Building Components</a></li>
+<li class="lvl-5"><a href="#3213-building-design-standards">3.2.13 Building Design Standards</a></li>
+<li class="lvl-5"><a href="#3214-architectural-design-guidelines">3.2.14 Architectural Design Guidelines</a></li>
+<li class="lvl-5"><a href="#3215-use-provisions">3.2.15 Use Provisions</a></li>
+<li class="lvl-5"><a href="#3216-development-standards">3.2.16 Development Standards</a></li>
+<li class="lvl-5"><a href="#3217-parking-mobility">3.2.17 Parking &amp; Mobility</a></li>
+<li class="lvl-5"><a href="#3218-public-realm">3.2.18 Public Realm</a></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+<li class="lvl-3"><details><summary><a href="#4-mid-rise-districts">4. MID-RISE DISTRICTS</a></summary>
+<ul>
+<li class="lvl-4"><details><summary><a href="#41-mid-rise-3-mr3">4.1 MID-RISE 3 (MR3)</a></summary>
+<ul>
+<li class="lvl-5"><a href="#411-description">4.1.1 Description</a></li>
+<li class="lvl-5"><a href="#412-intent">4.1.2 Intent</a></li>
+<li class="lvl-5"><a href="#413-purpose">4.1.3 Purpose</a></li>
+<li class="lvl-5"><a href="#414-applicability">4.1.4 Applicability</a></li>
+<li class="lvl-5"><a href="#415-development-review">4.1.5 Development Review</a></li>
+<li class="lvl-5"><a href="#416-building-types">4.1.6 Building Types</a></li>
+<li class="lvl-5"><a href="#417-apartment-building">4.1.7 Apartment Building</a></li>
+<li class="lvl-5"><a href="#418-general-building">4.1.8 General Building</a></li>
+<li class="lvl-5"><a href="#419-commercial-building">4.1.9 Commercial Building</a></li>
+<li class="lvl-5"><a href="#4110-building-components">4.1.10 Building Components</a></li>
+<li class="lvl-5"><a href="#4111-facade-design">4.1.11 Facade Design</a></li>
+<li class="lvl-5"><a href="#4112-architectural-design-guidelines">4.1.12 Architectural Design Guidelines</a></li>
+<li class="lvl-5"><a href="#4113-use-provisions">4.1.13 Use Provisions</a></li>
+<li class="lvl-5"><a href="#4114-development-standards">4.1.14 Development Standards</a></li>
+<li class="lvl-5"><a href="#4115-parking-mobility">4.1.15 Parking &amp; Mobility</a></li>
+<li class="lvl-5"><a href="#4116-public-realm">4.1.16 Public Realm</a></li>
+</ul>
+</details></li>
+<li class="lvl-4"><details><summary><a href="#42-mid-rise-4-mr4">4.2 MID-RISE 4 (MR4)</a></summary>
+<ul>
+<li class="lvl-5"><a href="#421-character-description">4.2.1 Character Description</a></li>
+<li class="lvl-5"><a href="#422-intent">4.2.2 Intent</a></li>
+<li class="lvl-5"><a href="#423-purpose">4.2.3 Purpose</a></li>
+<li class="lvl-5"><a href="#424-applicability">4.2.4 Applicability</a></li>
+<li class="lvl-5"><a href="#425-development-review">4.2.5 Development Review</a></li>
+<li class="lvl-5"><a href="#426-building-types">4.2.6 Building Types</a></li>
+<li class="lvl-5"><a href="#427-apartment-building">4.2.7 Apartment Building</a></li>
+<li class="lvl-5"><a href="#428-general-building">4.2.8 General Building</a></li>
+<li class="lvl-5"><a href="#429-commercial-building">4.2.9 Commercial Building</a></li>
+<li class="lvl-5"><a href="#4210-building-components">4.2.10 Building Components</a></li>
+<li class="lvl-5"><a href="#4211-facade-design">4.2.11 Facade Design</a></li>
+<li class="lvl-5"><a href="#4212-architectural-design-guidelines">4.2.12 Architectural Design Guidelines</a></li>
+<li class="lvl-5"><a href="#4213-use-provisions">4.2.13 Use Provisions</a></li>
+<li class="lvl-5"><a href="#4214-development-standards">4.2.14 Development Standards</a></li>
+<li class="lvl-5"><a href="#4215-parking-mobility">4.2.15 Parking &amp; Mobility</a></li>
+<li class="lvl-5"><a href="#4216-public-realm">4.2.16 Public Realm</a></li>
+</ul>
+</details></li>
+<li class="lvl-4"><details><summary><a href="#43-mid-rise-5-mr5">4.3 MID-RISE 5 (MR5)</a></summary>
+<ul>
+<li class="lvl-5"><a href="#431-description">4.3.1 Description</a></li>
+<li class="lvl-5"><a href="#432-intent">4.3.2 Intent</a></li>
+<li class="lvl-5"><a href="#433-purpose">4.3.3 Purpose</a></li>
+<li class="lvl-5"><a href="#434-applicability">4.3.4 Applicability</a></li>
+<li class="lvl-5"><a href="#435-development-review">4.3.5 Development Review</a></li>
+<li class="lvl-5"><a href="#436-building-types">4.3.6 Building Types</a></li>
+<li class="lvl-5"><a href="#437-apartment-building">4.3.7 Apartment Building</a></li>
+<li class="lvl-5"><a href="#438-general-building">4.3.8 General Building</a></li>
+<li class="lvl-5"><a href="#439-commercial-building">4.3.9 Commercial Building</a></li>
+<li class="lvl-5"><a href="#4310-building-components">4.3.10 Building Components</a></li>
+<li class="lvl-5"><a href="#4311-facade-design">4.3.11 Facade Design</a></li>
+<li class="lvl-5"><a href="#4312-architectural-design-guidelines">4.3.12 Architectural Design Guidelines</a></li>
+<li class="lvl-5"><a href="#4313-use-provisions">4.3.13 Use Provisions</a></li>
+<li class="lvl-5"><a href="#4314-development-standards">4.3.14 Development Standards</a></li>
+<li class="lvl-5"><a href="#4315-parking-mobility">4.3.15 Parking &amp; Mobility</a></li>
+<li class="lvl-5"><a href="#4316-public-realm">4.3.16 Public Realm</a></li>
+</ul>
+</details></li>
+<li class="lvl-4"><details><summary><a href="#44-mid-rise-6-mr6">4.4 MID-RISE 6 (MR6)</a></summary>
+<ul>
+<li class="lvl-5"><a href="#441-character-description">4.4.1 Character Description</a></li>
+<li class="lvl-5"><a href="#442-intent">4.4.2 Intent</a></li>
+<li class="lvl-5"><a href="#443-purpose">4.4.3 Purpose</a></li>
+<li class="lvl-5"><a href="#444-applicability">4.4.4 Applicability</a></li>
+<li class="lvl-5"><a href="#445-development-review">4.4.5 Development Review</a></li>
+<li class="lvl-5"><a href="#446-building-types">4.4.6 Building Types</a></li>
+<li class="lvl-5"><a href="#447-apartment-building">4.4.7 Apartment Building</a></li>
+<li class="lvl-5"><a href="#448-general-building">4.4.8 General Building</a></li>
+<li class="lvl-5"><a href="#449-commercial-building">4.4.9 Commercial Building</a></li>
+<li class="lvl-5"><a href="#4410-building-components">4.4.10 Building Components</a></li>
+<li class="lvl-5"><a href="#4411-facade-design">4.4.11 Facade Design</a></li>
+<li class="lvl-5"><a href="#4412-architectural-design-guidelines">4.4.12 Architectural Design Guidelines</a></li>
+<li class="lvl-5"><a href="#4413-use-provisions">4.4.13 Use Provisions</a></li>
+<li class="lvl-5"><a href="#4414-development-standards">4.4.14 Development Standards</a></li>
+<li class="lvl-5"><a href="#4415-parking-mobility">4.4.15 Parking &amp; Mobility</a></li>
+<li class="lvl-5"><a href="#4416-public-realm">4.4.16 Public Realm</a></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+<li class="lvl-3"><details><summary><a href="#5-high-rise-districts">5. HIGH-RISE DISTRICTS</a></summary>
+<ul>
+<li class="lvl-4"><details><summary><a href="#51-high-rise-hr">5.1 HIGH-RISE (HR)</a></summary>
+<ul>
+<li class="lvl-5"><a href="#511-character-description">5.1.1 Character Description</a></li>
+<li class="lvl-5"><a href="#512-intent">5.1.2 Intent</a></li>
+<li class="lvl-5"><a href="#513-purpose">5.1.3 Purpose</a></li>
+<li class="lvl-5"><a href="#514-applicability">5.1.4 Applicability</a></li>
+<li class="lvl-5"><a href="#515-development-review">5.1.5 Development Review</a></li>
+<li class="lvl-5"><a href="#516-building-types">5.1.6 Building Types</a></li>
+<li class="lvl-5"><a href="#517-general-building">5.1.7 General Building</a></li>
+<li class="lvl-5"><a href="#518-commercial-building">5.1.8 Commercial Building</a></li>
+<li class="lvl-5"><a href="#519-mid-rise-podium-tower">5.1.9 Mid-Rise Podium Tower</a></li>
+<li class="lvl-5"><a href="#5110-block-building">5.1.10 Block Building</a></li>
+<li class="lvl-5"><a href="#5111-building-components">5.1.11 Building Components</a></li>
+<li class="lvl-5"><a href="#5112-facade-design">5.1.12 Facade Design</a></li>
+<li class="lvl-5"><a href="#5113-architectural-design-guidelines">5.1.13 Architectural Design Guidelines</a></li>
+<li class="lvl-5"><a href="#5114-use-provisions">5.1.14 Use Provisions</a></li>
+<li class="lvl-5"><a href="#5115-development-standards">5.1.15 Development Standards</a></li>
+<li class="lvl-5"><a href="#5116-parking-mobility">5.1.16 Parking &amp; Mobility</a></li>
+<li class="lvl-5"><a href="#5117-public-realm">5.1.17 Public Realm</a></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+<li class="lvl-3"><details><summary><a href="#6-commercial-districts">6. COMMERCIAL DISTRICTS</a></summary>
+<ul>
+<li class="lvl-4"><details><summary><a href="#61-fabrication-fab">6.1 FABRICATION (FAB)</a></summary>
+<ul>
+<li class="lvl-5"><a href="#611-description">6.1.1 Description</a></li>
+<li class="lvl-5"><a href="#612-intent">6.1.2 Intent</a></li>
+<li class="lvl-5"><a href="#613-purpose">6.1.3 Purpose</a></li>
+<li class="lvl-5"><a href="#614-applicability">6.1.4 Applicability</a></li>
+<li class="lvl-5"><a href="#615-development-review">6.1.5 Development Review</a></li>
+<li class="lvl-5"><a href="#616-building-types">6.1.6 Building Types</a></li>
+<li class="lvl-5"><a href="#617-fabrication-building">6.1.7 Fabrication Building</a></li>
+<li class="lvl-5"><a href="#618-building-components">6.1.8 Building Components</a></li>
+<li class="lvl-5"><a href="#619-facade-design">6.1.9 Facade Design</a></li>
+<li class="lvl-5"><a href="#6110-architectural-design-guidelines">6.1.10 Architectural Design Guidelines</a></li>
+<li class="lvl-5"><a href="#6111-use-provisions">6.1.11 Use Provisions</a></li>
+<li class="lvl-5"><a href="#6112-development-standards">6.1.12 Development Standards</a></li>
+<li class="lvl-5"><a href="#6113-parking-mobility">6.1.13 Parking &amp; Mobility</a></li>
+<li class="lvl-5"><a href="#6114-public-realm">6.1.14 Public Realm</a></li>
+</ul>
+</details></li>
+<li class="lvl-4"><details><summary><a href="#62-commercial-core-cc">6.2 COMMERCIAL CORE (CC)</a></summary>
+<ul>
+<li class="lvl-5"><a href="#621-description">6.2.1 Description</a></li>
+<li class="lvl-5"><a href="#622-intent">6.2.2 Intent</a></li>
+<li class="lvl-5"><a href="#623-purpose">6.2.3 Purpose</a></li>
+<li class="lvl-5"><a href="#624-applicability">6.2.4 Applicability</a></li>
+<li class="lvl-5"><a href="#625-development-review">6.2.5 Development Review</a></li>
+<li class="lvl-5"><a href="#626-building-types">6.2.6 Building Types</a></li>
+<li class="lvl-5"><a href="#627-commercial-building">6.2.7 Commercial Building</a></li>
+<li class="lvl-5"><a href="#628-commercial-block-building">6.2.8 Commercial Block Building</a></li>
+<li class="lvl-5"><a href="#629-building-components">6.2.9 Building Components</a></li>
+<li class="lvl-5"><a href="#6210-facade-design">6.2.10 Facade Design</a></li>
+<li class="lvl-5"><a href="#6211-architectural-design-guidelines">6.2.11 Architectural Design Guidelines</a></li>
+<li class="lvl-5"><a href="#6212-use-provisions">6.2.12 Use Provisions</a></li>
+<li class="lvl-5"><a href="#6213-development-standards">6.2.13 Development Standards</a></li>
+<li class="lvl-5"><a href="#6214-parking-mobility">6.2.14 Parking &amp; Mobility</a></li>
+<li class="lvl-5"><a href="#6215-public-realm">6.2.15 Public Realm</a></li>
+</ul>
+</details></li>
+<li class="lvl-4"><details><summary><a href="#63-commercial-industry-ci">6.3 COMMERCIAL INDUSTRY (CI)</a></summary>
+<ul>
+<li class="lvl-5"><a href="#631-description">6.3.1 Description</a></li>
+<li class="lvl-5"><a href="#632-intent">6.3.2 Intent</a></li>
+<li class="lvl-5"><a href="#633-purpose">6.3.3 Purpose</a></li>
+<li class="lvl-5"><a href="#634-applicability">6.3.4 Applicability</a></li>
+<li class="lvl-5"><a href="#635-development-review">6.3.5 Development Review</a></li>
+<li class="lvl-5"><a href="#636-building-types">6.3.6 Building Types</a></li>
+<li class="lvl-5"><a href="#637-commercial-building">6.3.7 Commercial Building</a></li>
+<li class="lvl-5"><a href="#638-building-components">6.3.8 Building Components</a></li>
+<li class="lvl-5"><a href="#639-facade-design">6.3.9 Facade Design</a></li>
+<li class="lvl-5"><a href="#6310-architectural-design-guidelines">6.3.10 Architectural Design Guidelines</a></li>
+<li class="lvl-5"><a href="#6311-use-provisions">6.3.11 Use Provisions</a></li>
+<li class="lvl-5"><a href="#6312-development-standards">6.3.12 Development Standards</a></li>
+<li class="lvl-5"><a href="#6313-parking-mobility">6.3.13 Parking &amp; Mobility</a></li>
+<li class="lvl-5"><a href="#6314-public-realm">6.3.14 Public Realm</a></li>
+</ul>
+</details></li>
+<li class="lvl-4"><details><summary><a href="#64-commercial-business-cb">6.4 COMMERCIAL BUSINESS (CB)</a></summary>
+<ul>
+<li class="lvl-5"><a href="#641-character-description">6.4.1 Character Description</a></li>
+<li class="lvl-5"><a href="#642-intent">6.4.2 Intent</a></li>
+<li class="lvl-5"><a href="#643-purpose">6.4.3 Purpose</a></li>
+<li class="lvl-5"><a href="#644-applicability">6.4.4 Applicability</a></li>
+<li class="lvl-5"><a href="#645-standards-measurements">6.4.5 Standards &amp; Measurements</a></li>
+<li class="lvl-5"><a href="#646-development-review">6.4.6 Development Review</a></li>
+<li class="lvl-5"><a href="#647-building-types">6.4.7 Building Types</a></li>
+<li class="lvl-5"><a href="#648-box-building">6.4.8 Box Building</a></li>
+<li class="lvl-5"><a href="#649-strip-commerce">6.4.9 Strip Commerce</a></li>
+<li class="lvl-5"><a href="#6410-pad-commerce">6.4.10 Pad Commerce</a></li>
+<li class="lvl-5"><a href="#6411-building-components">6.4.11 Building Components</a></li>
+<li class="lvl-5"><a href="#6412-facade-design">6.4.12 Facade Design</a></li>
+<li class="lvl-5"><a href="#6413-architectural-design-guidelines">6.4.13 Architectural Design Guidelines</a></li>
+<li class="lvl-5"><a href="#6414-use-provisions">6.4.14 Use Provisions</a></li>
+<li class="lvl-5"><a href="#6415-development-standards">6.4.15 Development Standards</a></li>
+<li class="lvl-5"><a href="#6416-parking-mobility">6.4.16 Parking &amp; Mobility</a></li>
+<li class="lvl-5"><a href="#6417-public-realm">6.4.17 Public Realm</a></li>
+</ul>
+</details></li>
+<li class="lvl-4"><details><summary><a href="#65-research-development-rd">6.5 RESEARCH &amp; DEVELOPMENT (R&amp;D)</a></summary>
+<ul>
+<li class="lvl-5"><a href="#651-description">6.5.1 Description</a></li>
+<li class="lvl-5"><a href="#652-intent">6.5.2 Intent</a></li>
+<li class="lvl-5"><a href="#653-purpose">6.5.3 Purpose</a></li>
+<li class="lvl-5"><a href="#654-applicability">6.5.4 Applicability</a></li>
+<li class="lvl-5"><a href="#655-development-review">6.5.5 Development Review</a></li>
+<li class="lvl-5"><a href="#656-building-types">6.5.6 Building Types</a></li>
+<li class="lvl-5"><a href="#657-commercial-building">6.5.7 Commercial Building</a></li>
+<li class="lvl-5"><a href="#658-building-components">6.5.8 Building Components</a></li>
+<li class="lvl-5"><a href="#659-facade-design">6.5.9 Facade Design</a></li>
+<li class="lvl-5"><a href="#6510-architectural-design-guidelines">6.5.10 Architectural Design Guidelines</a></li>
+<li class="lvl-5"><a href="#6511-use-provisions">6.5.11 Use Provisions</a></li>
+<li class="lvl-5"><a href="#6512-development-standards">6.5.12 Development Standards</a></li>
+<li class="lvl-5"><a href="#6513-parking-mobility">6.5.13 Parking &amp; Mobility</a></li>
+<li class="lvl-5"><a href="#6514-public-realm">6.5.14 Public Realm</a></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+<li class="lvl-3"><details><summary><a href="#7-special-districts">7. SPECIAL DISTRICTS</a></summary>
+<ul>
+<li class="lvl-4"><details><summary><a href="#71-civic-civ">7.1 CIVIC (CIV)</a></summary>
+<ul>
+<li class="lvl-5"><a href="#711-character-description">7.1.1 Character Description</a></li>
+<li class="lvl-5"><a href="#712-intent">7.1.2 Intent</a></li>
+<li class="lvl-5"><a href="#713-purpose">7.1.3 Purpose</a></li>
+<li class="lvl-5"><a href="#714-applicability">7.1.4 Applicability</a></li>
+<li class="lvl-5"><a href="#715-development-review">7.1.5 Development Review</a></li>
+<li class="lvl-5"><a href="#716-use-provisions">7.1.6 Use Provisions</a></li>
+<li class="lvl-5"><a href="#717-development-standards">7.1.7 Development Standards</a></li>
+<li class="lvl-5"><a href="#718-parking-mobility">7.1.8 Parking &amp; Mobility</a></li>
+<li class="lvl-5"><a href="#719-public-realm">7.1.9 Public Realm</a></li>
+</ul>
+</details></li>
+<li class="lvl-4"><details><summary><a href="#72-powderhouse-school-ps">7.2 POWDERHOUSE SCHOOL (PS)</a></summary>
+<ul>
+<li class="lvl-5"><a href="#721-character-description">7.2.1 Character Description</a></li>
+<li class="lvl-5"><a href="#722-intent">7.2.2 Intent</a></li>
+<li class="lvl-5"><a href="#723-purpose">7.2.3 Purpose</a></li>
+<li class="lvl-5"><a href="#724-applicability">7.2.4 Applicability</a></li>
+<li class="lvl-5"><a href="#725-development-review">7.2.5 Development Review</a></li>
+<li class="lvl-5"><a href="#726-building-standards">7.2.6 Building Standards</a></li>
+<li class="lvl-5"><a href="#727-use-provisions">7.2.7 Use Provisions</a></li>
+<li class="lvl-5"><a href="#728-development-standards">7.2.8 Development Standards</a></li>
+<li class="lvl-5"><a href="#729-parking-mobility">7.2.9 Parking &amp; Mobility</a></li>
+<li class="lvl-5"><a href="#7210-development-benefits">7.2.10 Development Benefits</a></li>
+<li class="lvl-5"><a href="#7211-public-realm">7.2.11 Public Realm</a></li>
+</ul>
+</details></li>
+<li class="lvl-4"><details><summary><a href="#73-tufts-university-tu">7.3 TUFTS UNIVERSITY (TU)</a></summary>
+<ul>
+<li class="lvl-5"><a href="#731-character-description">7.3.1 Character Description</a></li>
+<li class="lvl-5"><a href="#732-intent">7.3.2 Intent</a></li>
+<li class="lvl-5"><a href="#733-purpose">7.3.3 Purpose</a></li>
+<li class="lvl-5"><a href="#734-applicability">7.3.4 Applicability</a></li>
+<li class="lvl-5"><a href="#735-development-review">7.3.5 Development Review</a></li>
+<li class="lvl-5"><a href="#736-lots">7.3.6 Lots</a></li>
+<li class="lvl-5"><a href="#737-building-standards">7.3.7 Building Standards</a></li>
+<li class="lvl-5"><a href="#738-use-provisions">7.3.8 Use Provisions</a></li>
+<li class="lvl-5"><a href="#739-parking-mobility">7.3.9 Parking &amp; Mobility</a></li>
+</ul>
+</details></li>
+<li class="lvl-4"><details><summary><a href="#74-assembly-square-mixed-use-asmd">7.4 ASSEMBLY SQUARE MIXED-USE (ASMD)</a></summary>
+<ul>
+<li class="lvl-5"><a href="#741-description">7.4.1 Description</a></li>
+<li class="lvl-5"><a href="#742-intent">7.4.2 Intent</a></li>
+<li class="lvl-5"><a href="#743-purpose">7.4.3 Purpose</a></li>
+<li class="lvl-5"><a href="#744-applicability">7.4.4 Applicability</a></li>
+<li class="lvl-5"><a href="#745-development-review">7.4.5 Development Review</a></li>
+<li class="lvl-5"><a href="#746-master-plan-standards">7.4.6 Master Plan Standards</a></li>
+<li class="lvl-5"><a href="#747-building-standards">7.4.7 Building Standards</a></li>
+<li class="lvl-5"><a href="#748-use-provisions">7.4.8 Use Provisions</a></li>
+<li class="lvl-5"><a href="#749-development-standards">7.4.9 Development Standards</a></li>
+<li class="lvl-5"><a href="#7410-parking-mobility">7.4.10 Parking &amp; Mobility</a></li>
+<li class="lvl-5"><a href="#7411-development-benefits">7.4.11 Development Benefits</a></li>
+<li class="lvl-5"><a href="#7412-public-realm">7.4.12 Public Realm</a></li>
+<li class="lvl-5"><a href="#7413-land-platting">7.4.13 Land Platting</a></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+<li class="lvl-3"><details><summary><a href="#8-overlay-districts">8. OVERLAY DISTRICTS</a></summary>
+<ul>
+<li class="lvl-4"><details><summary><a href="#81-affordable-housing-ah">8.1 AFFORDABLE HOUSING (AH)</a></summary>
+<ul>
+<li class="lvl-5"><a href="#811-intent">8.1.1 Intent</a></li>
+<li class="lvl-5"><a href="#812-purpose">8.1.2 Purpose</a></li>
+<li class="lvl-5"><a href="#813-applicability">8.1.3 Applicability</a></li>
+<li class="lvl-5"><a href="#814-neighborhood-residence">8.1.4 Neighborhood Residence</a></li>
+<li class="lvl-5"><a href="#815-urban-residence">8.1.5 Urban Residence</a></li>
+<li class="lvl-5"><a href="#816-mid-rise-districts">8.1.6 Mid-Rise Districts</a></li>
+</ul>
+</details></li>
+<li class="lvl-4"><details><summary><a href="#82-small-business-sb">8.2 SMALL BUSINESS (SB)</a></summary>
+<ul>
+<li class="lvl-5"><a href="#821-intent">8.2.1 Intent</a></li>
+<li class="lvl-5"><a href="#822-purpose">8.2.2 Purpose</a></li>
+<li class="lvl-5"><a href="#823-applicability">8.2.3 Applicability</a></li>
+<li class="lvl-5"><a href="#824-neighborhood-residence-urban-residence">8.2.4 Neighborhood Residence &amp; Urban Residence</a></li>
+<li class="lvl-5"><a href="#825-mid-rise-high-rise-commercial-districts">8.2.5 Mid-Rise, High-Rise, &amp; Commercial Districts</a></li>
+</ul>
+</details></li>
+<li class="lvl-4"><details><summary><a href="#83-floodplains-fp">8.3 FLOODPLAINS (FP)</a></summary>
+<ul>
+<li class="lvl-5"><a href="#831-intent">8.3.1 Intent</a></li>
+<li class="lvl-5"><a href="#832-purpose">8.3.2 Purpose</a></li>
+<li class="lvl-5"><a href="#833-applicability">8.3.3 Applicability</a></li>
+<li class="lvl-5"><a href="#834-enforcement">8.3.4 Enforcement</a></li>
+<li class="lvl-5"><a href="#835-definitions">8.3.5 Definitions</a></li>
+<li class="lvl-5"><a href="#836-development-review">8.3.6 Development Review</a></li>
+<li class="lvl-5"><a href="#837-compliance-with-other-regulations">8.3.7 Compliance with Other Regulations</a></li>
+<li class="lvl-5"><a href="#838-development-limitations">8.3.8 Development Limitations</a></li>
+<li class="lvl-5"><a href="#839-notification-of-watercourse-alteration">8.3.9 Notification of Watercourse Alteration</a></li>
+<li class="lvl-5"><a href="#8310-severability-invalidity">8.3.10 Severability &amp; Invalidity</a></li>
+</ul>
+</details></li>
+<li class="lvl-4"><details><summary><a href="#84-master-planned-development-mpd">8.4 MASTER PLANNED DEVELOPMENT (MPD)</a></summary>
+<ul>
+<li class="lvl-5"><a href="#841-intent">8.4.1 Intent</a></li>
+<li class="lvl-5"><a href="#842-purpose">8.4.2 Purpose</a></li>
+<li class="lvl-5"><a href="#843-applicability">8.4.3 Applicability</a></li>
+<li class="lvl-5"><a href="#844-urban-design">8.4.4 Urban Design</a></li>
+<li class="lvl-5"><a href="#845-development-review">8.4.5 Development Review</a></li>
+<li class="lvl-5"><a href="#846-master-plan-standards">8.4.6 Master Plan Standards</a></li>
+<li class="lvl-5"><a href="#847-thoroughfares-civic-spaces">8.4.7 Thoroughfares &amp; Civic Spaces</a></li>
+<li class="lvl-5"><a href="#848-development-standards">8.4.8 Development Standards</a></li>
+<li class="lvl-5"><a href="#849-parking-mobility">8.4.9 Parking &amp; Mobility</a></li>
+<li class="lvl-5"><a href="#8410-alternative-compliance">8.4.10 Alternative Compliance</a></li>
+<li class="lvl-5"><a href="#8411-assembly-square-asq-sub-area">8.4.11 Assembly Square (ASQ) Sub-Area</a></li>
+<li class="lvl-5"><a href="#8412-boynton-yards-by-sub-area">8.4.12 Boynton Yards (BY) Sub-Area</a></li>
+<li class="lvl-5"><a href="#8413-brickbottom-bb-sub-area">8.4.13 Brickbottom (BB) Sub-Area</a></li>
+<li class="lvl-5"><a href="#8414-grand-junction-gj-sub-area">8.4.14 Grand Junction (GJ) Sub-Area</a></li>
+<li class="lvl-5"><a href="#8415-inner-belt-ib-sub-area">8.4.15 Inner Belt (IB) Sub-Area</a></li>
+<li class="lvl-5"><a href="#8416-north-point-np-sub-area">8.4.16 North Point (NP) Sub-Area</a></li>
+<li class="lvl-5"><a href="#8417-union-square-usq-sub-area">8.4.17 Union Square (USQ) Sub-Area</a></li>
+<li class="lvl-5"><a href="#8418-union-square-east-usqe-sub-area">8.4.18 Union Square East (USQE) Sub-Area</a></li>
+<li class="lvl-5"><a href="#8419-arts-innovation-ai-sub-area">8.4.19 Arts &amp; Innovation (AI) Sub-Area</a></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+<li class="lvl-3"><details><summary><a href="#9-use-provisions">9. USE PROVISIONS</a></summary>
+<ul>
+<li class="lvl-4"><details><summary><a href="#91-permitted-uses">9.1 PERMITTED USES</a></summary>
+<ul>
+<li class="lvl-5"><a href="#911-general">9.1.1 General</a></li>
+<li class="lvl-5"><a href="#912-applicability">9.1.2 Applicability</a></li>
+<li class="lvl-5"><a href="#913-development-review">9.1.3 Development Review</a></li>
+<li class="lvl-5"><a href="#914-protected-uses">9.1.4 Protected Uses</a></li>
+<li class="lvl-5"><a href="#915-classification-of-uses">9.1.5 Classification of Uses</a></li>
+<li class="lvl-5"><a href="#916-category-designation">9.1.6 Category Designation</a></li>
+<li class="lvl-5"><a href="#917-use-restrictions">9.1.7 Use Restrictions</a></li>
+<li class="lvl-5"><a href="#918-outdoor-storage-display">9.1.8 Outdoor Storage &amp; Display</a></li>
+<li class="lvl-5"><a href="#table-911">Table 9.1.1</a></li>
+</ul>
+</details></li>
+<li class="lvl-4"><details><summary><a href="#92-use-definitions-standards">9.2 USE DEFINITIONS &amp; STANDARDS</a></summary>
+<ul>
+<li class="lvl-5"><a href="#921-general">9.2.1 General</a></li>
+<li class="lvl-5"><a href="#922-arts-creative-enterprise-use-categories">9.2.2 Arts &amp; Creative Enterprise Use Categories</a></li>
+<li class="lvl-5"><a href="#923-auto-oriented-use-categories">9.2.3 Auto-Oriented Use Categories</a></li>
+<li class="lvl-5"><a href="#924-cannabis-establishment-use-categories">9.2.4 Cannabis Establishment Use Categories</a></li>
+<li class="lvl-5"><a href="#925-civic-institutional-use-categories">9.2.5 Civic &amp; Institutional Use Categories</a></li>
+<li class="lvl-5"><a href="#926-commercial-services-use-categories">9.2.6 Commercial Services Use Categories</a></li>
+<li class="lvl-5"><a href="#927-food-beverage-service-use-categories">9.2.7 Food &amp; Beverage Service Use Categories</a></li>
+<li class="lvl-5"><a href="#928-industrial-use-categories">9.2.8 Industrial Use Categories</a></li>
+<li class="lvl-5"><a href="#929-lodging-use-categories">9.2.9 Lodging Use Categories</a></li>
+<li class="lvl-5"><a href="#9210-office-use-categories">9.2.10 Office Use Categories</a></li>
+<li class="lvl-5"><a href="#9211-residential-use-categories">9.2.11 Residential Use Categories</a></li>
+<li class="lvl-5"><a href="#9212-retail-sales-use-categories">9.2.12 Retail Sales Use Categories</a></li>
+<li class="lvl-5"><a href="#9213-urban-agriculture-use-categories">9.2.13 Urban Agriculture Use Categories</a></li>
+<li class="lvl-5"><a href="#9214-accessory-use-categories">9.2.14 Accessory Use Categories</a></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+<li class="lvl-3"><details><summary><a href="#10-development-standards">10. DEVELOPMENT STANDARDS</a></summary>
+<ul>
+<li class="lvl-4"><details><summary><a href="#101-land-platting">10.1 LAND PLATTING</a></summary>
+<ul>
+<li class="lvl-5"><a href="#1011-development-review">10.1.1 Development Review</a></li>
+<li class="lvl-5"><a href="#1012-general">10.1.2 General</a></li>
+<li class="lvl-5"><a href="#1013-blocks">10.1.3 Blocks</a></li>
+<li class="lvl-5"><a href="#1014-lots">10.1.4 Lots</a></li>
+</ul>
+</details></li>
+<li class="lvl-4"><details><summary><a href="#102-accessory-structures">10.2 ACCESSORY STRUCTURES</a></summary>
+<ul>
+<li class="lvl-5"><a href="#1021-general">10.2.1 General</a></li>
+<li class="lvl-5"><a href="#1022-permitted-accessory-structures">10.2.2 Permitted Accessory Structures</a></li>
+</ul>
+</details></li>
+<li class="lvl-4"><details><summary><a href="#103-landscaping">10.3 LANDSCAPING</a></summary>
+<ul>
+<li class="lvl-5"><a href="#1031-purpose">10.3.1 Purpose</a></li>
+<li class="lvl-5"><a href="#1032-applicability">10.3.2 Applicability</a></li>
+<li class="lvl-5"><a href="#1033-landscape-installation">10.3.3 Landscape Installation</a></li>
+<li class="lvl-5"><a href="#1034-landscape-maintenance">10.3.4 Landscape Maintenance</a></li>
+<li class="lvl-5"><a href="#1035-site-landscaping">10.3.5 Site Landscaping</a></li>
+<li class="lvl-5"><a href="#1036-landscape-buffers">10.3.6 Landscape Buffers</a></li>
+<li class="lvl-5"><a href="#1037-parking-lot-landscaping">10.3.7 Parking Lot Landscaping</a></li>
+<li class="lvl-5"><a href="#1038-vegetated-roofs">10.3.8 Vegetated Roofs</a></li>
+</ul>
+</details></li>
+<li class="lvl-4"><details><summary><a href="#104-green-score">10.4 GREEN SCORE</a></summary>
+<ul>
+<li class="lvl-5"><a href="#1041-purpose">10.4.1 Purpose</a></li>
+<li class="lvl-5"><a href="#1042-overview">10.4.2 Overview</a></li>
+<li class="lvl-5"><a href="#1043-applicability">10.4.3 Applicability</a></li>
+<li class="lvl-5"><a href="#1044-compliance-enforcement">10.4.4 Compliance &amp; Enforcement</a></li>
+<li class="lvl-5"><a href="#1045-calculation">10.4.5 Calculation</a></li>
+<li class="lvl-5"><a href="#1046-eligibility">10.4.6 Eligibility</a></li>
+<li class="lvl-5"><a href="#1047-measurement">10.4.7 Measurement</a></li>
+</ul>
+</details></li>
+<li class="lvl-4"><details><summary><a href="#105-fences-walls">10.5 FENCES &amp; WALLS</a></summary>
+<ul>
+<li class="lvl-5"><a href="#1051-fences">10.5.1 Fences</a></li>
+<li class="lvl-5"><a href="#1052-retaining-walls">10.5.2 Retaining Walls</a></li>
+</ul>
+</details></li>
+<li class="lvl-4"><details><summary><a href="#106-outdoor-lighting">10.6 OUTDOOR LIGHTING</a></summary>
+<ul>
+<li class="lvl-5"><a href="#1061-intent">10.6.1 Intent</a></li>
+<li class="lvl-5"><a href="#1062-purpose">10.6.2 Purpose</a></li>
+<li class="lvl-5"><a href="#1063-applicability">10.6.3 Applicability</a></li>
+<li class="lvl-5"><a href="#1064-lighting-standards">10.6.4 Lighting Standards</a></li>
+</ul>
+</details></li>
+<li class="lvl-4"><details><summary><a href="#107-screening">10.7 SCREENING</a></summary>
+<ul>
+<li class="lvl-5"><a href="#1071-applicability">10.7.1 Applicability</a></li>
+<li class="lvl-5"><a href="#1072-loading-facilities">10.7.2 Loading Facilities</a></li>
+<li class="lvl-5"><a href="#1073-service-areas">10.7.3 Service Areas</a></li>
+<li class="lvl-5"><a href="#1074-mechanical-equipment">10.7.4 Mechanical Equipment</a></li>
+</ul>
+</details></li>
+<li class="lvl-4"><details><summary><a href="#108-commercial-signs">10.8 COMMERCIAL SIGNS</a></summary>
+<ul>
+<li class="lvl-5"><a href="#1081-purpose">10.8.1 Purpose</a></li>
+<li class="lvl-5"><a href="#1082-applicability">10.8.2 Applicability</a></li>
+<li class="lvl-5"><a href="#1083-development-review">10.8.3 Development Review</a></li>
+<li class="lvl-5"><a href="#1084-exempt-signs">10.8.4 Exempt Signs</a></li>
+<li class="lvl-5"><a href="#1085-prohibited-sign-features">10.8.5 Prohibited Sign Features</a></li>
+<li class="lvl-5"><a href="#1086-sign-maintenance">10.8.6 Sign Maintenance</a></li>
+<li class="lvl-5"><a href="#1087-temporary-signs">10.8.7 Temporary Signs</a></li>
+<li class="lvl-5"><a href="#1088-removal">10.8.8 Removal</a></li>
+<li class="lvl-5"><a href="#1089-sign-illumination">10.8.9 Sign Illumination</a></li>
+<li class="lvl-5"><a href="#10810-blade-sign">10.8.10 Blade Sign</a></li>
+<li class="lvl-5"><a href="#10811-wall-sign">10.8.11 Wall Sign</a></li>
+<li class="lvl-5"><a href="#10812-awning-or-canopy-sign">10.8.12 Awning or Canopy Sign</a></li>
+<li class="lvl-5"><a href="#10813-suspended-sign">10.8.13 Suspended Sign</a></li>
+<li class="lvl-5"><a href="#10814-sidewalk-sign">10.8.14 Sidewalk Sign</a></li>
+<li class="lvl-5"><a href="#10815-window-sign">10.8.15 Window Sign</a></li>
+<li class="lvl-5"><a href="#10816-display-case">10.8.16 Display Case</a></li>
+<li class="lvl-5"><a href="#10817-vertical-blade-or-banner-sign">10.8.17 Vertical Blade or Banner Sign</a></li>
+<li class="lvl-5"><a href="#10818-yard-sign">10.8.18 Yard Sign</a></li>
+<li class="lvl-5"><a href="#10819-wall-mural">10.8.19 Wall Mural</a></li>
+<li class="lvl-5"><a href="#10820-roof-or-skyline-sign">10.8.20 Roof or Skyline Sign</a></li>
+</ul>
+</details></li>
+<li class="lvl-4"><details><summary><a href="#109-sustainable-development">10.9 SUSTAINABLE DEVELOPMENT</a></summary>
+<ul>
+<li class="lvl-5"><a href="#1091-green-buildings">10.9.1 Green Buildings</a></li>
+<li class="lvl-5"><a href="#1092-green-roofs-storm-water-management">10.9.2 Green Roofs &amp; Storm Water Management</a></li>
+<li class="lvl-5"><a href="#1093-heat-island-reduction">10.9.3 Heat Island Reduction</a></li>
+<li class="lvl-5"><a href="#1094-environmental-performance">10.9.4 Environmental Performance</a></li>
+</ul>
+</details></li>
+<li class="lvl-4"><details><summary><a href="#1010-wireless-communication">10.10 WIRELESS COMMUNICATION</a></summary>
+<ul>
+<li class="lvl-5"><a href="#10101-purpose">10.10.1 Purpose</a></li>
+<li class="lvl-5"><a href="#10102-applicability">10.10.2 Applicability</a></li>
+<li class="lvl-5"><a href="#10103-development-review">10.10.3 Development Review</a></li>
+<li class="lvl-5"><a href="#10104-wireless-communication-towers">10.10.4 Wireless Communication Towers</a></li>
+<li class="lvl-5"><a href="#10105-wireless-communication-antennas">10.10.5 Wireless Communication Antennas</a></li>
+<li class="lvl-5"><a href="#10106-ancillary-structures">10.10.6 Ancillary Structures</a></li>
+<li class="lvl-5"><a href="#10107-design-guidelines">10.10.7 Design Guidelines</a></li>
+<li class="lvl-5"><a href="#10108-abandonment">10.10.8 Abandonment</a></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+<li class="lvl-3"><details><summary><a href="#11-parking-mobility">11. PARKING &amp; MOBILITY</a></summary>
+<ul>
+<li class="lvl-4"><details><summary><a href="#111-bicycle-parking">11.1 BICYCLE PARKING</a></summary>
+<ul>
+<li class="lvl-5"><a href="#1111-general">11.1.1 General</a></li>
+<li class="lvl-5"><a href="#1112-short-term-bicycle-parking">11.1.2 Short-Term Bicycle Parking</a></li>
+<li class="lvl-5"><a href="#1113-long-term-bicycle-parking">11.1.3 Long-Term Bicycle Parking</a></li>
+<li class="lvl-5"><a href="#1114-alternative-compliance">11.1.4 Alternative Compliance</a></li>
+</ul>
+</details></li>
+<li class="lvl-4"><details><summary><a href="#112-motor-vehicle-parking">11.2 MOTOR VEHICLE PARKING</a></summary>
+<ul>
+<li class="lvl-5"><a href="#1121-general">11.2.1 General</a></li>
+<li class="lvl-5"><a href="#1122-parking-lots">11.2.2 Parking Lots</a></li>
+<li class="lvl-5"><a href="#1123-parking-structures">11.2.3 Parking Structures</a></li>
+<li class="lvl-5"><a href="#1124-loading-facilities">11.2.4 Loading Facilities</a></li>
+<li class="lvl-5"><a href="#1125-alternative-compliance">11.2.5 Alternative Compliance</a></li>
+<li class="lvl-5"><a href="#1126-on-street-parking-in-transit-areas">11.2.6 On-Street Parking in Transit Areas</a></li>
+</ul>
+</details></li>
+<li class="lvl-4"><details><summary><a href="#113-mobility-management">11.3 MOBILITY MANAGEMENT</a></summary>
+<ul>
+<li class="lvl-5"><a href="#1131-purpose">11.3.1 Purpose</a></li>
+<li class="lvl-5"><a href="#1132-applicability">11.3.2 Applicability</a></li>
+<li class="lvl-5"><a href="#1133-mobility-management-plan-required">11.3.3 Mobility Management Plan Required</a></li>
+<li class="lvl-5"><a href="#1134-review-authority">11.3.4 Review Authority</a></li>
+<li class="lvl-5"><a href="#1135-procedure">11.3.5 Procedure</a></li>
+<li class="lvl-5"><a href="#1136-mobility-management-plans">11.3.6 Mobility Management Plans</a></li>
+<li class="lvl-5"><a href="#1137-annual-reporting-monitoring">11.3.7 Annual Reporting &amp; Monitoring</a></li>
+<li class="lvl-5"><a href="#1138-compliance">11.3.8 Compliance</a></li>
+<li class="lvl-5"><a href="#1139-required-programs-services">11.3.9 Required Programs &amp; Services</a></li>
+<li class="lvl-5"><a href="#11310-definitions-standards">11.3.10 Definitions &amp; Standards</a></li>
+<li class="lvl-5"><a href="#11311-mobility-management-associations">11.3.11 Mobility Management Associations</a></li>
+<li class="lvl-5"><a href="#11312-enforcement">11.3.12 Enforcement</a></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+<li class="lvl-3"><details><summary><a href="#12-development-benefits">12. DEVELOPMENT BENEFITS</a></summary>
+<ul>
+<li class="lvl-4"><details><summary><a href="#121-affordable-housing">12.1 AFFORDABLE HOUSING</a></summary>
+<ul>
+<li class="lvl-5"><a href="#1211-purpose">12.1.1 Purpose</a></li>
+<li class="lvl-5"><a href="#1212-applicability">12.1.2 Applicability</a></li>
+<li class="lvl-5"><a href="#1213-enforcement">12.1.3 Enforcement</a></li>
+<li class="lvl-5"><a href="#1214-required-adus">12.1.4 Required ADUs</a></li>
+<li class="lvl-5"><a href="#1215-adu-price">12.1.5 ADU Price</a></li>
+<li class="lvl-5"><a href="#1216-purchase-tenancy-standards">12.1.6 Purchase &amp; Tenancy Standards</a></li>
+<li class="lvl-5"><a href="#1217-adu-development-standards">12.1.7 ADU Development Standards</a></li>
+<li class="lvl-5"><a href="#1218-legal-agreements">12.1.8 Legal Agreements</a></li>
+<li class="lvl-5"><a href="#1219-compliance">12.1.9 Compliance</a></li>
+<li class="lvl-5"><a href="#12110-performance-review">12.1.10 Performance Review</a></li>
+</ul>
+</details></li>
+<li class="lvl-4"><details><summary><a href="#122-linkage">12.2 LINKAGE</a></summary>
+<ul>
+<li class="lvl-5"><a href="#1221-applicability">12.2.1 Applicability</a></li>
+<li class="lvl-5"><a href="#1222-affordable-housing-linkage">12.2.2 Affordable Housing Linkage</a></li>
+<li class="lvl-5"><a href="#1223-employment-linkage">12.2.3 Employment Linkage</a></li>
+<li class="lvl-5"><a href="#1224-green-line-linkage">12.2.4 Green Line Linkage</a></li>
+<li class="lvl-5"><a href="#1225-civic-space-linkage">12.2.5 Civic Space Linkage</a></li>
+<li class="lvl-5"><a href="#1226-performance-review">12.2.6 Performance Review</a></li>
+</ul>
+</details></li>
+<li class="lvl-4"><details><summary><a href="#123-buyouts-payments">12.3 BUYOUTS &amp; PAYMENTS</a></summary>
+<ul>
+<li class="lvl-5"><a href="#1231-general">12.3.1 General</a></li>
+<li class="lvl-5"><a href="#1232-compliance">12.3.2 Compliance</a></li>
+<li class="lvl-5"><a href="#1233-open-space-in-lieu-payments">12.3.3 Open Space In Lieu Payments</a></li>
+<li class="lvl-5"><a href="#1234-civic-space-in-lieu-payments">12.3.4 Civic Space In Lieu Payments</a></li>
+<li class="lvl-5"><a href="#1235-commercial-space-in-lieu-payments">12.3.5 Commercial Space In Lieu Payments</a></li>
+<li class="lvl-5"><a href="#1236-adu-fractional-buyouts">12.3.6 ADU Fractional Buyouts</a></li>
+<li class="lvl-5"><a href="#1237-adu-in-lieu-payments">12.3.7 ADU In-Lieu Payments</a></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+<li class="lvl-3"><details><summary><a href="#13-public-realm">13. PUBLIC REALM</a></summary>
+<ul>
+<li class="lvl-4"><details><summary><a href="#131-civic-spaces">13.1 CIVIC SPACES</a></summary>
+<ul>
+<li class="lvl-5"><a href="#1311-development-review">13.1.1 Development Review</a></li>
+<li class="lvl-5"><a href="#1312-standards-for-all-civic-spaces">13.1.2 Standards for All Civic Spaces</a></li>
+<li class="lvl-5"><a href="#1313-parks">13.1.3 Parks</a></li>
+<li class="lvl-5"><a href="#1314-commons">13.1.4 Commons</a></li>
+<li class="lvl-5"><a href="#1315-plazas">13.1.5 Plazas</a></li>
+<li class="lvl-5"><a href="#1316-civic-uses">13.1.6 Civic Uses</a></li>
+</ul>
+</details></li>
+<li class="lvl-4"><details><summary><a href="#132-thoroughfares">13.2 THOROUGHFARES</a></summary>
+<ul>
+<li class="lvl-5"><a href="#1321-development-review">13.2.1 Development Review</a></li>
+<li class="lvl-5"><a href="#1322-thoroughfare-network">13.2.2 Thoroughfare Network</a></li>
+<li class="lvl-5"><a href="#1323-alley-access">13.2.3 Alley Access</a></li>
+<li class="lvl-5"><a href="#1324-standards-for-all-thoroughfare-types">13.2.4 Standards for all Thoroughfare Types</a></li>
+<li class="lvl-5"><a href="#1325-standards-for-specific-thoroughfare-types">13.2.5 Standards for Specific Thoroughfare Types</a></li>
+<li class="lvl-5"><a href="#1326-sidewalks">13.2.6 Sidewalks</a></li>
+<li class="lvl-5"><a href="#1327-mid-block-passages">13.2.7 Mid-Block Passages</a></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+<li class="lvl-3"><details><summary><a href="#14-nonconformance">14. NONCONFORMANCE</a></summary>
+<ul>
+<li class="lvl-4"><details><summary><a href="#141-nonconformities">14.1 NONCONFORMITIES</a></summary>
+<ul>
+<li class="lvl-5"><a href="#1411-general">14.1.1 General</a></li>
+<li class="lvl-5"><a href="#1412-determination-of-status">14.1.2 Determination of Status</a></li>
+<li class="lvl-5"><a href="#1413-basic-rights">14.1.3 Basic Rights</a></li>
+<li class="lvl-5"><a href="#1414-nonconforming-lots">14.1.4 Nonconforming Lots</a></li>
+<li class="lvl-5"><a href="#1415-nonconforming-structures">14.1.5 Nonconforming Structures</a></li>
+<li class="lvl-5"><a href="#1416-nonconforming-uses">14.1.6 Nonconforming Uses</a></li>
+<li class="lvl-5"><a href="#1417-nonconforming-site-characteristics">14.1.7 Nonconforming Site Characteristics</a></li>
+<li class="lvl-5"><a href="#1418-nonconforming-signs">14.1.8 Nonconforming Signs</a></li>
+<li class="lvl-5"><a href="#1419-casualty">14.1.9 Casualty</a></li>
+<li class="lvl-5"><a href="#14110-abandonment">14.1.10 Abandonment</a></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+<li class="lvl-3"><details><summary><a href="#15-administration">15. ADMINISTRATION</a></summary>
+<ul>
+<li class="lvl-4"><details><summary><a href="#151-review-procedures">15.1 REVIEW PROCEDURES</a></summary>
+<ul>
+<li class="lvl-5"><a href="#1511-general">15.1.1 General</a></li>
+<li class="lvl-5"><a href="#1512-pre-submittal-meeting">15.1.2 Pre-Submittal Meeting</a></li>
+<li class="lvl-5"><a href="#1513-neighborhood-meeting">15.1.3 Neighborhood Meeting</a></li>
+<li class="lvl-5"><a href="#1514-design-review">15.1.4 Design Review</a></li>
+<li class="lvl-5"><a href="#1515-application-submittal">15.1.5 Application Submittal</a></li>
+<li class="lvl-5"><a href="#1516-application-review-staff-report">15.1.6 Application Review &amp; Staff Report</a></li>
+<li class="lvl-5"><a href="#1517-public-notice">15.1.7 Public Notice</a></li>
+<li class="lvl-5"><a href="#1518-public-hearing">15.1.8 Public Hearing</a></li>
+<li class="lvl-5"><a href="#1519-decision">15.1.9 Decision</a></li>
+<li class="lvl-5"><a href="#15110-appeal">15.1.10 Appeal</a></li>
+<li class="lvl-5"><a href="#15111-certification-of-decision">15.1.11 Certification of Decision</a></li>
+</ul>
+</details></li>
+<li class="lvl-4"><details><summary><a href="#152-discretionary-permits">15.2 DISCRETIONARY PERMITS</a></summary>
+<ul>
+<li class="lvl-5"><a href="#1521-special-permit">15.2.1 Special Permit</a></li>
+<li class="lvl-5"><a href="#1522-master-plan-special-permit">15.2.2 Master Plan Special Permit</a></li>
+<li class="lvl-5"><a href="#1523-hardship-variance">15.2.3 Hardship Variance</a></li>
+<li class="lvl-5"><a href="#1524-plan-revision">15.2.4 Plan Revision</a></li>
+</ul>
+</details></li>
+<li class="lvl-4"><details><summary><a href="#153-administrative-permits">15.3 ADMINISTRATIVE PERMITS</a></summary>
+<ul>
+<li class="lvl-5"><a href="#1531-subdivision-plan-approval">15.3.1 Subdivision Plan Approval</a></li>
+<li class="lvl-5"><a href="#1532-site-plan-approval">15.3.2 Site Plan Approval</a></li>
+<li class="lvl-5"><a href="#1533-streetscape-construction-permit">15.3.3 Streetscape Construction Permit</a></li>
+<li class="lvl-5"><a href="#1534-civic-space-permit">15.3.4 Civic Space Permit</a></li>
+<li class="lvl-5"><a href="#1535-building-permit">15.3.5 Building Permit</a></li>
+</ul>
+</details></li>
+<li class="lvl-4"><details><summary><a href="#154-certificates">15.4 CERTIFICATES</a></summary>
+<ul>
+<li class="lvl-5"><a href="#1541-certificate-of-occupancy">15.4.1 Certificate of Occupancy</a></li>
+<li class="lvl-5"><a href="#1543-written-interpretation">15.4.3 Written Interpretation</a></li>
+</ul>
+</details></li>
+<li class="lvl-4"><details><summary><a href="#155-appeals">15.5 APPEALS</a></summary>
+<ul>
+<li class="lvl-5"><a href="#1551-building-code-appeal">15.5.1 Building Code Appeal</a></li>
+<li class="lvl-5"><a href="#1552-administrative-appeal">15.5.2 Administrative Appeal</a></li>
+<li class="lvl-5"><a href="#1553-judicial-appeal">15.5.3 Judicial Appeal</a></li>
+</ul>
+</details></li>
+<li class="lvl-4"><details><summary><a href="#156-legislative-procedures">15.6 LEGISLATIVE PROCEDURES</a></summary>
+<ul>
+<li class="lvl-5"><a href="#1561-land-conveyance">15.6.1 Land Conveyance</a></li>
+<li class="lvl-5"><a href="#1562-zoning-text-amendment">15.6.2 Zoning Text Amendment</a></li>
+<li class="lvl-5"><a href="#1563-zoning-map-amendment">15.6.3 Zoning Map Amendment</a></li>
+</ul>
+</details></li>
+<li class="lvl-4"><details><summary><a href="#157-review-boards-officials">15.7 REVIEW BOARDS &amp; OFFICIALS</a></summary>
+<ul>
+<li class="lvl-5"><a href="#1571-building-official">15.7.1 Building Official</a></li>
+<li class="lvl-5"><a href="#1572-zoning-board-of-appeals">15.7.2 Zoning Board of Appeals</a></li>
+<li class="lvl-5"><a href="#1573-planning-board">15.7.3 Planning Board</a></li>
+<li class="lvl-5"><a href="#1574-urban-design-commission">15.7.4 Urban Design Commission</a></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
 <li class="lvl-3"><a href="#map-changes">Map Changes</a></li>
 <li class="lvl-3"><a href="#amendment-history-table">Amendment History Table</a></li>
-      </ul>
+</ul>
     </nav>
     <main>
       <h1 id="somerville-zoning-ordinance">Somerville Zoning Ordinance</h1>
@@ -42886,5 +43644,49 @@
 </table>
     </main>
   </div>
+  <script>
+(function () {
+  function tocLinkFor(id) {
+    return document.querySelector('.toc a[href="#' + id.replace(/"/g, '\\"') + '"]');
+  }
+
+  function nearestTocHeadingBefore(el) {
+    var headings = document.querySelectorAll("main h2[id], main h3[id], main h4[id], main h5[id]");
+    var best = null;
+    for (var i = 0; i < headings.length; i++) {
+      var h = headings[i];
+      if (h === el || h.compareDocumentPosition(el) & Node.DOCUMENT_POSITION_FOLLOWING) {
+        best = h;
+      } else {
+        break;
+      }
+    }
+    return best;
+  }
+
+  function expandFor(hash) {
+    if (!hash || hash.length < 2) return;
+    var id;
+    try { id = decodeURIComponent(hash.slice(1)); } catch (e) { return; }
+    var link = tocLinkFor(id);
+    if (!link) {
+      // Deep link into content without its own ToC entry (e.g. a section
+      // anchor): expand the branch of the nearest heading above it.
+      var target = document.getElementById(id);
+      if (!target) return;
+      var heading = nearestTocHeadingBefore(target);
+      if (heading) link = tocLinkFor(heading.id);
+    }
+    if (!link) return;
+    for (var d = link.closest("details"); d; d = d.parentElement.closest("details")) {
+      d.open = true;
+    }
+    link.scrollIntoView({ block: "nearest" });
+  }
+
+  expandFor(location.hash);
+  window.addEventListener("hashchange", function () { expandFor(location.hash); });
+})();
+</script>
 </body>
 </html>

@@ -161,7 +161,7 @@ def markdown_to_html(markdown_text: str) -> tuple[str, list[tuple[int, str, str]
             heading_text = heading_text.strip()
             heading_id = next_slug(heading_text)
             rendered.append(f"<h{level} id=\"{heading_id}\">{apply_inline_formatting(heading_text)}</h{level}>")
-            if level <= 3 and len(toc) < 200:
+            if 2 <= level <= 5:
                 toc.append((level, heading_text, heading_id))
             idx += 1
             continue
@@ -207,14 +207,88 @@ def markdown_to_html(markdown_text: str) -> tuple[str, list[tuple[int, str, str]
     return "\n".join(rendered), toc
 
 
-def build_html_document(title: str, body_html: str, toc: list[tuple[int, str, str]]) -> str:
-    toc_items: list[str] = []
+def build_toc_tree(toc: list[tuple[int, str, str]]) -> list[dict]:
+    """Nest flat (level, label, target) headings into a tree by heading level."""
+    roots: list[dict] = []
+    stack: list[dict] = []
     for level, label, target in toc:
-        toc_items.append(
-            f'<li class="lvl-{level}"><a href="#{target}">{html.escape(label)}</a></li>'
-        )
+        node = {"level": level, "label": label, "target": target, "children": []}
+        while stack and stack[-1]["level"] >= level:
+            stack.pop()
+        (stack[-1]["children"] if stack else roots).append(node)
+        stack.append(node)
 
-    toc_html = "\n".join(toc_items)
+    # A lone root (e.g. a single document-title heading above every part) adds
+    # a nesting level without aiding navigation: keep it as a plain link and
+    # promote its children to the top level.
+    if len(roots) == 1 and roots[0]["children"]:
+        root = roots[0]
+        roots = [{**root, "children": []}] + root["children"]
+    return roots
+
+
+def render_toc_nodes(nodes: list[dict]) -> str:
+    parts = ["<ul>"]
+    for node in nodes:
+        link = f'<a href="#{node["target"]}">{html.escape(node["label"])}</a>'
+        if node["children"]:
+            parts.append(f'<li class="lvl-{node["level"]}"><details><summary>{link}</summary>')
+            parts.append(render_toc_nodes(node["children"]))
+            parts.append("</details></li>")
+        else:
+            parts.append(f'<li class="lvl-{node["level"]}">{link}</li>')
+    parts.append("</ul>")
+    return "\n".join(parts)
+
+
+TOC_SCRIPT = """<script>
+(function () {
+  function tocLinkFor(id) {
+    return document.querySelector('.toc a[href="#' + id.replace(/"/g, '\\\\"') + '"]');
+  }
+
+  function nearestTocHeadingBefore(el) {
+    var headings = document.querySelectorAll("main h2[id], main h3[id], main h4[id], main h5[id]");
+    var best = null;
+    for (var i = 0; i < headings.length; i++) {
+      var h = headings[i];
+      if (h === el || h.compareDocumentPosition(el) & Node.DOCUMENT_POSITION_FOLLOWING) {
+        best = h;
+      } else {
+        break;
+      }
+    }
+    return best;
+  }
+
+  function expandFor(hash) {
+    if (!hash || hash.length < 2) return;
+    var id;
+    try { id = decodeURIComponent(hash.slice(1)); } catch (e) { return; }
+    var link = tocLinkFor(id);
+    if (!link) {
+      // Deep link into content without its own ToC entry (e.g. a section
+      // anchor): expand the branch of the nearest heading above it.
+      var target = document.getElementById(id);
+      if (!target) return;
+      var heading = nearestTocHeadingBefore(target);
+      if (heading) link = tocLinkFor(heading.id);
+    }
+    if (!link) return;
+    for (var d = link.closest("details"); d; d = d.parentElement.closest("details")) {
+      d.open = true;
+    }
+    link.scrollIntoView({ block: "nearest" });
+  }
+
+  expandFor(location.hash);
+  window.addEventListener("hashchange", function () { expandFor(location.hash); });
+})();
+</script>"""
+
+
+def build_html_document(title: str, body_html: str, toc: list[tuple[int, str, str]]) -> str:
+    toc_html = render_toc_nodes(build_toc_tree(toc))
 
     return f"""<!doctype html>
 <html lang=\"en\">
@@ -262,11 +336,13 @@ def build_html_document(title: str, body_html: str, toc: list[tuple[int, str, st
     }}
     .toc h2 {{ margin: 0 0 0.75rem 0; font-size: 1rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); }}
     .toc ul {{ list-style: none; margin: 0; padding: 0; }}
+    .toc ul ul {{ padding-left: 0.9rem; }}
     .toc li {{ margin: 0.25rem 0; font-size: 0.9rem; }}
-    .toc li.lvl-2 {{ margin-left: 0.55rem; }}
-    .toc li.lvl-3 {{ margin-left: 1.1rem; }}
     .toc a {{ color: #134e7a; text-decoration: none; }}
     .toc a:hover {{ text-decoration: underline; }}
+    .toc details {{ margin: 0; }}
+    .toc summary {{ cursor: pointer; }}
+    .toc summary::marker {{ color: var(--muted); font-size: 0.8em; }}
     main {{
       background: var(--paper);
       border: 1px solid var(--rule);
@@ -338,14 +414,13 @@ def build_html_document(title: str, body_html: str, toc: list[tuple[int, str, st
   <div class=\"layout\">
     <nav class=\"toc\" aria-label=\"On this page\">
       <h2>Navigation</h2>
-      <ul>
-        {toc_html}
-      </ul>
+      {toc_html}
     </nav>
     <main>
       {body_html}
     </main>
   </div>
+  {TOC_SCRIPT}
 </body>
 </html>
 """
