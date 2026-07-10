@@ -587,21 +587,44 @@ def _execute_tool(name: str, tool_input: dict) -> str:
         return json.dumps({"error": f"{type(exc).__name__}: {exc}"}, ensure_ascii=False)
 
 
-def _section_label(key: str) -> str:
-    """Human-readable label for a section key, for progress display.
-
-    Uses the last heading in the section's heading path (for headerless
-    sections that is the nearest real ancestor heading, which reads far
-    better than the fallback body-text title).
-    """
-    recs = law_tools.get_sections([key])
-    rec = recs[0] if recs else {}
-    if not rec or rec.get("error"):
-        return key
-    path = rec.get("heading_path") or []
-    label = (path[-1] if path else "") or rec.get("title") or key
-    label = label.strip().rstrip(".")
+def _clean_heading(text: str) -> str:
+    label = (text or "").strip().rstrip(".:").strip()
     return label if len(label) <= 60 else label[:57] + "…"
+
+
+def _sections_detail(keys: list[str]) -> str:
+    """Human-readable summary of a get_sections call, for progress display.
+
+    Labels come from each section's last heading (for headerless sections
+    that is the nearest real ancestor heading). Duplicate labels collapse,
+    and when three or more distinct labels share a common ancestor heading
+    the whole fetch is summarized as that ancestor plus a section count —
+    e.g. "Board of Health Regulations for the Keeping of Hens (5 sections)".
+    """
+    recs = [r for r in law_tools.get_sections(keys) if r and not r.get("error")]
+    if not recs:
+        return ", ".join(keys)
+
+    paths = [r.get("heading_path") or [] for r in recs]
+    labels: list[str] = []
+    for r, path in zip(recs, paths):
+        label = _clean_heading((path[-1] if path else "") or r.get("title") or r.get("key", ""))
+        if label and label not in labels:
+            labels.append(label)
+
+    if len(labels) <= 2:
+        return ", ".join(labels) or ", ".join(keys)
+
+    # Many distinct labels: prefer the deepest heading shared by all of them.
+    common: list[str] = []
+    for parts in zip(*paths):
+        if all(p == parts[0] for p in parts):
+            common.append(parts[0])
+        else:
+            break
+    if common:
+        return f"{_clean_heading(common[-1])} ({len(recs)} sections)"
+    return f"{labels[0]}, {labels[1]}, +{len(labels) - 2} more"
 
 
 def _tool_detail(name: str, tool_input: dict) -> str:
@@ -609,10 +632,7 @@ def _tool_detail(name: str, tool_input: dict) -> str:
         return str(tool_input.get("query", ""))
     if name == "get_sections":
         keys = tool_input.get("keys", []) or []
-        labels = [_section_label(k) for k in keys[:3]]
-        if len(keys) > 3:
-            labels.append(f"+{len(keys) - 3} more")
-        return ", ".join(labels)
+        return _sections_detail(keys) if keys else ""
     if name == "get_wiki_page":
         return str(tool_input.get("topic_slug", ""))
     return ""
