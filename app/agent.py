@@ -307,7 +307,10 @@ TOOLS = [
             "Every legal claim in answer_markdown must be backed by a citation "
             "whose 'quote' is copied VERBATIM from the fetched section text "
             "(quotes are verified by exact substring match — paraphrases are "
-            "dropped)."
+            "dropped). 'caveats' is displayed as a highlighted note under the "
+            "answer: omit it unless there is one substantive question-specific "
+            "point, and never duplicate it as a closing note inside "
+            "answer_markdown."
         ),
         "input_schema": SUBMIT_ANSWER_SCHEMA,
         "strict": True,
@@ -353,8 +356,15 @@ answer, then the supporting detail.
 question or pad the answer with generic advice.
 - Do NOT append a legal-advice disclaimer or a "verify against the official \
 code" reminder to your answers — the site already displays that disclaimer \
-alongside every answer. Use the caveats field only for substantive, \
-question-specific caveats (e.g. "depends on your zoning district").
+alongside every answer.
+- Question-specific caveats (e.g. "the zoning ordinance may add \
+district-specific restrictions — check your district on the official zoning \
+map") belong ONLY in the 'caveats' field, which is rendered as a highlighted \
+"Note" box below your answer. Never write such a point as a closing "Note:", \
+"Caveat:", or "one more thing" paragraph inside answer_markdown — the reader \
+would see the caveat twice. Most answers need no caveat at all; when one is \
+warranted, keep it to one or two sentences and do not repeat anything already \
+said in the answer.
 - State-law questions (Massachusetts General Laws, "M.G.L.") are outside this \
 corpus, which covers only Somerville's own municipal law. If a question turns \
 on state law, say that it is out of scope here.
