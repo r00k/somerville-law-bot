@@ -14,6 +14,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import re
 import sys
 import unicodedata
 from dataclasses import dataclass, field
@@ -352,8 +353,10 @@ answer, then the supporting detail.
 - Be brief. Lead with the bottom line, and keep the whole answer under about \
 250 words unless the law genuinely requires more detail. Do not restate the \
 question or pad the answer with generic advice.
-- This is general legal information, not legal advice. Note that in your \
-answer, and tell the reader to verify against the official code.
+- Do NOT append a legal-advice disclaimer or a "verify against the official \
+code" reminder to your answers — the site already displays that disclaimer \
+alongside every answer. Use the caveats field only for substantive, \
+question-specific caveats (e.g. "depends on your zoning district").
 - State-law questions (Massachusetts General Laws, "M.G.L.") are outside this \
 corpus, which covers only Somerville's own municipal law. If a question turns \
 on state law, say that it is out of scope here.
@@ -742,10 +745,14 @@ def ask(
                     "(max tokens reached). This answer may be incomplete; "
                     "please verify against the official code."
                 )
-                body = text or (
-                    "I wasn't able to finish composing an answer for this "
-                    "question."
-                )
+                pseudo = _parse_pseudo_submit(text) if text else None
+                if pseudo is not None:
+                    body = pseudo.get("answer_markdown") or text
+                else:
+                    body = text or (
+                        "I wasn't able to finish composing an answer for this "
+                        "question."
+                    )
             return Answer(
                 answer_markdown=body,
                 citations=[],
@@ -850,7 +857,14 @@ def ask(
             if response.content:
                 messages.append({"role": "assistant", "content": response.content})
             messages.append(
-                {"role": "user", "content": "Reply by calling submit_answer."}
+                {
+                    "role": "user",
+                    "content": (
+                        "Reply by calling the submit_answer tool — an actual "
+                        "tool call, not the answer written out as text or "
+                        "XML-style tags."
+                    ),
+                }
             )
             continue
 
@@ -861,9 +875,48 @@ def ask(
     return _synthesize_answer(None, usage_total)
 
 
+def _parse_pseudo_submit(text: str) -> dict | None:
+    """Salvage a submit_answer-shaped payload from pseudo-XML text.
+
+    The model occasionally writes its final answer as plain text with XML-ish
+    tags mirroring the submit_answer schema (<answer_markdown>…<citations>…)
+    instead of calling the tool. Extract the fields so the answer can run
+    through the normal citation-verification path rather than showing raw
+    markup to the reader. Returns None if the text isn't in that shape.
+    """
+    m = re.search(
+        r"<answer_markdown>\s*(.*?)\s*(?:</answer_markdown>|\Z)", text, re.DOTALL
+    )
+    if not m:
+        return None
+    payload: dict = {"answer_markdown": m.group(1)}
+
+    cite_match = re.search(r"<citations>\s*(.*?)\s*</citations>", text, re.DOTALL)
+    if cite_match:
+        try:
+            citations = json.loads(cite_match.group(1))
+        except ValueError:
+            citations = None
+        if isinstance(citations, list):
+            payload["citations"] = [c for c in citations if isinstance(c, dict)]
+
+    conf_match = re.search(r"<confidence>\s*(high|medium|low)\s*</confidence>", text)
+    payload["confidence"] = conf_match.group(1) if conf_match else "low"
+
+    caveat_match = re.search(r"<caveats>\s*(.*?)\s*</caveats>", text, re.DOTALL)
+    if caveat_match:
+        payload["caveats"] = caveat_match.group(1)
+    return payload
+
+
 def _synthesize_answer(content, usage: dict) -> Answer:
     """Fallback Answer when the model never called submit_answer."""
     text = _text_from_content(content) if content else ""
+    pseudo = _parse_pseudo_submit(text) if text else None
+    if pseudo is not None:
+        # Tagged text mirroring the submit_answer schema: recover the fields
+        # and verify citations exactly as if the tool had been called.
+        return _build_answer_from_submit(pseudo, usage)
     if not text:
         text = (
             "I wasn't able to complete a fully-formed answer for this "
