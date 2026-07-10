@@ -63,7 +63,7 @@ Expected outputs:
 - `somerville-zoning.readable.html`
 - `somerville-law-combined.md` (regenerated automatically whenever either fetch script runs, when both source Markdown files are present)
 
-## Ask Somerville Law (Q&A web app)
+## Somerville Law Bot (Q&A web app)
 
 `app/` contains a web app where residents ask plain-language questions ("Can I use a gas-powered leaf blower in July?", "Can I raise chickens?") and get answers grounded in the corpus. Every legal claim carries a citation whose quote is verified verbatim against the ordinance text before display, deep-linked into the readable editions. Powered by Claude Opus 4.8 via the Anthropic API.
 

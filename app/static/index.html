@@ -3,68 +3,70 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Ask Somerville Law</title>
+<title>Somerville Law Bot</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cline x1='32' y1='6' x2='32' y2='16' stroke='%236cb2ff' stroke-width='3'/%3E%3Ccircle cx='32' cy='6' r='4' fill='%233ddc97'/%3E%3Crect x='12' y='16' width='40' height='34' rx='9' fill='%23151e2a' stroke='%236cb2ff' stroke-width='3'/%3E%3Ccircle cx='24' cy='31' r='4' fill='%233ddc97'/%3E%3Ccircle cx='40' cy='31' r='4' fill='%233ddc97'/%3E%3Cpath d='M24 40 Q32 45 40 40' stroke='%236cb2ff' stroke-width='3' fill='none' stroke-linecap='round'/%3E%3C/svg%3E">
 <style>
   :root {
-    color-scheme: light dark;
-    --color-bg: #f5f7fb;
-    --color-surface: #ffffff;
-    --color-surface-alt: #eef3f9;
-    --color-text: #1b2430;
-    --color-muted: #5b6b7c;
-    --color-primary: #1d4e89;
-    --color-primary-strong: #123a68;
-    --color-border: #dbe3ee;
-    --color-shadow: rgba(20, 30, 50, 0.08);
-    --serif: Georgia, "Iowan Old Style", "Palatino Linotype", Palatino, serif;
+    color-scheme: dark;
+    --bg: #0f1620;
+    --panel: #151e2a;
+    --panel-deep: #121a25;
+    --line: #24303f;
+    --ink: #e6edf5;
+    --muted: #7b8a9c;
+    --dim: #566575;
+    --blue: #6cb2ff;
+    --green: #3ddc97;
+    --amber: #e3b341;
+    --red: #ff7b72;
     --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    --radius: 10px;
-  }
-
-  @media (prefers-color-scheme: dark) {
-    :root {
-      --color-bg: #10151d;
-      --color-surface: #171e29;
-      --color-surface-alt: #1c2635;
-      --color-text: #e6ebf2;
-      --color-muted: #96a5b6;
-      --color-primary: #7fb0e8;
-      --color-primary-strong: #9dc4f0;
-      --color-border: #2a3546;
-      --color-shadow: rgba(0, 0, 0, 0.45);
-    }
+    --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
   }
 
   * { box-sizing: border-box; }
 
   body {
     margin: 0;
-    background: var(--color-bg);
-    color: var(--color-text);
+    background: var(--bg);
+    color: var(--ink);
     font-family: var(--sans);
-    line-height: 1.55;
+    line-height: 1.6;
   }
 
   .page {
-    max-width: 44rem;
+    max-width: 46rem;
     margin: 0 auto;
-    padding: 2.5rem 1.25rem 4rem;
+    padding: 2.25rem 1.25rem 4rem;
   }
+
+  .site-header {
+    display: flex;
+    align-items: center;
+    gap: 0.9rem;
+    padding-bottom: 1.1rem;
+    margin-bottom: 1.5rem;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .mascot { flex-shrink: 0; display: block; }
 
   .site-header h1 {
-    font-family: var(--serif);
-    font-size: 2rem;
-    margin: 0 0 0.35rem;
-    color: var(--color-primary-strong);
-    letter-spacing: -0.01em;
+    margin: 0;
+    font-size: 1.35rem;
+    font-weight: 650;
+    letter-spacing: 0.01em;
   }
 
-  .subtitle {
-    margin: 0 0 2rem;
-    color: var(--color-muted);
-    font-size: 1.05rem;
-    max-width: 38rem;
+  .site-header h1 .dim { color: var(--muted); font-weight: 400; }
+
+  .corpus-stat {
+    margin: 0.15rem 0 0;
+    font-family: var(--mono);
+    font-size: 0.72rem;
+    color: var(--dim);
+    letter-spacing: 0.05em;
   }
+  .corpus-stat b { color: var(--green); font-weight: 600; }
 
   .visually-hidden {
     position: absolute;
@@ -75,269 +77,329 @@
   }
 
   .ask-panel {
-    background: var(--color-surface);
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius);
-    padding: 1.5rem;
-    box-shadow: 0 1px 3px var(--color-shadow);
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 1.25rem;
   }
 
   .chips {
     display: flex;
     flex-wrap: wrap;
     gap: 0.5rem;
-    margin-bottom: 1.1rem;
+    margin-bottom: 1rem;
   }
 
   .chip {
-    font: inherit;
-    font-size: 0.85rem;
-    background: var(--color-surface-alt);
-    color: var(--color-primary-strong);
-    border: 1px solid var(--color-border);
+    font-family: var(--mono);
+    font-size: 0.75rem;
+    background: var(--panel-deep);
+    color: var(--blue);
+    border: 1px solid var(--line);
     border-radius: 999px;
-    padding: 0.4rem 0.85rem;
+    padding: 0.35rem 0.8rem;
     cursor: pointer;
-    transition: background 0.15s ease;
+    transition: border-color 0.15s ease;
   }
 
-  .chip:hover:not(:disabled) { background: var(--color-border); }
-  .chip:disabled { opacity: 0.55; cursor: not-allowed; }
+  .chip:hover:not(:disabled) { border-color: var(--blue); }
+  .chip:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  .prompt-row {
+    display: flex;
+    gap: 0.7rem;
+    align-items: flex-start;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: var(--panel-deep);
+    padding: 0.75rem 0.9rem;
+  }
+
+  .prompt-row:focus-within {
+    outline: 2px solid var(--blue);
+    outline-offset: 1px;
+  }
+
+  .prompt-caret {
+    font-family: var(--mono);
+    color: var(--green);
+    font-weight: 700;
+    font-size: 1.05rem;
+    line-height: 1.5;
+    user-select: none;
+  }
 
   textarea {
+    flex: 1;
     width: 100%;
     font: inherit;
     font-size: 1rem;
-    color: var(--color-text);
-    background: var(--color-bg);
-    border: 1px solid var(--color-border);
-    border-radius: 8px;
-    padding: 0.75rem 0.9rem;
+    color: var(--ink);
+    background: transparent;
+    border: none;
+    padding: 0;
     resize: vertical;
-    min-height: 4.5rem;
+    min-height: 3.2rem;
+    line-height: 1.5;
   }
 
-  textarea:focus {
-    outline: 2px solid var(--color-primary);
-    outline-offset: 1px;
-  }
+  textarea:focus { outline: none; }
+  textarea::placeholder { color: var(--dim); }
 
   .form-row {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-top: 0.6rem;
+    gap: 1rem;
+    margin-top: 0.8rem;
   }
 
   .char-count {
-    color: var(--color-muted);
-    font-size: 0.8rem;
+    font-family: var(--mono);
+    color: var(--dim);
+    font-size: 0.72rem;
+    letter-spacing: 0.05em;
   }
 
   button[type="submit"] {
     font: inherit;
-    font-weight: 600;
-    background: var(--color-primary);
-    color: #ffffff;
+    font-weight: 700;
+    font-size: 0.9rem;
+    background: var(--blue);
+    color: var(--bg);
     border: none;
-    border-radius: 8px;
-    padding: 0.55rem 1.3rem;
+    border-radius: 7px;
+    padding: 0.5rem 1.4rem;
     cursor: pointer;
-    transition: background 0.15s ease;
+    transition: filter 0.15s ease;
   }
 
-  button[type="submit"]:hover:not(:disabled) { background: var(--color-primary-strong); }
-  button[type="submit"]:disabled { opacity: 0.6; cursor: not-allowed; }
-
-  .progress {
-    display: flex;
-    align-items: center;
-    gap: 0.6rem;
-    color: var(--color-muted);
-    font-size: 0.92rem;
-    margin: 1rem 0 0;
+  button[type="submit"]:hover:not(:disabled) { filter: brightness(1.12); }
+  button[type="submit"]:disabled { opacity: 0.55; cursor: not-allowed; }
+  button:focus-visible, .chip:focus-visible, a:focus-visible {
+    outline: 2px solid var(--blue);
+    outline-offset: 2px;
   }
 
-  .progress-dot {
-    width: 0.55em;
-    height: 0.55em;
-    border-radius: 50%;
-    background: var(--color-primary);
-    animation: pulse 1.4s ease-in-out infinite;
-    flex-shrink: 0;
+  .trace {
+    font-family: var(--mono);
+    font-size: 0.76rem;
+    color: var(--dim);
+    line-height: 2;
+    margin: 1.2rem 0 0;
+    letter-spacing: 0.01em;
   }
 
-  @keyframes pulse {
-    0%, 100% { opacity: 0.3; transform: scale(0.85); }
-    50% { opacity: 1; transform: scale(1); }
+  .trace-line .tm { display: inline-block; width: 1.2em; color: var(--muted); }
+  .trace-line.done .tm { color: var(--green); }
+  .trace-line.current { color: var(--muted); }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .trace-line.current { animation: trace-pulse 1.4s ease-in-out infinite; }
+    @keyframes trace-pulse {
+      0%, 100% { opacity: 0.55; }
+      50% { opacity: 1; }
+    }
   }
 
   .error-message {
     margin: 1rem 0 0;
     padding: 0.75rem 1rem;
-    background: var(--color-surface-alt);
-    border: 1px solid var(--color-border);
-    border-left: 4px solid #b3441e;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-left: 3px solid var(--red);
     border-radius: 6px;
-    color: var(--color-text);
-    font-size: 0.95rem;
+    color: var(--ink);
+    font-size: 0.92rem;
   }
 
   .answer {
-    margin-top: 1.75rem;
-    background: var(--color-surface);
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius);
-    padding: 1.5rem;
-    box-shadow: 0 1px 3px var(--color-shadow);
+    margin-top: 1.4rem;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    overflow: hidden;
   }
 
-  .answer-header {
+  .answer-bar {
     display: flex;
-    justify-content: flex-end;
-    margin-bottom: 0.5rem;
-    min-height: 1.4rem;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    background: var(--panel);
+    border-bottom: 1px solid var(--line);
+    padding: 0.6rem 1.2rem;
+    min-height: 2.4rem;
   }
 
-  .badge {
+  .answer-bar .lbl {
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .confmeter {
     display: inline-flex;
     align-items: center;
-    padding: 0.25em 0.8em;
-    border-radius: 999px;
-    font-size: 0.75rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
+    gap: 0.55rem;
+    font-family: var(--mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.08em;
   }
 
-  .badge-high { background: #dff3e6; color: #1c7a42; }
-  .badge-medium { background: #fbf0cf; color: #8a6100; }
-  .badge-low { background: #e6eaf0; color: #5b6b7c; }
+  .confmeter .bars { display: inline-flex; gap: 2px; }
+  .confmeter .bars i {
+    width: 0.85rem;
+    height: 0.4rem;
+    background: var(--line);
+    border-radius: 1px;
+  }
 
-  .badge-high, .badge-medium, .badge-low { animation: badge-in 0.4s ease; }
+  .conf-high { color: var(--green); }
+  .conf-high .bars i.on { background: var(--green); }
+  .conf-medium { color: var(--amber); }
+  .conf-medium .bars i.on { background: var(--amber); }
+  .conf-low { color: var(--muted); }
+  .conf-low .bars i.on { background: var(--muted); }
+
+  .conf-high, .conf-medium, .conf-low { animation: badge-in 0.4s ease; }
   @keyframes badge-in { from { opacity: 0; } }
 
-  @media (prefers-color-scheme: dark) {
-    .badge-high { background: #163826; color: #7ee3a4; }
-    .badge-medium { background: #3a2f0d; color: #f0cf6b; }
-    .badge-low { background: #232c39; color: #b7c3d1; }
+  .answer-body {
+    padding: 1.15rem 1.25rem 0.4rem;
+    font-size: 0.98rem;
   }
 
-  .answer-body { font-size: 1.02rem; }
   .answer-body.streaming::after {
     content: "▍";
     display: inline;
     margin-left: 1px;
-    color: var(--color-primary);
+    color: var(--green);
     animation: blink 1s steps(2, start) infinite;
   }
 
   @keyframes blink {
     50% { opacity: 0; }
   }
-  .answer-body p { margin: 0 0 0.9rem; }
-  .answer-body ul { margin: 0 0 0.9rem 1.2rem; padding: 0; }
+
+  .answer-body p { margin: 0 0 0.85rem; }
+  .answer-body ul { margin: 0 0 0.85rem 1.2rem; padding: 0; }
   .answer-body li { margin: 0.2rem 0; }
+  .answer-body strong { color: var(--blue); font-weight: 600; }
   .answer-body code {
-    background: var(--color-surface-alt);
-    padding: 0.1em 0.35em;
+    font-family: var(--mono);
+    background: var(--panel);
+    border: 1px solid var(--line);
+    padding: 0.08em 0.35em;
     border-radius: 4px;
-    font-size: 0.92em;
+    font-size: 0.88em;
   }
-  .answer-body a { color: var(--color-primary); }
+  .answer-body a { color: var(--blue); }
 
   .caveats {
-    margin: 0.5rem 0 1.25rem;
-    padding: 0.75rem 1rem;
-    background: var(--color-surface-alt);
-    border-left: 4px solid var(--color-primary);
+    margin: 0 1.25rem 1.1rem;
+    padding: 0.7rem 1rem;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-left: 3px solid var(--amber);
     border-radius: 6px;
-    font-size: 0.92rem;
-    color: var(--color-text);
+    font-size: 0.88rem;
   }
 
-  .citations-heading {
-    margin: 1.75rem 0 0;
-    padding-top: 1.1rem;
-    border-top: 1px solid var(--color-border);
+  .sources {
+    border-top: 1px solid var(--line);
+    background: var(--panel-deep);
+    padding: 1rem 1.25rem 1.25rem;
   }
 
   .citations-heading h2 {
-    margin: 0;
-    font-family: var(--sans);
-    font-size: 0.8rem;
+    margin: 0 0 0.2rem;
+    font-family: var(--mono);
+    font-size: 0.7rem;
     font-weight: 600;
-    letter-spacing: 0.08em;
+    letter-spacing: 0.16em;
     text-transform: uppercase;
-    color: var(--color-muted);
+    color: var(--muted);
   }
 
   .citations-heading p {
-    margin: 0.25rem 0 0;
-    font-size: 0.85rem;
-    color: var(--color-muted);
+    margin: 0;
+    font-size: 0.78rem;
+    color: var(--dim);
   }
+
+  .citations-heading p b { color: var(--green); font-weight: 600; }
 
   .citations {
     display: flex;
     flex-direction: column;
-    gap: 0.9rem;
-    margin-top: 1rem;
+    gap: 0.6rem;
+    margin-top: 0.9rem;
   }
 
   .no-citations {
-    color: var(--color-muted);
-    font-size: 0.92rem;
+    color: var(--muted);
+    font-size: 0.88rem;
+    margin: 0;
   }
 
   .citation-card {
-    border: 1px solid var(--color-border);
+    border: 1px solid var(--line);
     border-radius: 8px;
-    padding: 0.9rem 1rem;
-    background: var(--color-bg);
+    padding: 0.8rem 1rem;
+    background: var(--panel);
   }
 
-  .citation-header {
+  .refline {
     display: flex;
-    align-items: center;
+    align-items: baseline;
     justify-content: space-between;
-    gap: 0.75rem;
+    gap: 0.8rem;
     flex-wrap: wrap;
-    margin-bottom: 0.4rem;
+    margin-bottom: 0.45rem;
   }
 
-  .citation-header a {
-    font-weight: 600;
-    color: var(--color-primary-strong);
+  .refline a {
+    font-family: var(--mono);
+    font-size: 0.78rem;
+    color: var(--blue);
     text-decoration: none;
   }
-  .citation-header a:hover { text-decoration: underline; }
+  .refline a:hover { text-decoration: underline; }
+
+  .refline .match {
+    font-family: var(--mono);
+    font-size: 0.66rem;
+    color: var(--green);
+    letter-spacing: 0.1em;
+    white-space: nowrap;
+  }
 
   .citation-card blockquote {
-    margin: 0 0 0.5rem;
-    padding: 0.5rem 0.9rem;
-    border-left: 3px solid var(--color-border);
-    font-family: var(--serif);
-    font-style: italic;
-    color: var(--color-text);
+    margin: 0 0 0.45rem;
+    font-family: var(--mono);
+    font-size: 0.78rem;
+    line-height: 1.65;
+    color: #b9c6d4;
   }
 
   .why-relevant {
     margin: 0;
-    color: var(--color-muted);
-    font-size: 0.9rem;
+    color: var(--dim);
+    font-size: 0.82rem;
   }
 
   .site-footer {
     margin-top: 3rem;
     padding-top: 1.25rem;
-    border-top: 1px solid var(--color-border);
-    color: var(--color-muted);
-    font-size: 0.82rem;
+    border-top: 1px solid var(--line);
+    color: var(--dim);
+    font-size: 0.8rem;
     line-height: 1.6;
   }
 
-  .site-footer a { color: var(--color-muted); }
+  .site-footer a { color: var(--muted); }
 
   [hidden] { display: none !important; }
 </style>
@@ -345,57 +407,69 @@
 <body>
 <div class="page">
   <header class="site-header">
-    <h1>Ask Somerville Law</h1>
-    <p class="subtitle">
-      Ask a plain-language question about Somerville's Code of Ordinances or
-      Zoning Ordinance. Answers are drawn from and cited to the actual law text.
-    </p>
+    <svg class="mascot" width="46" height="46" viewBox="0 0 64 64" role="img" aria-label="Somerville Law Bot mascot">
+      <line x1="32" y1="6" x2="32" y2="16" stroke="#6cb2ff" stroke-width="3"/>
+      <circle cx="32" cy="6" r="4" fill="#3ddc97"/>
+      <rect x="12" y="16" width="40" height="34" rx="9" fill="#151e2a" stroke="#6cb2ff" stroke-width="3"/>
+      <rect x="6" y="27" width="6" height="12" rx="3" fill="#24303f" stroke="#6cb2ff" stroke-width="2"/>
+      <rect x="52" y="27" width="6" height="12" rx="3" fill="#24303f" stroke="#6cb2ff" stroke-width="2"/>
+      <circle cx="24" cy="31" r="4" fill="#3ddc97"/>
+      <circle cx="40" cy="31" r="4" fill="#3ddc97"/>
+      <path d="M24 40 Q32 45 40 40" stroke="#6cb2ff" stroke-width="3" fill="none" stroke-linecap="round"/>
+    </svg>
+    <div>
+      <h1>Somerville Law Bot <span class="dim">/ grounded answers, verified quotes</span></h1>
+      <p class="corpus-stat">corpus: <b>3,346 sections</b> · every quote checked against the ordinance text</p>
+    </div>
   </header>
 
   <main>
     <section class="ask-panel">
       <div class="chips" id="chips">
-        <button type="button" class="chip" data-question="Can I use a gas-powered leaf blower in July?">Leaf blower in July</button>
-        <button type="button" class="chip" data-question="Can I raise chickens in my backyard?">Raise chickens</button>
-        <button type="button" class="chip" data-question="How long is the mayor's term of office?">Mayor's term</button>
-        <button type="button" class="chip" data-question="Am I required to shovel snow from my sidewalk?">Shovel sidewalk snow</button>
+        <button type="button" class="chip" data-question="Can I use a gas-powered leaf blower in July?">leaf blower in july?</button>
+        <button type="button" class="chip" data-question="Can I raise chickens in my backyard?">raise chickens?</button>
+        <button type="button" class="chip" data-question="How long is the mayor's term of office?">mayor's term?</button>
+        <button type="button" class="chip" data-question="Am I required to shovel snow from my sidewalk?">shovel sidewalk snow?</button>
       </div>
 
       <form id="ask-form">
         <label for="question" class="visually-hidden">Your question</label>
-        <textarea
-          id="question"
-          name="question"
-          rows="3"
-          maxlength="1000"
-          placeholder="Ask about noise rules, permits, snow shoveling, pets, parking…"
-          required
-        ></textarea>
+        <div class="prompt-row">
+          <span class="prompt-caret" aria-hidden="true">❯</span>
+          <textarea
+            id="question"
+            name="question"
+            rows="2"
+            maxlength="1000"
+            placeholder="Ask about noise rules, permits, snow shoveling, pets, parking…"
+            required
+          ></textarea>
+        </div>
         <div class="form-row">
           <span class="char-count" id="char-count">0 / 1000</span>
-          <button type="submit" id="ask-button">Ask</button>
+          <button type="submit" id="ask-button">Run query</button>
         </div>
       </form>
 
-      <p class="progress" id="progress" hidden>
-        <span class="progress-dot" aria-hidden="true"></span>
-        <span id="progress-text">Researching…</span>
-      </p>
+      <div class="trace" id="progress" hidden aria-live="polite"></div>
 
       <p class="error-message" id="error-message" hidden></p>
     </section>
 
     <section class="answer" id="answer" hidden aria-live="polite">
-      <div class="answer-header">
-        <span class="badge" id="confidence-badge"></span>
+      <div class="answer-bar">
+        <span class="lbl">Answer</span>
+        <span id="confidence-badge"></span>
       </div>
       <div class="answer-body" id="answer-body"></div>
       <div class="caveats" id="caveats" hidden></div>
-      <div class="citations-heading" id="citations-heading" hidden>
-        <h2>Sources</h2>
-        <p>Direct from Somerville's municipal law.</p>
+      <div class="sources" id="sources-section" hidden>
+        <div class="citations-heading">
+          <h2>Sources</h2>
+          <p id="citations-note"></p>
+        </div>
+        <div class="citations" id="citations"></div>
       </div>
-      <div class="citations" id="citations"></div>
     </section>
   </main>
 
@@ -420,12 +494,12 @@
   var textarea = document.getElementById("question");
   var askButton = document.getElementById("ask-button");
   var progressEl = document.getElementById("progress");
-  var progressText = document.getElementById("progress-text");
   var errorEl = document.getElementById("error-message");
   var answerSection = document.getElementById("answer");
   var answerBody = document.getElementById("answer-body");
   var citationsEl = document.getElementById("citations");
-  var citationsHeading = document.getElementById("citations-heading");
+  var sourcesSection = document.getElementById("sources-section");
+  var citationsNote = document.getElementById("citations-note");
   var caveatsEl = document.getElementById("caveats");
   var confidenceBadge = document.getElementById("confidence-badge");
   var charCount = document.getElementById("char-count");
@@ -461,12 +535,38 @@
 
   function setBusy(busy) {
     askButton.disabled = busy;
-    askButton.textContent = busy ? "Asking…" : "Ask";
+    askButton.textContent = busy ? "Running…" : "Run query";
     textarea.disabled = busy;
     var chipButtons = chips.querySelectorAll(".chip");
     for (var i = 0; i < chipButtons.length; i++) {
       chipButtons[i].disabled = busy;
     }
+  }
+
+  // --- research trace: the agent's steps accumulate as a visible log ---
+
+  function traceCompleteCurrent() {
+    var current = progressEl.querySelector(".trace-line.current");
+    if (current) {
+      current.classList.remove("current");
+      current.classList.add("done");
+      current.querySelector(".tm").textContent = "✓";
+    }
+  }
+
+  function tracePush(text) {
+    var current = progressEl.querySelector(".trace-line.current");
+    if (current && current.dataset.text === text) return;
+    traceCompleteCurrent();
+    var line = document.createElement("div");
+    line.className = "trace-line current";
+    line.dataset.text = text;
+    var marker = document.createElement("span");
+    marker.className = "tm";
+    marker.textContent = "▸";
+    line.appendChild(marker);
+    line.appendChild(document.createTextNode(text));
+    progressEl.appendChild(line);
   }
 
   function resetUI() {
@@ -477,13 +577,15 @@
     answerBody.classList.remove("streaming");
     provisionalAnswer = "";
     citationsEl.innerHTML = "";
-    citationsHeading.hidden = true;
+    citationsNote.textContent = "";
+    sourcesSection.hidden = true;
     caveatsEl.hidden = true;
     caveatsEl.textContent = "";
     confidenceBadge.textContent = "";
-    confidenceBadge.className = "badge";
+    confidenceBadge.className = "";
+    progressEl.innerHTML = "";
     progressEl.hidden = false;
-    progressText.textContent = "Researching…";
+    tracePush("researching…");
   }
 
   function showError(message) {
@@ -521,7 +623,7 @@
       })
       .finally(function () {
         setBusy(false);
-        progressEl.hidden = true;
+        traceCompleteCurrent();
       });
   }
 
@@ -572,10 +674,10 @@
   function handleEvent(payload) {
     switch (payload.type) {
       case "thinking":
-        progressText.textContent = "Researching…";
+        tracePush("reasoning…");
         break;
       case "tool":
-        progressText.textContent = describeTool(payload);
+        tracePush(describeTool(payload));
         break;
       case "answer_delta":
         appendAnswerDelta(payload.text || "");
@@ -590,7 +692,7 @@
         showError(payload.message || "Something went wrong while answering your question.");
         break;
       case "done":
-        progressEl.hidden = true;
+        traceCompleteCurrent();
         break;
       default:
         break;
@@ -601,21 +703,22 @@
     var detail = payload.detail || "";
     switch (payload.name) {
       case "search_law":
-        return "Searching: " + detail + "…";
+        return 'search_law "' + detail + '"';
       case "get_sections":
-        return "Reading " + detail + "…";
+        return "get_sections " + detail;
       case "get_wiki_page":
-        return "Checking topic guide: " + detail + "…";
+        return "topic_guide " + detail;
       default:
-        return detail ? payload.name + ": " + detail + "…" : "Working…";
+        return detail ? payload.name + " " + detail : payload.name || "working…";
     }
   }
 
   function appendAnswerDelta(text) {
-    // Provisional answer streaming in: hide the progress line, reveal the
-    // answer area, and re-render the accumulated markdown, marked in-progress.
-    progressEl.hidden = true;
+    // Provisional answer streaming in: reveal the answer area and re-render
+    // the accumulated markdown, marked in-progress. The trace stays visible
+    // above the answer as a record of the research.
     answerSection.hidden = false;
+    tracePush("drafting answer…");
     provisionalAnswer += text;
     answerBody.classList.add("streaming");
     answerBody.innerHTML = renderMarkdown(provisionalAnswer);
@@ -627,18 +730,18 @@
     provisionalAnswer = "";
     answerBody.innerHTML = "";
     answerBody.classList.add("streaming");
+    tracePush("re-checking citations…");
   }
 
   function renderAnswer(answer) {
-    progressEl.hidden = true;
     answerSection.hidden = false;
+    traceCompleteCurrent();
 
     // Replace any provisional streamed rendering with the authoritative answer.
     provisionalAnswer = "";
     answerBody.classList.remove("streaming");
 
-    confidenceBadge.textContent = confidenceLabel(answer.confidence);
-    confidenceBadge.className = "badge " + confidenceClass(answer.confidence);
+    renderConfidence(answer.confidence);
 
     answerBody.innerHTML = renderMarkdown(answer.answer_markdown || "");
 
@@ -650,30 +753,36 @@
     }
 
     citationsEl.innerHTML = "";
-    citationsHeading.hidden = false;
+    sourcesSection.hidden = false;
     var citations = Array.isArray(answer.citations) ? answer.citations : [];
     if (!citations.length) {
+      citationsNote.textContent = "";
       var p = document.createElement("p");
       p.className = "no-citations";
       p.textContent = "No verified citations were found for this answer.";
       citationsEl.appendChild(p);
     } else {
+      var n = citations.length;
+      citationsNote.innerHTML =
+        n + " of " + n + " quote" + (n === 1 ? "" : "s") +
+        " matched the ordinance text <b>character-for-character</b>.";
       for (var i = 0; i < citations.length; i++) {
         citationsEl.appendChild(renderCitationCard(citations[i]));
       }
     }
   }
 
-  function confidenceLabel(confidence) {
-    if (confidence === "high") return "High confidence";
-    if (confidence === "medium") return "Medium confidence";
-    return "Low confidence";
-  }
-
-  function confidenceClass(confidence) {
-    if (confidence === "high") return "badge-high";
-    if (confidence === "medium") return "badge-medium";
-    return "badge-low";
+  function renderConfidence(confidence) {
+    var cls = confidence === "high" ? "conf-high" : confidence === "medium" ? "conf-medium" : "conf-low";
+    var on = confidence === "high" ? 3 : confidence === "medium" ? 2 : 1;
+    var label = confidence === "high" ? "HIGH" : confidence === "medium" ? "MEDIUM" : "LOW";
+    confidenceBadge.className = "confmeter " + cls;
+    var bars = '<span class="bars" aria-hidden="true">';
+    for (var i = 0; i < 3; i++) {
+      bars += '<i class="' + (i < on ? "on" : "") + '"></i>';
+    }
+    bars += "</span>";
+    confidenceBadge.innerHTML = bars + " CONFIDENCE " + label;
   }
 
   function formatSectionLabel(key) {
@@ -690,17 +799,22 @@
     var card = document.createElement("article");
     card.className = "citation-card";
 
-    var header = document.createElement("div");
-    header.className = "citation-header";
+    var refline = document.createElement("div");
+    refline.className = "refline";
 
     var link = document.createElement("a");
     link.href = citation.url || "#";
     link.target = "_blank";
     link.rel = "noopener noreferrer";
     link.textContent = citation.section_title || formatSectionLabel(citation.section_key);
-    header.appendChild(link);
+    refline.appendChild(link);
 
-    card.appendChild(header);
+    var match = document.createElement("span");
+    match.className = "match";
+    match.textContent = "VERBATIM ✓";
+    refline.appendChild(match);
+
+    card.appendChild(refline);
 
     if (citation.quote) {
       var quote = document.createElement("blockquote");

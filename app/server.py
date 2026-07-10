@@ -54,7 +54,7 @@ _DAY_SECONDS = 86400
 # IPs between the arrival of their requests and the next expiry sweep.
 _MAX_IP_BUCKETS = 50_000
 
-app = FastAPI(title="Ask Somerville Law")
+app = FastAPI(title="Somerville Law Bot")
 
 if STATIC_DIR.exists():
     app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
