@@ -196,6 +196,7 @@
     display: flex;
     justify-content: flex-end;
     margin-bottom: 0.5rem;
+    min-height: 1.4rem;
   }
 
   .badge {
@@ -213,6 +214,9 @@
   .badge-medium { background: #fbf0cf; color: #8a6100; }
   .badge-low { background: #e6eaf0; color: #5b6b7c; }
 
+  .badge-high, .badge-medium, .badge-low { animation: badge-in 0.4s ease; }
+  @keyframes badge-in { from { opacity: 0; } }
+
   @media (prefers-color-scheme: dark) {
     .badge-high { background: #163826; color: #7ee3a4; }
     .badge-medium { background: #3a2f0d; color: #f0cf6b; }
@@ -220,7 +224,6 @@
   }
 
   .answer-body { font-size: 1.02rem; }
-  .answer-body.streaming { opacity: 0.72; }
   .answer-body.streaming::after {
     content: "▍";
     display: inline;
@@ -251,6 +254,28 @@
     border-radius: 6px;
     font-size: 0.92rem;
     color: var(--color-text);
+  }
+
+  .citations-heading {
+    margin: 1.75rem 0 0;
+    padding-top: 1.1rem;
+    border-top: 1px solid var(--color-border);
+  }
+
+  .citations-heading h2 {
+    margin: 0;
+    font-family: var(--sans);
+    font-size: 0.8rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-muted);
+  }
+
+  .citations-heading p {
+    margin: 0.25rem 0 0;
+    font-size: 0.85rem;
+    color: var(--color-muted);
   }
 
   .citations {
@@ -287,16 +312,6 @@
     text-decoration: none;
   }
   .citation-header a:hover { text-decoration: underline; }
-
-  .verified-tick {
-    font-size: 0.78rem;
-    font-weight: 600;
-    color: #1c7a42;
-  }
-
-  @media (prefers-color-scheme: dark) {
-    .verified-tick { color: #7ee3a4; }
-  }
 
   .citation-card blockquote {
     margin: 0 0 0.5rem;
@@ -364,7 +379,7 @@
 
       <p class="progress" id="progress" hidden>
         <span class="progress-dot" aria-hidden="true"></span>
-        <span id="progress-text">Thinking…</span>
+        <span id="progress-text">Researching…</span>
       </p>
 
       <p class="error-message" id="error-message" hidden></p>
@@ -376,6 +391,10 @@
       </div>
       <div class="answer-body" id="answer-body"></div>
       <div class="caveats" id="caveats" hidden></div>
+      <div class="citations-heading" id="citations-heading" hidden>
+        <h2>Sources</h2>
+        <p>Direct from Somerville's municipal law.</p>
+      </div>
       <div class="citations" id="citations"></div>
     </section>
   </main>
@@ -406,6 +425,7 @@
   var answerSection = document.getElementById("answer");
   var answerBody = document.getElementById("answer-body");
   var citationsEl = document.getElementById("citations");
+  var citationsHeading = document.getElementById("citations-heading");
   var caveatsEl = document.getElementById("caveats");
   var confidenceBadge = document.getElementById("confidence-badge");
   var charCount = document.getElementById("char-count");
@@ -415,6 +435,13 @@
 
   textarea.addEventListener("input", function () {
     charCount.textContent = textarea.value.length + " / 1000";
+  });
+
+  textarea.addEventListener("keydown", function (e) {
+    if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
+      e.preventDefault();
+      form.requestSubmit();
+    }
   });
 
   chips.addEventListener("click", function (e) {
@@ -450,12 +477,13 @@
     answerBody.classList.remove("streaming");
     provisionalAnswer = "";
     citationsEl.innerHTML = "";
+    citationsHeading.hidden = true;
     caveatsEl.hidden = true;
     caveatsEl.textContent = "";
     confidenceBadge.textContent = "";
     confidenceBadge.className = "badge";
     progressEl.hidden = false;
-    progressText.textContent = "Thinking…";
+    progressText.textContent = "Researching…";
   }
 
   function showError(message) {
@@ -544,7 +572,7 @@
   function handleEvent(payload) {
     switch (payload.type) {
       case "thinking":
-        progressText.textContent = "Thinking…";
+        progressText.textContent = "Researching…";
         break;
       case "tool":
         progressText.textContent = describeTool(payload);
@@ -622,6 +650,7 @@
     }
 
     citationsEl.innerHTML = "";
+    citationsHeading.hidden = false;
     var citations = Array.isArray(answer.citations) ? answer.citations : [];
     if (!citations.length) {
       var p = document.createElement("p");
@@ -670,13 +699,6 @@
     link.rel = "noopener noreferrer";
     link.textContent = citation.section_title || formatSectionLabel(citation.section_key);
     header.appendChild(link);
-
-    if (citation.verified) {
-      var tick = document.createElement("span");
-      tick.className = "verified-tick";
-      tick.textContent = "✓ Verified";
-      header.appendChild(tick);
-    }
 
     card.appendChild(header);
 
