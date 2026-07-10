@@ -329,8 +329,6 @@
     color: var(--dim);
   }
 
-  .citations-heading p b { color: var(--green); font-weight: 600; }
-
   .citations {
     display: flex;
     flex-direction: column;
@@ -367,14 +365,6 @@
     text-decoration: none;
   }
   .refline a:hover { text-decoration: underline; }
-
-  .refline .match {
-    font-family: var(--mono);
-    font-size: 0.66rem;
-    color: var(--green);
-    letter-spacing: 0.1em;
-    white-space: nowrap;
-  }
 
   .citation-card blockquote {
     margin: 0 0 0.45rem;
@@ -418,8 +408,8 @@
       <path d="M24 40 Q32 45 40 40" stroke="#6cb2ff" stroke-width="3" fill="none" stroke-linecap="round"/>
     </svg>
     <div>
-      <h1>Somerville Law Bot <span class="dim">/ grounded answers, verified quotes</span></h1>
-      <p class="corpus-stat">corpus: <b>3,346 sections</b> · every quote checked against the ordinance text</p>
+      <h1>Somerville Law Bot <span class="dim">/ ask an AI about Somerville law</span></h1>
+      <p class="corpus-stat">source: <b>the full Somerville municipal code</b></p>
     </div>
   </header>
 
@@ -762,10 +752,7 @@
       p.textContent = "No verified citations were found for this answer.";
       citationsEl.appendChild(p);
     } else {
-      var n = citations.length;
-      citationsNote.innerHTML =
-        n + " of " + n + " quote" + (n === 1 ? "" : "s") +
-        " matched the ordinance text <b>character-for-character</b>.";
+      citationsNote.textContent = "Quoted directly from Somerville's municipal law.";
       for (var i = 0; i < citations.length; i++) {
         citationsEl.appendChild(renderCitationCard(citations[i]));
       }
@@ -808,11 +795,6 @@
     link.rel = "noopener noreferrer";
     link.textContent = citation.section_title || formatSectionLabel(citation.section_key);
     refline.appendChild(link);
-
-    var match = document.createElement("span");
-    match.className = "match";
-    match.textContent = "VERBATIM ✓";
-    refline.appendChild(match);
 
     card.appendChild(refline);
 
