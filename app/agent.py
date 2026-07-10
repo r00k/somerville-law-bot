@@ -45,7 +45,6 @@ DATA_DIR = Path(__file__).resolve().parent / "data"
 class VerifiedCitation:
     quote: str
     section_key: str
-    why_relevant: str
     url: str | None
     verified: bool
 
@@ -216,11 +215,10 @@ SUBMIT_ANSWER_SCHEMA = {
             "items": {
                 "type": "object",
                 "additionalProperties": False,
-                "required": ["quote", "section_key", "why_relevant"],
+                "required": ["quote", "section_key"],
                 "properties": {
                     "quote": {"type": "string"},
                     "section_key": {"type": "string"},
-                    "why_relevant": {"type": "string"},
                 },
             },
         },
@@ -491,7 +489,6 @@ def _verify_citations(
     for cite in raw_citations:
         quote = (cite.get("quote") or "").strip()
         section_key = (cite.get("section_key") or "").strip()
-        why = cite.get("why_relevant") or ""
 
         section = law_tools.SECTIONS.get(section_key)
         verified = False
@@ -507,7 +504,6 @@ def _verify_citations(
                 VerifiedCitation(
                     quote=quote,
                     section_key=section_key,
-                    why_relevant=why,
                     url=url,
                     verified=True,
                 )
@@ -607,8 +603,8 @@ def _sections_detail(keys: list[str]) -> str:
 
     paths = [r.get("heading_path") or [] for r in recs]
     labels: list[str] = []
-    for r, path in zip(recs, paths):
-        label = _clean_heading((path[-1] if path else "") or r.get("title") or r.get("key", ""))
+    for r in recs:
+        label = law_tools.section_label(r.get("key", ""))
         if label and label not in labels:
             labels.append(label)
 
@@ -998,8 +994,6 @@ def _pretty_print(answer: Answer) -> None:
         mark = "✓" if c.verified else "✗"
         print(f"\n{mark} [{c.section_key}] {c.url or ''}")
         print(f"  “{c.quote}”")
-        if c.why_relevant:
-            print(f"  -> {c.why_relevant}")
 
     print("\n" + "-" * 72)
     print(f"Confidence: {answer.confidence}")

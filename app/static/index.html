@@ -360,24 +360,32 @@
 
   .refline a {
     font-family: var(--mono);
-    font-size: 0.78rem;
+    font-size: 0.95rem;
+    font-weight: 600;
     color: var(--blue);
     text-decoration: none;
   }
   .refline a:hover { text-decoration: underline; }
+  .refline .goes-to-law {
+    display: block;
+    font-size: 0.72rem;
+    font-weight: 400;
+    color: var(--dim);
+    margin-top: 0.15rem;
+  }
 
   .citation-card blockquote {
-    margin: 0 0 0.45rem;
+    margin: 0 0 0.9rem;
     font-family: var(--mono);
     font-size: 0.78rem;
     line-height: 1.65;
     color: #b9c6d4;
   }
 
-  .why-relevant {
-    margin: 0;
-    color: var(--dim);
-    font-size: 0.82rem;
+  .answer-body h3 {
+    font-size: 1.05rem;
+    font-weight: 700;
+    margin: 1rem 0 0.5rem;
   }
 
   .site-footer {
@@ -753,8 +761,9 @@
       citationsEl.appendChild(p);
     } else {
       citationsNote.textContent = "Quoted directly from Somerville's municipal law.";
-      for (var i = 0; i < citations.length; i++) {
-        citationsEl.appendChild(renderCitationCard(citations[i]));
+      var groups = groupCitationsBySection(citations);
+      for (var i = 0; i < groups.length; i++) {
+        citationsEl.appendChild(renderCitationCard(groups[i]));
       }
     }
   }
@@ -782,7 +791,31 @@
     return id ? corpusName + " — Sec. " + id : key;
   }
 
-  function renderCitationCard(citation) {
+  // One card per section of law: citations that quote different passages of
+  // the same section stack inside a single card instead of repeating it.
+  function groupCitationsBySection(citations) {
+    var order = [];
+    var byKey = {};
+    for (var i = 0; i < citations.length; i++) {
+      var c = citations[i];
+      var key = c.section_key || "unknown";
+      if (!byKey[key]) {
+        byKey[key] = {
+          section_key: c.section_key,
+          section_title: c.section_title,
+          url: c.url,
+          quotes: []
+        };
+        order.push(key);
+      }
+      if (c.quote) {
+        byKey[key].quotes.push(c.quote);
+      }
+    }
+    return order.map(function (k) { return byKey[k]; });
+  }
+
+  function renderCitationCard(group) {
     var card = document.createElement("article");
     card.className = "citation-card";
 
@@ -790,25 +823,27 @@
     refline.className = "refline";
 
     var link = document.createElement("a");
-    link.href = citation.url || "#";
+    link.href = group.url || "#";
     link.target = "_blank";
     link.rel = "noopener noreferrer";
-    link.textContent = citation.section_title || formatSectionLabel(citation.section_key);
-    refline.appendChild(link);
+    link.textContent = (group.section_title || formatSectionLabel(group.section_key)) + " ↗";
+    link.title = "Read this section in the official code";
+
+    var hint = document.createElement("span");
+    hint.className = "goes-to-law";
+    hint.textContent = "opens the full section text";
+
+    var titleWrap = document.createElement("div");
+    titleWrap.appendChild(link);
+    titleWrap.appendChild(hint);
+    refline.appendChild(titleWrap);
 
     card.appendChild(refline);
 
-    if (citation.quote) {
+    for (var i = 0; i < group.quotes.length; i++) {
       var quote = document.createElement("blockquote");
-      quote.textContent = citation.quote;
+      quote.textContent = "“" + group.quotes[i] + "”";
       card.appendChild(quote);
-    }
-
-    if (citation.why_relevant) {
-      var why = document.createElement("p");
-      why.className = "why-relevant";
-      why.textContent = citation.why_relevant;
-      card.appendChild(why);
     }
 
     return card;
@@ -858,6 +893,13 @@
       var line = lines[i];
       if (/^\s*$/.test(line)) {
         flushParagraph();
+        i += 1;
+        continue;
+      }
+      var heading = line.match(/^#{1,6}\s+(.*)$/);
+      if (heading) {
+        flushParagraph();
+        html += "<h3>" + renderInline(heading[1]) + "</h3>";
         i += 1;
         continue;
       }

@@ -232,3 +232,33 @@ def wiki_index() -> str:
         blocks.append("\n".join(lines))
 
     return "\n\n".join(blocks)
+
+
+_GENERIC_HEADINGS = {
+    "definitions", "definition", "purpose", "applicability", "general",
+    "general provisions", "enforcement", "penalties", "penalty",
+    "severability", "fees", "scope", "intent", "authority", "findings",
+}
+
+
+def section_label(key: str) -> str:
+    """Human-readable display label for a section.
+
+    Walks the heading path from the most specific end and returns the first
+    heading that isn't a generic subsection name ("Definitions", "Purpose",
+    ...), so headerless subsections inherit their parent regulation's name
+    instead of a body-text fallback title.
+    """
+    rec = SECTIONS.get(key)
+    if not rec:
+        return key
+
+    def clean(text: str) -> str:
+        label = (text or "").strip().rstrip(".:").strip()
+        return label if len(label) <= 70 else label[:67] + "…"
+
+    for heading in reversed(rec.get("heading_path") or []):
+        cleaned = clean(heading)
+        if cleaned and cleaned.casefold() not in _GENERIC_HEADINGS:
+            return cleaned
+    return clean(rec.get("title") or "") or key

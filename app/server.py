@@ -211,23 +211,17 @@ def _answer_to_dict(answer: Any) -> dict:
 
 
 def _attach_section_titles(citations: list[dict]) -> None:
-    """Add the human-readable section title to each citation for display."""
+    """Add the human-readable section label to each citation for display."""
     try:
-        from app.law_tools import get_sections
+        from app.law_tools import section_label
     except ImportError:
         return
-    keys = [c.get("section_key") for c in citations if c.get("section_key")]
-    if not keys:
-        return
-    titles = {
-        rec.get("key"): rec.get("title")
-        for rec in get_sections(list(dict.fromkeys(keys)))
-        if not rec.get("error")
-    }
     for c in citations:
-        title = titles.get(c.get("section_key"))
-        if title:
-            c["section_title"] = title
+        key = c.get("section_key")
+        if key:
+            label = section_label(key)
+            if label and label != key:
+                c["section_title"] = label
 
 
 def _run_agent(
