@@ -71,6 +71,7 @@ class EvalOutcome:
     cited_sections: list[str] = field(default_factory=list)
     usage: dict = field(default_factory=dict)
     answer_markdown: str = ""
+    caveats: str | None = None
     error: str | None = None
     latency_s: float = 0.0
 
@@ -228,6 +229,7 @@ def evaluate(spec: dict, answer: Any) -> EvalOutcome:
         cited_sections=cited_keys,
         usage=usage,
         answer_markdown=answer_markdown,
+        caveats=_get(answer, "caveats", None),
     )
 
 

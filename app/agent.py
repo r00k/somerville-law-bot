@@ -22,6 +22,7 @@ from pathlib import Path
 from typing import Callable
 
 import anthropic
+import httpx
 
 from . import law_tools
 
@@ -30,7 +31,9 @@ from . import law_tools
 # Sonnet 5 won the 2026-07-09 A/B vs Opus 4.8: equal eval pass rate,
 # ~33% cheaper, much better tail latency (p90 38s vs 59s).
 MODEL = os.environ.get("LAW_QA_MODEL", "claude-sonnet-5")
-MAX_TOKENS = 16_000
+# 32k: citation-heavy questions (e.g. the noise ordinance) were hitting a 16k
+# cap mid-submit_answer, which degrades to an uncited low-confidence answer.
+MAX_TOKENS = 32_000
 MAX_ITERATIONS = 12
 NUDGE_EXTRA_ITERATIONS = 2
 
@@ -593,8 +596,17 @@ def _salvage_spilled_payload(payload: dict) -> dict:
     if cut is not None:
         body = body[:cut].rstrip()
     merged["answer_markdown"] = body
-    if not merged.get("citations") and pseudo.get("citations"):
-        merged["citations"] = pseudo["citations"]
+    # Merge recovered citations with any the model put in the real array —
+    # the spill often carries the full set while the array holds a partial
+    # (and possibly unverifiable) subset, so keep both and let verification
+    # sort them out.
+    recovered = [c for c in (pseudo.get("citations") or []) if isinstance(c, dict)]
+    if recovered:
+        existing = [c for c in (merged.get("citations") or []) if isinstance(c, dict)]
+        seen = {(c.get("section_key"), c.get("quote")) for c in existing}
+        merged["citations"] = existing + [
+            c for c in recovered if (c.get("section_key"), c.get("quote")) not in seen
+        ]
     if not merged.get("caveats") and pseudo.get("caveats"):
         merged["caveats"] = pseudo["caveats"]
     # _parse_pseudo_submit defaults confidence to "low"; only take its value
@@ -604,12 +616,39 @@ def _salvage_spilled_payload(payload: dict) -> dict:
     return merged
 
 
+def _extract_trailing_note(answer_markdown: str) -> tuple[str, str | None]:
+    """Split off a closing "Note:"/"Caveat:" paragraph from the answer body.
+
+    The prompt forbids these (the caveats field is the note UI), but the model
+    still writes them sometimes — relocating mechanically beats hoping. Only a
+    LAST paragraph is moved, and never a lone-paragraph answer.
+    """
+    paras = answer_markdown.rstrip().split("\n\n")
+    if len(paras) < 2:
+        return answer_markdown, None
+    last = paras[-1].strip()
+    lead = last.lstrip("*_ ").lower()
+    if not lead.startswith(("note:", "notes:", "caveat:", "caveats:")):
+        return answer_markdown, None
+    note = last.split(":", 1)[1].strip().lstrip("*_ ").strip()
+    return "\n\n".join(paras[:-1]).rstrip(), note or None
+
+
 def _build_answer_from_submit(payload: dict, usage: dict) -> Answer:
     """Turn a validated submit_answer payload into a verified Answer."""
     answer_markdown = payload.get("answer_markdown", "") or ""
     confidence = payload.get("confidence", "low") or "low"
     caveats = payload.get("caveats") or None
     raw_citations = payload.get("citations") or []
+
+    # A closing Note:/Caveat: paragraph belongs in the caveats field — move it
+    # there, unless the caveats field already says the same thing.
+    answer_markdown, trailing_note = _extract_trailing_note(answer_markdown)
+    if trailing_note:
+        if not caveats:
+            caveats = trailing_note
+        elif _normalize(trailing_note).lower() not in _normalize(caveats).lower():
+            caveats = f"{caveats}\n\n{trailing_note}"
 
     citations, dropped = _verify_citations(raw_citations)
 
@@ -760,15 +799,16 @@ def _stream_turn(client, request_params: dict, emit: Callable[[dict], None]):
     can render the answer as it is written. Only ``submit_answer`` triggers
     deltas — other tool_use blocks are ignored by the extractor.
 
-    Returns ``(final_message, streamed_answer)`` where ``final_message`` is the
+    Returns ``(final_message, streamed_text)`` where ``final_message`` is the
     fully-accumulated response (so all existing post-loop logic — tool handling,
     citation verification, usage accumulation — works unchanged) and
-    ``streamed_answer`` is True iff at least one answer_delta was emitted.
+    ``streamed_text`` is the concatenation of every answer_delta emitted ("" if
+    none) — usable as a salvage body when the turn is cut off mid-submit.
     """
     extractor: AnswerMarkdownExtractor | None = None
     guard = AnswerStreamGuard()
     submit_index = None
-    streamed = False
+    streamed_parts: list[str] = []
 
     with client.messages.stream(**request_params) as stream:
         for event in stream:
@@ -782,6 +822,7 @@ def _stream_turn(client, request_params: dict, emit: Callable[[dict], None]):
                     extractor = AnswerMarkdownExtractor()
                     guard = AnswerStreamGuard()
                     submit_index = getattr(event, "index", None)
+                    streamed_parts = []
             elif etype == "content_block_delta":
                 if extractor is not None and getattr(event, "index", None) == submit_index:
                     delta = getattr(event, "delta", None)
@@ -790,11 +831,11 @@ def _stream_turn(client, request_params: dict, emit: Callable[[dict], None]):
                         if text:
                             text = guard.feed(text)
                         if text:
-                            streamed = True
+                            streamed_parts.append(text)
                             emit({"type": "answer_delta", "text": text})
         response = stream.get_final_message()
 
-    return response, streamed
+    return response, "".join(streamed_parts)
 
 
 def ask(
@@ -820,12 +861,23 @@ def ask(
 
     nudged = False
     citation_nudged = False
+    turn_retried = False
     iteration = 0
     max_iterations = MAX_ITERATIONS
 
     while iteration < max_iterations:
         iteration += 1
         emit({"type": "thinking"})
+
+        # Track whether THIS turn streamed any answer text, so a mid-stream
+        # failure can reset the reader's provisional answer before the retry.
+        turn_streamed = False
+
+        def emit_tracking(event: dict) -> None:
+            nonlocal turn_streamed
+            if event.get("type") == "answer_delta":
+                turn_streamed = True
+            emit(event)
 
         try:
             response, streamed_answer = _stream_turn(
@@ -839,9 +891,19 @@ def ask(
                     "tools": TOOLS,
                     "messages": messages,
                 },
-                emit,
+                emit_tracking,
             )
-        except anthropic.APIError as exc:
+        except (anthropic.APIError, httpx.HTTPError) as exc:
+            # Transient stream/connection failures (the SDK's own retries only
+            # cover the initial request, not a stream that dies midway): retry
+            # the turn once before giving up. The failed turn contributed
+            # nothing to `messages`, so a plain re-send is safe.
+            if turn_retried is False:
+                turn_retried = True
+                iteration -= 1
+                if turn_streamed:
+                    emit({"type": "answer_reset"})
+                continue
             return Answer(
                 answer_markdown=(
                     "Sorry — I ran into an error contacting the model and "
@@ -878,7 +940,11 @@ def ask(
                     "please verify against the official code."
                 )
                 pseudo = _parse_pseudo_submit(text) if text else None
-                if pseudo is not None:
+                if streamed_answer:
+                    # Cut off mid-submit_answer: the extracted answer text that
+                    # already streamed to the reader is the best body we have.
+                    body = streamed_answer
+                elif pseudo is not None:
                     body = pseudo.get("answer_markdown") or text
                 else:
                     body = text or (
@@ -935,10 +1001,14 @@ def ask(
                                     "Rejected: an answer with confidence above "
                                     "'low' must include at least one citation "
                                     "with a verbatim quote from a section you "
-                                    "fetched. Re-read the governing section if "
-                                    "needed, then call submit_answer again with "
-                                    "citations, or lower confidence to 'low' "
-                                    "and explain the gap."
+                                    "fetched. You have already read the "
+                                    "governing sections, so re-read them if "
+                                    "needed and call submit_answer again with "
+                                    "the same answer plus verbatim quotes in "
+                                    "the citations array (not embedded in the "
+                                    "answer text). Only lower confidence to "
+                                    "'low' if the corpus genuinely does not "
+                                    "address the question."
                                 ),
                                 "is_error": True,
                             }
@@ -1030,12 +1100,19 @@ def _parse_pseudo_submit(text: str) -> dict | None:
         re.DOTALL,
     )
     if cite_match:
+        blob = cite_match.group(1)
         try:
-            citations = json.loads(cite_match.group(1))
+            citations = json.loads(blob)
         except ValueError:
             citations = None
         if isinstance(citations, list):
             payload["citations"] = [c for c in citations if isinstance(c, dict)]
+        else:
+            # Not JSON: the model also writes citations as XML elements,
+            # <citation section_key="…"><quote>…</quote></citation>.
+            elements = _parse_citation_elements(blob)
+            if elements:
+                payload["citations"] = elements
 
     conf_match = re.search(r"<confidence>\s*(high|medium|low)\s*</confidence>", text)
     payload["confidence"] = conf_match.group(1) if conf_match else "low"
@@ -1044,6 +1121,26 @@ def _parse_pseudo_submit(text: str) -> dict | None:
     if caveat_match:
         payload["caveats"] = caveat_match.group(1)
     return payload
+
+
+def _parse_citation_elements(blob: str) -> list[dict]:
+    """Parse XML-element-style citations the model sometimes writes instead
+    of the JSON array: <citation section_key="…"><quote>…</quote></citation>
+    (section_key may also appear as a child tag instead of an attribute)."""
+    cites: list[dict] = []
+    for m in re.finditer(
+        r"<citation\b([^>]*)>(.*?)</citation>", blob, re.DOTALL
+    ):
+        attrs, body = m.group(1), m.group(2)
+        key_m = re.search(r'section_key\s*=\s*"([^"]+)"', attrs) or re.search(
+            r"<section_key>\s*(.*?)\s*</section_key>", body, re.DOTALL
+        )
+        quote_m = re.search(r"<quote>\s*(.*?)\s*</quote>", body, re.DOTALL)
+        if key_m and quote_m:
+            cites.append(
+                {"section_key": key_m.group(1).strip(), "quote": quote_m.group(1)}
+            )
+    return cites
 
 
 def _synthesize_answer(content, usage: dict) -> Answer:

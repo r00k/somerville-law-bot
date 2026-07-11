@@ -14,6 +14,8 @@ from __future__ import annotations
 
 from app.agent import (
     AnswerStreamGuard,
+    _build_answer_from_submit,
+    _extract_trailing_note,
     _parse_pseudo_submit,
     _salvage_spilled_payload,
 )
@@ -89,6 +91,67 @@ def test_salvage_leaves_clean_payload_untouched():
     assert _salvage_spilled_payload(payload) is payload
 
 
+def test_salvage_merges_spilled_citations_with_existing():
+    # Seen live 2026-07-10 (noise-at-night eval): the real citations array
+    # held one (unverifiable) citation while the spill carried the full set.
+    # Both must survive so verification can sort them out.
+    payload = {
+        "answer_markdown": (
+            "Quiet hours vary by activity.</answer_markdown>\n"
+            '<citations>[{"section_key":"coo:822","quote":"embedded one"},'
+            '{"section_key":"coo:823","quote":"embedded two"}]'
+        ),
+        "citations": [{"section_key": "coo:822", "quote": "from the array"}],
+        "confidence": "high",
+    }
+    fixed = _salvage_spilled_payload(payload)
+    assert fixed["citations"] == [
+        {"section_key": "coo:822", "quote": "from the array"},
+        {"section_key": "coo:822", "quote": "embedded one"},
+        {"section_key": "coo:823", "quote": "embedded two"},
+    ]
+
+
+def test_salvage_parses_xml_element_citations():
+    # Also seen live 2026-07-10: citations spilled as XML elements, not JSON.
+    payload = {
+        "answer_markdown": (
+            "Answer body.</answer_markdown>\n<citations>\n"
+            '<citation section_key="coo:822">\n'
+            "<quote>Domestic power tools between 9:00 p.m. and 7:00 a.m.</quote>\n"
+            "</citation>\n"
+            '<citation section_key="coo:823">\n'
+            "<quote>10 PM - 7 AM (residential districts)</quote>\n"
+            "</citation>\n"
+            "</citations>\n<confidence>high</confidence>"
+        ),
+        "citations": [],
+        "confidence": "high",
+    }
+    fixed = _salvage_spilled_payload(payload)
+    assert fixed["answer_markdown"] == "Answer body."
+    assert fixed["citations"] == [
+        {
+            "section_key": "coo:822",
+            "quote": "Domestic power tools between 9:00 p.m. and 7:00 a.m.",
+        },
+        {"section_key": "coo:823", "quote": "10 PM - 7 AM (residential districts)"},
+    ]
+    assert fixed["confidence"] == "high"
+
+
+def test_citation_elements_with_child_section_key_tag():
+    from app.agent import _parse_citation_elements
+
+    blob = (
+        "<citation><section_key>zon:5</section_key>"
+        "<quote>the quote</quote></citation>"
+    )
+    assert _parse_citation_elements(blob) == [
+        {"section_key": "zon:5", "quote": "the quote"}
+    ]
+
+
 def test_parse_pseudo_submit_still_handles_closed_tags():
     text = (
         "<answer_markdown>Body here.</answer_markdown>\n"
@@ -100,6 +163,46 @@ def test_parse_pseudo_submit_still_handles_closed_tags():
     assert payload["citations"] == [{"section_key": "coo:2", "quote": "q2"}]
     assert payload["confidence"] == "medium"
     assert payload["caveats"] == "Check zoning."
+
+
+def test_trailing_note_moves_to_caveats():
+    # Seen live 2026-07-10 (short-term-rental eval): a closing "Note:" body
+    # paragraph, which the frontend would show alongside the caveats box.
+    answer = _build_answer_from_submit(
+        {
+            "answer_markdown": (
+                "You need to register your short-term rental.\n\n"
+                "Note: a \"Bed & Breakfast\" is a distinct zoning use category."
+            ),
+            "citations": [],
+            "confidence": "low",
+        },
+        usage={},
+    )
+    assert answer.answer_markdown == "You need to register your short-term rental."
+    assert answer.caveats == 'a "Bed & Breakfast" is a distinct zoning use category.'
+
+
+def test_trailing_note_not_duplicated_into_matching_caveats():
+    answer = _build_answer_from_submit(
+        {
+            "answer_markdown": "Answer body.\n\n**Caveat:** check your zoning district.",
+            "citations": [],
+            "confidence": "low",
+            "caveats": "Check your zoning district.",
+        },
+        usage={},
+    )
+    assert answer.answer_markdown == "Answer body."
+    assert answer.caveats == "Check your zoning district."
+
+
+def test_extract_trailing_note_leaves_normal_answers_alone():
+    body = "First paragraph.\n\nSecond paragraph with note-taking advice."
+    assert _extract_trailing_note(body) == (body, None)
+    # A lone-paragraph answer is never emptied, even if it looks like a note.
+    lone = "Note: the corpus does not address this."
+    assert _extract_trailing_note(lone) == (lone, None)
 
 
 def _feed_chunks(chunks: list[str]) -> tuple[str, AnswerStreamGuard]:
