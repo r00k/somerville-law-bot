@@ -705,7 +705,7 @@
       case "get_sections":
         return "Reading " + detail;
       case "get_wiki_page":
-        return "Reading topic: " + detail.replace(/-/g, " ");
+        return "reading topic: " + detail.replace(/-/g, " ");
       default:
         return detail ? payload.name + " " + detail : payload.name || "working…";
     }
