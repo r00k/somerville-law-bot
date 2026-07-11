@@ -900,7 +900,7 @@ def ask(
                     "model": MODEL,
                     "max_tokens": MAX_TOKENS,
                     "thinking": {"type": "adaptive"},
-                    "output_config": {"effort": "medium"},
+                    "output_config": {"effort": "low"},
                     "system": system_blocks,
                     "tools": TOOLS,
                     "messages": messages,
