@@ -21,6 +21,11 @@ B = 0.75
 
 SNIPPET_WIDTH = 300
 GET_SECTIONS_CHAR_CAP = 150_000
+# Inline-full-text budgets: search_law and get_wiki_page include the complete
+# text of as many (top-ranked / referenced) sections as fit, so the model can
+# quote verbatim without a follow-up get_sections round trip.
+SEARCH_INLINE_CHAR_CAP = 24_000
+WIKI_INLINE_CHAR_CAP = 30_000
 
 
 def _tokenize(text: str) -> list[str]:
@@ -104,8 +109,11 @@ def _make_snippet(text: str, query_tokens: list[str], width: int = SNIPPET_WIDTH
 
 def search_law(query: str, limit: int = 12) -> list[dict]:
     """BM25 over (title + heading_path + text), tokenized lowercase alnum.
-    Returns [{key, title, heading_path, score, snippet}] — snippet is ~300
-    chars around the best matching region.
+    Returns [{key, title, heading_path, score, snippet, text?}] — snippet is
+    ~300 chars around the best matching region. In rank order, each result
+    whose complete section text still fits within SEARCH_INLINE_CHAR_CAP also
+    carries that full text (never truncated — a section either fits whole or
+    is skipped), so quotes taken from it verify verbatim.
     """
     query_tokens = _tokenize(query)
     if not query_tokens or not SECTIONS:
@@ -127,17 +135,21 @@ def search_law(query: str, limit: int = 12) -> list[dict]:
     ranked = sorted(scores.items(), key=lambda kv: kv[1], reverse=True)[:limit]
 
     results = []
+    inline_budget = SEARCH_INLINE_CHAR_CAP
     for key, score in ranked:
         sec = SECTIONS[key]
-        results.append(
-            {
-                "key": key,
-                "title": sec.get("title", ""),
-                "heading_path": sec.get("heading_path", []),
-                "score": round(score, 4),
-                "snippet": _make_snippet(sec.get("text", ""), query_tokens),
-            }
-        )
+        text = sec.get("text", "") or ""
+        record = {
+            "key": key,
+            "title": sec.get("title", ""),
+            "heading_path": sec.get("heading_path", []),
+            "score": round(score, 4),
+            "snippet": _make_snippet(text, query_tokens),
+        }
+        if text and len(text) <= inline_budget:
+            record["text"] = text
+            inline_budget -= len(text)
+        results.append(record)
     return results
 
 
@@ -205,6 +217,48 @@ def get_wiki_page(topic_slug: str) -> str | None:
     if m:
         return m.group(1).strip()
     return raw.strip()
+
+
+def get_wiki_page_bundle(topic_slug: str) -> dict | None:
+    """The wiki page body plus the full text of its referenced sections.
+
+    In frontmatter order, each referenced section whose complete text still
+    fits within WIKI_INLINE_CHAR_CAP is returned as a full record (same shape
+    as get_sections, never truncated); the rest are listed by key in
+    'omitted_section_keys' for the model to fetch explicitly if needed.
+    Returns None if the page doesn't exist.
+    """
+    path = WIKI_DIR / f"{topic_slug}.md"
+    if not path.exists() or not path.is_file():
+        return None
+    raw = path.read_text(encoding="utf-8")
+    fm = _parse_frontmatter(raw) or {}
+    body = get_wiki_page(topic_slug) or ""
+
+    keys = [k.strip() for k in (fm.get("sections") or "").split(",") if k.strip()]
+    included: list[dict] = []
+    omitted: list[str] = []
+    budget = WIKI_INLINE_CHAR_CAP
+    for key in keys:
+        sec = SECTIONS.get(key)
+        if sec is None:
+            continue
+        text = sec.get("text", "") or ""
+        if len(text) <= budget:
+            included.append(
+                {
+                    "key": sec["key"],
+                    "corpus": sec["corpus"],
+                    "heading_path": sec["heading_path"],
+                    "title": sec["title"],
+                    "text": text,
+                    "url": sec["url"],
+                }
+            )
+            budget -= len(text)
+        else:
+            omitted.append(key)
+    return {"body": body, "sections": included, "omitted_section_keys": omitted}
 
 
 def wiki_index() -> str:

@@ -279,10 +279,13 @@ TOOLS = [
             "Full-text (BM25) search over every section of the Somerville "
             "corpus (Charter, Code of Ordinances, appendices, and the zoning "
             "ordinance). Returns the best-matching sections with their key, "
-            "title, heading path, and a short snippet. Search with the legal "
-            "vocabulary the code actually uses (e.g. 'domestic fowl' rather "
-            "than 'chickens'); issue several searches with synonyms if the "
-            "first is thin."
+            "title, heading path, and a short snippet; top results also "
+            "include the complete section text ('text', as many as fit a "
+            "size budget). Text returned here counts as fetched — quote from "
+            "it directly instead of re-fetching with get_sections. Search "
+            "with the legal vocabulary the code actually uses (e.g. "
+            "'domestic fowl' rather than 'chickens'); issue several searches "
+            "with synonyms if the first is thin."
         ),
         "input_schema": {
             "type": "object",
@@ -304,9 +307,11 @@ TOOLS = [
         "name": "get_sections",
         "description": (
             "Fetch the full verbatim text of one or more sections by key "
-            "(e.g. 'coo:826' or 'zon:88'). Always read the actual section "
-            "text before making a legal claim or quoting from it — snippets "
-            "from search are not enough."
+            "(e.g. 'coo:826' or 'zon:88'). Use it for sections whose full "
+            "text you have NOT already received inline from search_law or "
+            "get_wiki_page — always read the actual section text before "
+            "making a legal claim or quoting from it; snippets from search "
+            "are not enough."
         ),
         "input_schema": {
             "type": "object",
@@ -325,9 +330,12 @@ TOOLS = [
         "name": "get_wiki_page",
         "description": (
             "Fetch a pregenerated plain-language topic page by slug (from the "
-            "<topic_index>). Use it to route to the relevant section keys for "
-            "a common topic. If the topic index is empty or has no matching "
-            "slug, skip this and use search_law instead."
+            "<topic_index>). Returns the page body plus the complete text of "
+            "its referenced sections (as many as fit a size budget; any left "
+            "out are listed in 'omitted_section_keys' — fetch those with "
+            "get_sections only if you still need them). If the topic index "
+            "is empty or has no matching slug, skip this and use search_law "
+            "instead."
         ),
         "input_schema": {
             "type": "object",
@@ -392,8 +400,9 @@ corpus doesn't cover that" is always confidence "low".
 EXACT, verbatim quote copied from the text of a section you have fetched. \
 Quotes are checked by exact substring match against the section text; a \
 paraphrased or approximate quote will be dropped and will not support your \
-answer. Quote only from section text you have actually retrieved with \
-get_sections.
+answer. Quote only from complete section text you have actually retrieved — \
+the full 'text' field returned by search_law or get_wiki_page, or a \
+get_sections result. Never quote from a search snippet.
 - Write for residents: clear, direct, plain language. Lead with the bottom-line \
 answer, then the supporting detail.
 - Be brief. Lead with the bottom line, and keep the whole answer under about \
@@ -427,11 +436,16 @@ the code says "domestic fowl", not "chickens"; "leaf blowers", not "yard \
 equipment"). Search with legal synonyms, and run several searches if needed. \
 Relevant rules may span the Code of Ordinances, appendices, and the Zoning \
 Ordinance — check across corpora.
-3. Read the actual sections with get_sections before answering. Use the \
+3. Make sure you have the FULL text of every section you rely on. search_law \
+and get_wiki_page already inline the complete text of their top results — if \
+that text answers the question, do NOT re-fetch it; only call get_sections \
+for sections you have merely as a snippet or key. Use the \
 <table_of_contents> to orient yourself and to find neighboring sections.
 4. When you have read enough to answer, finish by calling submit_answer with \
 your plain-language answer and verbatim-quoted citations. Do not answer in \
-free-form text — always end with submit_answer.
+free-form text — always end with submit_answer. Prefer finishing in few \
+turns: if the first tool results already contain the governing text, submit \
+your answer immediately.
 """
 
 
@@ -701,13 +715,13 @@ def _execute_tool(name: str, tool_input: dict) -> str:
             return json.dumps({"sections": results}, ensure_ascii=False)
         if name == "get_wiki_page":
             slug = tool_input.get("topic_slug", "")
-            body = law_tools.get_wiki_page(slug)
-            if body is None:
+            bundle = law_tools.get_wiki_page_bundle(slug)
+            if bundle is None:
                 return json.dumps(
                     {"error": f"no wiki page for slug '{slug}'"},
                     ensure_ascii=False,
                 )
-            return json.dumps({"topic_slug": slug, "body": body}, ensure_ascii=False)
+            return json.dumps({"topic_slug": slug, **bundle}, ensure_ascii=False)
         return json.dumps({"error": f"unknown tool '{name}'"}, ensure_ascii=False)
     except Exception as exc:  # pragma: no cover - defensive
         return json.dumps({"error": f"{type(exc).__name__}: {exc}"}, ensure_ascii=False)
