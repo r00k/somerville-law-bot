@@ -69,7 +69,7 @@ Expected outputs:
 
 ```bash
 uv sync
-export ANTHROPIC_API_KEY=sk-ant-...
+printf 'ANTHROPIC_API_KEY=sk-ant-...\n' > .env  # loaded automatically; gitignored
 
 # One-time (already committed, rerun after a corpus refresh):
 uv run python -m app.indexer          # rebuild section index

@@ -5,6 +5,9 @@ in-memory rate limiting, and logs each Q&A exchange to a daily JSONL file.
 
 Run from the repo root with: uv run uvicorn app.server:app
 
+For local development, ``.env`` is loaded automatically without overwriting
+variables already present in the process environment.
+
 Environment variables:
   RATE_LIMIT_PER_HOUR  Per-IP sliding-window limit (default 10).
   DAILY_QUESTION_CAP   Global daily request cap (default 200).
@@ -35,11 +38,16 @@ from typing import Any, Callable
 from fastapi import FastAPI, Request
 from fastapi.responses import FileResponse, JSONResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
+from dotenv import load_dotenv
 
 APP_DIR = Path(__file__).resolve().parent
 REPO_ROOT = APP_DIR.parent
 STATIC_DIR = APP_DIR / "static"
 LOG_DIR = REPO_ROOT / "logs"
+
+# Keep the simple documented launch command reliable in local development.
+# Explicit process environment variables still win in deployed environments.
+load_dotenv(REPO_ROOT / ".env", override=False)
 
 MAX_QUESTION_LENGTH = 1000
 
@@ -373,6 +381,21 @@ async def api_ask(request: Request):
             },
         )
     question = question.strip()
+
+    # Report configuration failures before consuming rate-limit budget or
+    # starting an SSE response, where they would otherwise become a vague
+    # mid-stream error in the browser.
+    if not os.environ.get("ANTHROPIC_API_KEY"):
+        return JSONResponse(
+            status_code=503,
+            content={
+                "error": "anthropic_not_configured",
+                "message": (
+                    "The Q&A service is not configured. For local development, "
+                    "add ANTHROPIC_API_KEY to the repository's .env file and restart the server."
+                ),
+            },
+        )
 
     # Confirm the agent is importable BEFORE consuming any rate-limit budget, so
     # a 503 (agent unavailable) never burns per-IP or global quota.
