@@ -66,7 +66,14 @@
     color: var(--dim);
     letter-spacing: 0.05em;
   }
-  .corpus-stat b { color: var(--green); font-weight: 600; }
+  .corpus-stat a {
+    color: var(--green);
+    font-weight: 600;
+    text-decoration: none;
+    transition: filter 120ms ease;
+  }
+  .corpus-stat a:hover,
+  .corpus-stat a:focus-visible { filter: brightness(1.3); }
 
   .visually-hidden {
     position: absolute;
@@ -417,7 +424,7 @@
     </svg>
     <div>
       <h1>Somerville Law Bot <span class="dim">/ ask an AI about Somerville law</span></h1>
-      <p class="corpus-stat">source: <b>the full Somerville municipal code</b></p>
+      <p class="corpus-stat">source: <a href="https://r00k.github.io/somerville-ordinances/somerville-law-non-zoning.readable.html">the full Somerville municipal code</a></p>
     </div>
   </header>
 
