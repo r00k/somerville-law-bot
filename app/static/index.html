@@ -560,6 +560,9 @@
   }
 
   function tracePush(text) {
+    // Progress lines use sentence-style lowercase, including tool-provided
+    // details that may begin with a capitalized section title.
+    text = text.charAt(0).toLowerCase() + text.slice(1);
     var current = progressEl.querySelector(".trace-line.current");
     if (current && current.dataset.text === text) return;
     traceCompleteCurrent();
@@ -710,7 +713,7 @@
       case "search_law":
         return 'search_law "' + detail + '"';
       case "get_sections":
-        return "Reading " + detail;
+        return "reading " + detail;
       case "get_wiki_page":
         return "reading topic: " + detail.replace(/-/g, " ");
       default:
