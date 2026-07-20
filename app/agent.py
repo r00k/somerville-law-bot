@@ -876,6 +876,7 @@ def ask(
     nudged = False
     citation_nudged = False
     turn_retried = False
+    cutoff_retried = False
     iteration = 0
     max_iterations = MAX_ITERATIONS
 
@@ -937,6 +938,32 @@ def ask(
         # continue without adding a user message.
         if stop_reason == "pause_turn":
             messages.append({"role": "assistant", "content": response.content})
+            continue
+
+        if stop_reason == "max_tokens" and not cutoff_retried:
+            # A runaway generation hit the 32k output cap (seen ~2/40 eval
+            # questions: the model spirals while composing submit_answer and
+            # the result degrades to an uncited low-confidence answer).
+            # The cut-off turn contributed nothing to `messages`, so drop it
+            # and retry once with an explicit brevity instruction instead of
+            # shipping the degraded answer.
+            cutoff_retried = True
+            if turn_streamed:
+                emit({"type": "answer_reset"})
+            messages.append(
+                {
+                    "role": "user",
+                    "content": (
+                        "Your previous response was cut off at the maximum "
+                        "output length and has been discarded. Answer again, "
+                        "much more concisely: keep the answer under 250 "
+                        "words, cite only the few sections that directly "
+                        "answer the question, and keep each citation quote "
+                        "to a single short sentence or clause. Do not "
+                        "re-fetch sections you have already read."
+                    ),
+                }
+            )
             continue
 
         if stop_reason in ("max_tokens", "refusal"):
