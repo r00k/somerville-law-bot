@@ -983,13 +983,13 @@ def ask(
         if submit is not None:
             payload = submit.input if isinstance(submit.input, dict) else {}
             payload = _salvage_spilled_payload(payload)
-            # Guardrail: a confident answer with no citations is never
-            # acceptable — reject once so the model cites or lowers confidence.
-            if (
-                not payload.get("citations")
-                and payload.get("confidence") != "low"
-                and not citation_nudged
-            ):
+            # Guardrail: an answer with no citations is rejected once at ANY
+            # confidence. Gating this on confidence above 'low' left an escape
+            # hatch — the model would drop to 'low' instead of citing, even
+            # with the governing text quoted in its answer body (seen in eval
+            # flakes: graffiti-removal, dog-leash). A genuinely-uncovered
+            # topic survives the retry: the second uncited submit is accepted.
+            if not payload.get("citations") and not citation_nudged:
                 citation_nudged = True
                 # Provisional answer text was already streamed to the UI; clear
                 # it so the retry streams fresh deltas onto a clean slate.
@@ -1012,17 +1012,19 @@ def ask(
                                 "type": "tool_result",
                                 "tool_use_id": submit.id,
                                 "content": (
-                                    "Rejected: an answer with confidence above "
-                                    "'low' must include at least one citation "
-                                    "with a verbatim quote from a section you "
-                                    "fetched. You have already read the "
-                                    "governing sections, so re-read them if "
-                                    "needed and call submit_answer again with "
-                                    "the same answer plus verbatim quotes in "
-                                    "the citations array (not embedded in the "
-                                    "answer text). Only lower confidence to "
-                                    "'low' if the corpus genuinely does not "
-                                    "address the question."
+                                    "Rejected: your answer has an empty "
+                                    "citations array. If your answer makes "
+                                    "legal claims — especially if it quotes "
+                                    "section text — call submit_answer again "
+                                    "with the same answer plus those verbatim "
+                                    "quotes in the citations array (not "
+                                    "embedded in the answer text), and keep "
+                                    "your original confidence. Lowering "
+                                    "confidence is NOT a substitute for "
+                                    "citing text you have already read. Only "
+                                    "if the corpus genuinely does not address "
+                                    "the question should you resubmit with "
+                                    "no citations and confidence 'low'."
                                 ),
                                 "is_error": True,
                             }
