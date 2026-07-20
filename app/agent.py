@@ -395,7 +395,11 @@ topic but the answer requires interpretation, depends on facts you don't have \
 (like a zoning district), or the governing text is ambiguous; "low" = \
 REQUIRED whenever the corpus does not directly address the question, even if \
 you can offer helpful adjacent context. An answer whose core claim is "this \
-corpus doesn't cover that" is always confidence "low".
+corpus doesn't cover that" is always confidence "low". Inferring an answer \
+from provisions that govern a DIFFERENT scenario (e.g. concluding a use is \
+banned from a rule about displays or businesses when the question is about \
+private conduct) is adjacent context, not coverage — that is "low", no \
+matter how confident the practical conclusion.
 - Every legal claim you make MUST be supported by a citation containing an \
 EXACT, verbatim quote copied from the text of a section you have fetched. \
 Quotes are checked by exact substring match against the section text; a \
