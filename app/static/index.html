@@ -70,6 +70,21 @@
     font-weight: 400;
   }
 
+  .byline {
+    margin: 0.1rem 0 0;
+    font-family: var(--serif);
+    font-style: italic;
+    font-size: 0.85rem;
+    color: var(--muted);
+  }
+  .byline a {
+    color: var(--blue);
+    font-style: normal;
+    font-weight: 600;
+    text-decoration: none;
+  }
+  .byline a:hover, .byline a:focus-visible { text-decoration: underline; }
+
   .corpus-stat {
     margin: 0.15rem 0 0;
     font-family: var(--mono);
@@ -423,7 +438,8 @@
 
   .site-footer a { color: var(--muted); }
 
-  .site-footer .credit { margin-top: 0.75rem; color: var(--muted); }
+  .site-footer .credit { margin-top: 0.75rem; color: var(--ink); font-size: 0.85rem; }
+  .site-footer .credit a { color: var(--blue); font-weight: 600; }
 
   [hidden] { display: none !important; }
 </style>
@@ -443,6 +459,7 @@
     </svg>
     <div>
       <h1>Somerville Law Bot <span class="dim">/ ask an AI about Somerville law</span></h1>
+      <p class="byline">by <a href="https://ben.net" target="_blank" rel="noopener noreferrer">Ben Orenstein</a></p>
       <p class="corpus-stat">source: <a href="https://somervillelawbot.com/somerville-law-non-zoning.readable.html">the full Somerville municipal code</a></p>
     </div>
   </header>
