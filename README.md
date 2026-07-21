@@ -83,7 +83,7 @@ After a refresh: rerun `uv run python -m app.indexer`, regenerate wiki pages for
 The generated outputs are committed — no need to run anything:
 
 - **Readable HTML (what citations link to):**
-  - [Non-zoning law (Charter, Code of Ordinances, Appendices B/D/E)](https://somervillelawbot.com/code)
+  - [Non-zoning law (Charter, Code of Ordinances, Appendices B/D/E)](https://somervillelawbot.com/ordinances)
   - [Zoning ordinance](https://somervillelawbot.com/zoning)
 - **Markdown (best for search, diffing, LLM ingestion):** [somerville-law-non-zoning.md](somerville-law-non-zoning.md), [somerville-zoning.md](somerville-zoning.md), [somerville-law-combined.md](somerville-law-combined.md)
 - **Raw HTML (auditable, as fetched):** [somerville-law-non-zoning.raw.html](somerville-law-non-zoning.raw.html), [somerville-zoning.raw.html](somerville-zoning.raw.html)

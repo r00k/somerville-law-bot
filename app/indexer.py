@@ -20,7 +20,7 @@ READABLE_BASE = "https://somervillelawbot.com"
 # The third field is the URL path the app serves each readable edition at
 # (see app/server.py), not the generated filename.
 CORPORA = [
-    ("coo", "somerville-law-non-zoning.md", "code",
+    ("coo", "somerville-law-non-zoning.md", "ordinances",
      "CODE OF ORDINANCES (non-zoning)"),
     ("zon", "somerville-zoning.md", "zoning",
      "ZONING ORDINANCE"),

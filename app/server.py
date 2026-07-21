@@ -405,19 +405,20 @@ async def index():
     return FileResponse(STATIC_DIR / "index.html")
 
 
-# The readable corpus pages that citation URLs point to (/code#secid-N and
-# /zoning#secid-N). Served by this app so citations work on the app's own
-# domain. The legacy *.readable.html filenames stay routable because they
+# The readable corpus pages that citation URLs point to (/ordinances#secid-N
+# and /zoning#secid-N). Served by this app so citations work on the app's own
+# domain. /code and the *.readable.html filenames stay routable because they
 # appear in previously-given answers and logs.
 _READABLE_PAGES = {
-    "code": "somerville-law-non-zoning.readable.html",
+    "ordinances": "somerville-law-non-zoning.readable.html",
     "zoning": "somerville-zoning.readable.html",
 }
 
 
+@app.get("/ordinances")
 @app.get("/code")
-async def code_page() -> FileResponse:
-    return FileResponse(REPO_ROOT / _READABLE_PAGES["code"], media_type="text/html")
+async def ordinances_page() -> FileResponse:
+    return FileResponse(REPO_ROOT / _READABLE_PAGES["ordinances"], media_type="text/html")
 
 
 @app.get("/zoning")
