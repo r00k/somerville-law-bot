@@ -36,7 +36,7 @@ from pathlib import Path
 from typing import Any, Callable
 
 from fastapi import FastAPI, Request
-from fastapi.responses import FileResponse, JSONResponse, StreamingResponse
+from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from dotenv import load_dotenv
 
@@ -351,8 +351,57 @@ async def healthz() -> dict:
     return {"ok": True}
 
 
+# --- dev live reload (enabled only with DEV_RELOAD=1; never set in prod) ---
+
+DEV_RELOAD = os.environ.get("DEV_RELOAD") == "1"
+_SERVER_STARTED_AT = time.time()
+
+_DEV_RELOAD_SCRIPT = """
+<script>
+/* dev live reload: polls /dev/reload-state and refreshes when static files
+   change or the server restarts. Injected only when DEV_RELOAD=1. */
+(async () => {
+  let last = null;
+  for (;;) {
+    try {
+      const r = await fetch("/dev/reload-state", { cache: "no-store" });
+      const { token } = await r.json();
+      if (last !== null && token !== last) location.reload();
+      last = token;
+    } catch (e) {
+      /* server restarting; keep polling */
+    }
+    await new Promise((res) => setTimeout(res, 500));
+  }
+})();
+</script>
+"""
+
+
+def _static_mtime_token() -> str:
+    latest = 0.0
+    for path in STATIC_DIR.rglob("*"):
+        if path.is_file():
+            latest = max(latest, path.stat().st_mtime)
+    return f"{_SERVER_STARTED_AT:.0f}-{latest:.6f}"
+
+
+@app.get("/dev/reload-state")
+async def dev_reload_state():
+    if not DEV_RELOAD:
+        return JSONResponse(status_code=404, content={"error": "not_found"})
+    return {"token": _static_mtime_token()}
+
+
 @app.get("/")
-async def index() -> FileResponse:
+async def index():
+    if DEV_RELOAD:
+        html = (STATIC_DIR / "index.html").read_text(encoding="utf-8")
+        if "</body>" in html:
+            html = html.replace("</body>", _DEV_RELOAD_SCRIPT + "</body>", 1)
+        else:
+            html += _DEV_RELOAD_SCRIPT
+        return HTMLResponse(html)
     return FileResponse(STATIC_DIR / "index.html")
 
 
