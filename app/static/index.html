@@ -201,9 +201,9 @@
   }
 
   .trace {
-    font-family: var(--mono);
-    font-size: 0.76rem;
-    color: var(--dim);
+    font-family: var(--sans);
+    font-size: 0.8rem;
+    color: var(--muted);
     line-height: 2;
     margin: 1.2rem 0 0;
     letter-spacing: 0.01em;
@@ -587,9 +587,6 @@
   }
 
   function tracePush(text) {
-    // Progress lines use sentence-style lowercase, including tool-provided
-    // details that may begin with a capitalized section title.
-    text = text.charAt(0).toLowerCase() + text.slice(1);
     var current = progressEl.querySelector(".trace-line.current");
     if (current && current.dataset.text === text) return;
     traceCompleteCurrent();
@@ -620,7 +617,7 @@
     confidenceBadge.className = "";
     progressEl.innerHTML = "";
     progressEl.hidden = false;
-    tracePush("researching…");
+    tracePush("Researching…");
   }
 
   function showError(message) {
@@ -709,7 +706,7 @@
   function handleEvent(payload) {
     switch (payload.type) {
       case "thinking":
-        tracePush("researching…");
+        tracePush("Researching…");
         break;
       case "tool":
         tracePush(describeTool(payload));
@@ -738,13 +735,13 @@
     var detail = payload.detail || "";
     switch (payload.name) {
       case "search_law":
-        return 'search_law "' + detail + '"';
+        return 'Searching the code for “' + detail + '”';
       case "get_sections":
-        return "reading " + detail;
+        return "Reading " + detail;
       case "get_wiki_page":
-        return "reading topic: " + detail.replace(/-/g, " ");
+        return "Checking the topic guide: " + detail.replace(/-/g, " ");
       default:
-        return detail ? payload.name + " " + detail : payload.name || "working…";
+        return detail ? payload.name + " " + detail : payload.name || "Working…";
     }
   }
 
@@ -753,7 +750,7 @@
     // the accumulated markdown, marked in-progress. The trace stays visible
     // above the answer as a record of the research.
     answerSection.hidden = false;
-    tracePush("drafting answer…");
+    tracePush("Writing the answer…");
     provisionalAnswer += text;
     answerBody.classList.add("streaming");
     answerBody.innerHTML = renderMarkdown(provisionalAnswer);
@@ -765,7 +762,7 @@
     provisionalAnswer = "";
     answerBody.innerHTML = "";
     answerBody.classList.add("streaming");
-    tracePush("re-checking citations…");
+    tracePush("Double-checking citations…");
   }
 
   function renderAnswer(answer) {
