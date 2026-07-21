@@ -42,13 +42,31 @@ LOGS_DIR = REPO_ROOT / "logs"
 
 CONFIDENCE_RANK = {"low": 0, "medium": 1, "high": 2}
 
-# claude-opus-4-8 pricing (app.agent.MODEL): $ per million tokens.
-# Cache reads bill at 0.1x the input rate. DESIGN.md does not specify a
-# separate multiplier for cache *writes* in the eval cost summary, so those
-# tokens are counted at the normal input rate here.
-OPUS_INPUT_PER_MTOK = 5.0
-OPUS_OUTPUT_PER_MTOK = 25.0
+# Standard (non-introductory) $ per million tokens, keyed by model-ID prefix.
+# The agent's model is app.agent.MODEL (default claude-sonnet-5, overridable
+# via LAW_QA_MODEL), so pricing is resolved from it at runtime. Cache reads
+# bill at 0.1x the input rate. DESIGN.md does not specify a separate
+# multiplier for cache *writes* in the eval cost summary, so those tokens are
+# counted at the normal input rate here.
+MODEL_PRICING_PER_MTOK = {
+    "claude-sonnet-5": (3.0, 15.0),
+    "claude-opus-4-8": (5.0, 25.0),
+    "claude-haiku-4-5": (1.0, 5.0),
+}
+DEFAULT_PRICING_PER_MTOK = MODEL_PRICING_PER_MTOK["claude-sonnet-5"]
 CACHE_READ_MULTIPLIER = 0.1
+
+
+def _pricing_per_mtok() -> tuple[float, float]:
+    """(input, output) $ per MTok for the model the agent actually uses."""
+    try:
+        from app.agent import MODEL
+    except Exception:
+        return DEFAULT_PRICING_PER_MTOK
+    for prefix, rates in MODEL_PRICING_PER_MTOK.items():
+        if MODEL.startswith(prefix):
+            return rates
+    return DEFAULT_PRICING_PER_MTOK
 
 
 def _get(obj: Any, key: str, default: Any = None) -> Any:
@@ -312,11 +330,12 @@ def _sum_usage(outcomes: list[EvalOutcome]) -> dict[str, int]:
 
 
 def _cost_for(totals: dict[str, int]) -> float:
-    input_cost = totals["input_tokens"] / 1_000_000 * OPUS_INPUT_PER_MTOK
-    output_cost = totals["output_tokens"] / 1_000_000 * OPUS_OUTPUT_PER_MTOK
-    cache_write_cost = totals["cache_creation_input_tokens"] / 1_000_000 * OPUS_INPUT_PER_MTOK
+    input_per_mtok, output_per_mtok = _pricing_per_mtok()
+    input_cost = totals["input_tokens"] / 1_000_000 * input_per_mtok
+    output_cost = totals["output_tokens"] / 1_000_000 * output_per_mtok
+    cache_write_cost = totals["cache_creation_input_tokens"] / 1_000_000 * input_per_mtok
     cache_read_cost = (
-        totals["cache_read_input_tokens"] / 1_000_000 * OPUS_INPUT_PER_MTOK * CACHE_READ_MULTIPLIER
+        totals["cache_read_input_tokens"] / 1_000_000 * input_per_mtok * CACHE_READ_MULTIPLIER
     )
     return input_cost + output_cost + cache_write_cost + cache_read_cost
 
