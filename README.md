@@ -1,36 +1,62 @@
-# Somerville Municipal Law Consolidation
+# Somerville Law Bot
 
-Consolidated, machine-friendly extracts of Somerville municipal law from enCodePlus — plus an LLM-powered Q&A web app for asking questions about it.
+**[somervillelawbot.com](https://somervillelawbot.com)** — ask plain-language questions about Somerville, MA municipal law ("Can I raise chickens?", "How soon do I have to shovel my sidewalk?") and get answers grounded in the actual ordinance text. Every legal claim carries a citation whose quote is verified verbatim against the corpus before display, deep-linked into a readable edition of the law.
 
-## What This Is
+This repo contains the whole thing: the pipeline that fetches and normalizes the law from Somerville's official enCodePlus publications, the section index and search tools, the Claude-powered Q&A agent, the web app, and the eval suite that keeps the answers honest.
 
-This repository fetches official municipal-law content from Somerville's enCodePlus publications, normalizes it into machine-friendly Markdown, and renders a human-friendly HTML reading edition.
+## How It Works
 
-## Who This Is For
+- `fetch_somerville_law.py` / `fetch_somerville_zoning.py` fetch official content from enCodePlus and normalize it into Markdown; `render_markdown_html.py` produces the readable HTML editions that citations link into.
+- `app/indexer.py` parses both corpora into a 3,346-section index (`app/data/sections.json`).
+- `app/law_tools.py` provides BM25 search and section fetch as agent tools.
+- `app/wiki/` holds 44 pregenerated topic pages that map resident vocabulary ("chickens") to legal vocabulary ("domestic fowl") and route the agent across corpora.
+- `app/agent.py` runs the tool loop (Claude Sonnet 5 by default, override with `LAW_QA_MODEL`) and rejects any citation whose quote doesn't appear verbatim in the cited section.
+- `app/server.py` serves the frontend with SSE progress streaming, per-IP and global rate limits, JSONL question logging, and the readable corpus pages themselves.
 
-- Researchers, civic technologists, and policy teams who want consolidated non-zoning and zoning law corpora.
-- Developers who want a reproducible fetch + transform pipeline.
+See `app/DESIGN.md` for the full spec.
 
-## Just Want to Read the Law?
+## Running Locally
 
-The generated outputs are committed to this repo — no need to run anything. Open them directly:
+```bash
+uv sync
+printf 'ANTHROPIC_API_KEY=sk-ant-...\n' > .env  # loaded automatically; gitignored
 
-- **Readable HTML (recommended for browsing):**
-  - [Non-zoning law (Charter, Code of Ordinances, Appendices B/D/E)](https://somervillelawbot.com/somerville-law-non-zoning.readable.html)
-  - [Zoning ordinance](https://somervillelawbot.com/somerville-zoning.readable.html)
-- **Markdown (best for search, diffing, LLM ingestion):**
-  - [somerville-law-non-zoning.md](somerville-law-non-zoning.md)
-  - [somerville-zoning.md](somerville-zoning.md)
-  - [somerville-law-combined.md](somerville-law-combined.md) — both of the above concatenated, regenerated automatically by the fetch scripts
-- **Raw HTML (auditable, as fetched from enCodePlus):**
-  - [somerville-law-non-zoning.raw.html](somerville-law-non-zoning.raw.html)
-  - [somerville-zoning.raw.html](somerville-zoning.raw.html)
-- **PDF:**
-  - [rules-of-the-council.pdf](rules-of-the-council.pdf) — Rules of the City Council (Appendix B), exported from enCodePlus
+# Run the app
+uv run uvicorn app.server:app             # then open http://127.0.0.1:8000
 
-Check the commit history to see when the law was last refreshed, and [CHANGELOG.md](CHANGELOG.md) for a summary of substantive legal changes observed between refreshes.
+# Frontend/design work: auto-reload the browser on static or server changes
+DEV_RELOAD=1 uv run uvicorn app.server:app --reload
 
-## Quick Start
+# Ask from the CLI
+uv run python -m app.agent "How long is the mayor's term?"
+```
+
+## Evals
+
+`evals/questions.yaml` holds 30 live questions — unequivocal lookups graded on exactness, multi-hop judgment questions that must cite every provision in the chain, and hallucination traps where inventing a number is a failure.
+
+```bash
+uv run python evals/run.py                # all questions, 4 in parallel (costs API tokens)
+uv run python evals/run.py --parallel 8   # more concurrency
+uv run python evals/run.py --only council-composition,late-night-music
+uv run python evals/run.py --json         # also write logs/eval-results-{date}.json
+```
+
+Answers are stochastic: rerun affected questions before trusting a single pass, and read the failing `answer_markdown` (via `--json`) before deciding whether the answer or the check is wrong.
+
+## Deployment
+
+Deployed on Railway; pushes to `main` auto-deploy. `railway.json` sets the start command (single uvicorn worker — the in-memory rate limiter is per-process), a `/healthz` health check, and restart-on-failure.
+
+Service configuration (Railway environment variables):
+
+- `ANTHROPIC_API_KEY` — required.
+- `TRUST_PROXY=1` — required behind Railway's proxy so per-IP rate limiting keys on real client IPs.
+- `RATE_LIMIT_PER_HOUR` (default 10) and `DAILY_QUESTION_CAP` (default 200) — abuse/cost caps.
+
+A Railway volume mounted at `/app/logs` persists the JSONL Q&A logs across deploys.
+
+## Refreshing the Law Corpus
 
 ```bash
 python3 -m pip install -r requirements.txt
@@ -50,44 +76,20 @@ python3 render_markdown_html.py \
 python3 combine_law.py
 ```
 
-Pass `--skip-pdf-attempt` to `fetch_somerville_law.py` to skip the best-effort host PDF export and only produce Markdown/HTML.
+After a refresh: rerun `uv run python -m app.indexer`, regenerate wiki pages for changed topics with `uv run python -m app.wiki_build` (costs API tokens; see `CHANGELOG.md` for what changed), and rerun the evals.
 
-Expected outputs:
+## Just Want to Read the Law?
 
-- `somerville-law-non-zoning.md`
-- `somerville-law-non-zoning.raw.html`
-- `somerville-law-non-zoning.readable.html`
-- `somerville-zoning.md`
-- `somerville-zoning.raw.html`
-- `somerville-zoning.images.json`
-- `somerville-zoning.readable.html`
-- `somerville-law-combined.md` (regenerated automatically whenever either fetch script runs, when both source Markdown files are present)
+The generated outputs are committed — no need to run anything:
 
-## Somerville Law Bot (Q&A web app)
+- **Readable HTML (what citations link to):**
+  - [Non-zoning law (Charter, Code of Ordinances, Appendices B/D/E)](https://somervillelawbot.com/somerville-law-non-zoning.readable.html)
+  - [Zoning ordinance](https://somervillelawbot.com/somerville-zoning.readable.html)
+- **Markdown (best for search, diffing, LLM ingestion):** [somerville-law-non-zoning.md](somerville-law-non-zoning.md), [somerville-zoning.md](somerville-zoning.md), [somerville-law-combined.md](somerville-law-combined.md)
+- **Raw HTML (auditable, as fetched):** [somerville-law-non-zoning.raw.html](somerville-law-non-zoning.raw.html), [somerville-zoning.raw.html](somerville-zoning.raw.html)
+- **PDF:** [rules-of-the-council.pdf](rules-of-the-council.pdf) — Rules of the City Council (Appendix B)
 
-`app/` contains a web app where residents ask plain-language questions ("Can I use a gas-powered leaf blower in July?", "Can I raise chickens?") and get answers grounded in the corpus. Every legal claim carries a citation whose quote is verified verbatim against the ordinance text before display, deep-linked into the readable editions. Powered by Claude Opus 4.8 via the Anthropic API.
-
-```bash
-uv sync
-printf 'ANTHROPIC_API_KEY=sk-ant-...\n' > .env  # loaded automatically; gitignored
-
-# One-time (already committed, rerun after a corpus refresh):
-uv run python -m app.indexer          # rebuild section index
-uv run python -m app.wiki_build       # regenerate topic wiki pages (costs API tokens)
-
-# Run the app
-uv run uvicorn app.server:app         # then open http://127.0.0.1:8000
-
-# Ask from the CLI
-uv run python -m app.agent "How long is the mayor's term?"
-
-# Run the eval suite (20 live questions, costs API tokens)
-uv run python evals/run.py
-```
-
-Architecture: `app/indexer.py` parses both corpora into a 3,346-section index; `app/law_tools.py` provides BM25 search and section fetch as agent tools; `app/wiki/` holds 44 pregenerated topic pages that map resident vocabulary ("chickens") to legal vocabulary ("domestic fowl") and route the agent across corpora; `app/agent.py` runs the tool loop and rejects any citation whose quote doesn't appear verbatim in the cited section; `app/server.py` serves the frontend with SSE progress streaming, per-IP rate limits, and JSONL question logging. See `app/DESIGN.md` for the full spec.
-
-After refreshing the law corpus, rerun the indexer, regenerate wiki pages for changed topics (see `CHANGELOG.md`), and rerun the evals.
+Check the commit history for when the law was last refreshed, and [CHANGELOG.md](CHANGELOG.md) for substantive legal changes observed between refreshes.
 
 ## Known Limitations
 
@@ -98,4 +100,4 @@ After refreshing the law corpus, rerun the indexer, regenerate wiki pages for ch
 
 ## Legal Disclaimer
 
-This repository is for informational and research use only and does not constitute legal advice. Check the official municipal code before doing something serious with this information.
+This site and repository are for informational and research use only and do not constitute legal advice. Check the official municipal code before doing something serious with this information.
