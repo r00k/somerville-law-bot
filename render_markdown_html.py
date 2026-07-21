@@ -283,6 +283,22 @@ TOC_SCRIPT = """<script>
 
   expandFor(location.hash);
   window.addEventListener("hashchange", function () { expandFor(location.hash); });
+
+  // On a document this large the browser jumps to the hash target while
+  // content is still rendering, so late layout shifts leave the viewport a
+  // chapter away from the anchor. Re-scroll once everything has loaded (and
+  // once more shortly after, for font/layout settling).
+  function rescrollToHash() {
+    if (!location.hash || location.hash.length < 2) return;
+    var id;
+    try { id = decodeURIComponent(location.hash.slice(1)); } catch (e) { return; }
+    var target = document.getElementById(id);
+    if (target) target.scrollIntoView({ block: "start" });
+  }
+  window.addEventListener("load", function () {
+    rescrollToHash();
+    setTimeout(rescrollToHash, 300);
+  });
 })();
 </script>"""
 

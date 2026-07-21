@@ -17,10 +17,12 @@ DATA_DIR = Path(__file__).resolve().parent / "data"
 READABLE_BASE = "https://somervillelawbot.com"
 
 # (corpus prefix, source markdown filename, readable-HTML filename, display name)
+# The third field is the URL path the app serves each readable edition at
+# (see app/server.py), not the generated filename.
 CORPORA = [
-    ("coo", "somerville-law-non-zoning.md", "somerville-law-non-zoning.readable.html",
+    ("coo", "somerville-law-non-zoning.md", "code",
      "CODE OF ORDINANCES (non-zoning)"),
-    ("zon", "somerville-zoning.md", "somerville-zoning.readable.html",
+    ("zon", "somerville-zoning.md", "zoning",
      "ZONING ORDINANCE"),
 ]
 
