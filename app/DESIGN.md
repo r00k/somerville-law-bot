@@ -23,8 +23,8 @@ the model can never fabricate law text.
   markdown headings (`#`–`######`). secids are NOT unique across the two files
   — always qualify with corpus prefix.
 - Readable HTML editions are published at:
-  - `https://r00k.github.io/somerville-ordinances/somerville-law-non-zoning.readable.html#secid-{N}`
-  - `https://r00k.github.io/somerville-ordinances/somerville-zoning.readable.html#secid-{N}`
+  - `https://somervillelawbot.com/somerville-law-non-zoning.readable.html#secid-{N}`
+  - `https://somervillelawbot.com/somerville-zoning.readable.html#secid-{N}`
   (anchors `id="secid-{N}"` exist in the published HTML)
 
 ## Directory layout
@@ -65,7 +65,7 @@ Section key format: `"coo:{secid}"` for non-zoning, `"zon:{secid}"` for zoning.
   "heading_path": ["PART II CODE OF ORDINANCES", "Chapter 9 ...", "ARTICLE V. ...", "DIVISION 3. LEAF BLOWERS", "Sec. 9-120. Leaf blowers regulated."],
   "title": "Sec. 9-120. Leaf blowers regulated.",
   "text": "<full markdown text of the section, headings excluded>",
-  "url": "https://r00k.github.io/somerville-ordinances/somerville-law-non-zoning.readable.html#secid-1234"
+  "url": "https://somervillelawbot.com/somerville-law-non-zoning.readable.html#secid-1234"
 }
 ```
 

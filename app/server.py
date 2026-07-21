@@ -356,6 +356,24 @@ async def index() -> FileResponse:
     return FileResponse(STATIC_DIR / "index.html")
 
 
+# The readable corpus pages that citation URLs point to (…/#secid-N). Served
+# by this app so citations work on the app's own domain with no dependency on
+# GitHub Pages. Only these two fixed filenames are exposed — this is not a
+# general file server over the repo root.
+_READABLE_PAGES = {
+    "somerville-law-non-zoning.readable.html",
+    "somerville-zoning.readable.html",
+}
+
+
+@app.get("/{page_name}.readable.html")
+async def readable_page(page_name: str):
+    filename = f"{page_name}.readable.html"
+    if filename not in _READABLE_PAGES:
+        return JSONResponse(status_code=404, content={"error": "not_found"})
+    return FileResponse(REPO_ROOT / filename, media_type="text/html")
+
+
 @app.post("/api/ask")
 async def api_ask(request: Request):
     try:

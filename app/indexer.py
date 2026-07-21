@@ -14,7 +14,7 @@ from typing import NamedTuple
 REPO_ROOT = Path(__file__).resolve().parent.parent
 DATA_DIR = Path(__file__).resolve().parent / "data"
 
-READABLE_BASE = "https://r00k.github.io/somerville-ordinances"
+READABLE_BASE = "https://somervillelawbot.com"
 
 # (corpus prefix, source markdown filename, readable-HTML filename, display name)
 CORPORA = [

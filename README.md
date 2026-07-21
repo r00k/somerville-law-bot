@@ -16,8 +16,8 @@ This repository fetches official municipal-law content from Somerville's enCodeP
 The generated outputs are committed to this repo — no need to run anything. Open them directly:
 
 - **Readable HTML (recommended for browsing):**
-  - [Non-zoning law (Charter, Code of Ordinances, Appendices B/D/E)](https://r00k.github.io/somerville-ordinances/somerville-law-non-zoning.readable.html)
-  - [Zoning ordinance](https://r00k.github.io/somerville-ordinances/somerville-zoning.readable.html)
+  - [Non-zoning law (Charter, Code of Ordinances, Appendices B/D/E)](https://somervillelawbot.com/somerville-law-non-zoning.readable.html)
+  - [Zoning ordinance](https://somervillelawbot.com/somerville-zoning.readable.html)
 - **Markdown (best for search, diffing, LLM ingestion):**
   - [somerville-law-non-zoning.md](somerville-law-non-zoning.md)
   - [somerville-zoning.md](somerville-zoning.md)
