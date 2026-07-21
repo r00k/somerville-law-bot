@@ -4,23 +4,25 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Somerville Law Bot</title>
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cline x1='32' y1='6' x2='32' y2='16' stroke='%236cb2ff' stroke-width='3'/%3E%3Ccircle cx='32' cy='6' r='4' fill='%233ddc97'/%3E%3Crect x='12' y='16' width='40' height='34' rx='9' fill='%23151e2a' stroke='%236cb2ff' stroke-width='3'/%3E%3Ccircle cx='24' cy='31' r='4' fill='%233ddc97'/%3E%3Ccircle cx='40' cy='31' r='4' fill='%233ddc97'/%3E%3Cpath d='M24 40 Q32 45 40 40' stroke='%236cb2ff' stroke-width='3' fill='none' stroke-linecap='round'/%3E%3C/svg%3E">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cline x1='32' y1='6' x2='32' y2='16' stroke='%231d5fbf' stroke-width='3'/%3E%3Ccircle cx='32' cy='6' r='4' fill='%23177a4c'/%3E%3Crect x='12' y='16' width='40' height='34' rx='9' fill='%23ffffff' stroke='%231d5fbf' stroke-width='3'/%3E%3Ccircle cx='24' cy='31' r='4' fill='%23177a4c'/%3E%3Ccircle cx='40' cy='31' r='4' fill='%23177a4c'/%3E%3Cpath d='M24 40 Q32 45 40 40' stroke='%231d5fbf' stroke-width='3' fill='none' stroke-linecap='round'/%3E%3C/svg%3E">
 <style>
   :root {
-    color-scheme: dark;
-    --bg: #0f1620;
-    --panel: #151e2a;
-    --panel-deep: #121a25;
-    --line: #24303f;
-    --ink: #e6edf5;
-    --muted: #7b8a9c;
-    --dim: #566575;
-    --blue: #6cb2ff;
-    --green: #3ddc97;
-    --amber: #e3b341;
-    --red: #ff7b72;
+    color-scheme: light;
+    --bg: #f6f3ec;
+    --panel: #ffffff;
+    --panel-deep: #faf8f2;
+    --line: #e2dcce;
+    --ink: #26323d;
+    --muted: #5f6e7c;
+    --dim: #8b96a1;
+    --blue: #1d5fbf;
+    --green: #177a4c;
+    --amber: #9a6c00;
+    --red: #b3261e;
     --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --serif: Georgia, "Iowan Old Style", "Times New Roman", serif;
     --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+    --shadow: 0 1px 2px rgba(38, 50, 61, 0.05), 0 10px 30px rgba(38, 50, 61, 0.06);
   }
 
   * { box-sizing: border-box; }
@@ -55,12 +57,18 @@
 
   .site-header h1 {
     margin: 0;
-    font-size: 1.35rem;
-    font-weight: 650;
-    letter-spacing: 0.01em;
+    font-family: var(--serif);
+    font-size: 1.5rem;
+    font-weight: 700;
+    letter-spacing: 0.005em;
   }
 
-  .site-header h1 .dim { color: var(--muted); font-weight: 400; }
+  .site-header h1 .dim {
+    color: var(--muted);
+    font-family: var(--sans);
+    font-size: 0.95rem;
+    font-weight: 400;
+  }
 
   .corpus-stat {
     margin: 0.15rem 0 0;
@@ -89,8 +97,9 @@
   .ask-panel {
     background: var(--panel);
     border: 1px solid var(--line);
-    border-radius: 10px;
+    border-radius: 12px;
     padding: 1.25rem;
+    box-shadow: var(--shadow);
   }
 
   .chips {
@@ -101,18 +110,18 @@
   }
 
   .chip {
-    font-family: var(--mono);
-    font-size: 0.75rem;
-    background: var(--panel-deep);
+    font-family: var(--sans);
+    font-size: 0.78rem;
+    background: #eef3fb;
     color: var(--blue);
-    border: 1px solid var(--line);
+    border: 1px solid #cfdcf2;
     border-radius: 999px;
-    padding: 0.35rem 0.8rem;
+    padding: 0.35rem 0.85rem;
     cursor: pointer;
-    transition: border-color 0.15s ease;
+    transition: border-color 0.15s ease, background 0.15s ease;
   }
 
-  .chip:hover:not(:disabled) { border-color: var(--blue); }
+  .chip:hover:not(:disabled) { border-color: var(--blue); background: #e4edfa; }
   .chip:disabled { opacity: 0.5; cursor: not-allowed; }
 
   .prompt-row {
@@ -149,7 +158,7 @@
     border: none;
     padding: 0;
     resize: vertical;
-    min-height: 3.2rem;
+    min-height: 4.5rem;
     line-height: 1.5;
   }
 
@@ -173,13 +182,13 @@
 
   button[type="submit"] {
     font: inherit;
-    font-weight: 700;
+    font-weight: 650;
     font-size: 0.9rem;
     background: var(--blue);
-    color: var(--bg);
+    color: #ffffff;
     border: none;
-    border-radius: 7px;
-    padding: 0.5rem 1.4rem;
+    border-radius: 8px;
+    padding: 0.55rem 1.4rem;
     cursor: pointer;
     transition: filter 0.15s ease;
   }
@@ -215,8 +224,8 @@
   .error-message {
     margin: 1rem 0 0;
     padding: 0.75rem 1rem;
-    background: var(--panel);
-    border: 1px solid var(--line);
+    background: #fbf0ef;
+    border: 1px solid #efd7d4;
     border-left: 3px solid var(--red);
     border-radius: 6px;
     color: var(--ink);
@@ -225,9 +234,11 @@
 
   .answer {
     margin-top: 1.4rem;
+    background: var(--panel);
     border: 1px solid var(--line);
-    border-radius: 10px;
+    border-radius: 12px;
     overflow: hidden;
+    box-shadow: var(--shadow);
   }
 
   .answer-bar {
@@ -235,7 +246,7 @@
     justify-content: space-between;
     align-items: center;
     gap: 1rem;
-    background: var(--panel);
+    background: var(--panel-deep);
     border-bottom: 1px solid var(--line);
     padding: 0.6rem 1.2rem;
     min-height: 2.4rem;
@@ -299,7 +310,7 @@
   .answer-body strong { color: var(--blue); font-weight: 600; }
   .answer-body code {
     font-family: var(--mono);
-    background: var(--panel);
+    background: var(--panel-deep);
     border: 1px solid var(--line);
     padding: 0.08em 0.35em;
     border-radius: 4px;
@@ -310,9 +321,9 @@
   .caveats {
     margin: 0 1.25rem 1.1rem;
     padding: 0.7rem 1rem;
-    background: var(--panel);
-    border: 1px solid var(--line);
-    border-left: 3px solid var(--amber);
+    background: #fbf4de;
+    border: 1px solid #eee2b8;
+    border-left: 3px solid #d9a600;
     border-radius: 6px;
     font-size: 0.88rem;
   }
@@ -369,9 +380,9 @@
   }
 
   .refline a {
-    font-family: var(--mono);
-    font-size: 0.95rem;
-    font-weight: 600;
+    font-family: var(--sans);
+    font-size: 0.92rem;
+    font-weight: 650;
     color: var(--blue);
     text-decoration: none;
   }
@@ -386,10 +397,13 @@
 
   .citation-card blockquote {
     margin: 0 0 0.9rem;
-    font-family: var(--mono);
-    font-size: 0.78rem;
+    padding-left: 0.85rem;
+    border-left: 2px solid var(--line);
+    font-family: var(--serif);
+    font-size: 0.85rem;
+    font-style: italic;
     line-height: 1.65;
-    color: #b9c6d4;
+    color: #4a5a68;
   }
 
   .answer-body h3 {
@@ -418,14 +432,14 @@
 <div class="page">
   <header class="site-header">
     <svg class="mascot" width="46" height="46" viewBox="0 0 64 64" role="img" aria-label="Somerville Law Bot mascot">
-      <line x1="32" y1="6" x2="32" y2="16" stroke="#6cb2ff" stroke-width="3"/>
-      <circle cx="32" cy="6" r="4" fill="#3ddc97"/>
-      <rect x="12" y="16" width="40" height="34" rx="9" fill="#151e2a" stroke="#6cb2ff" stroke-width="3"/>
-      <rect x="6" y="27" width="6" height="12" rx="3" fill="#24303f" stroke="#6cb2ff" stroke-width="2"/>
-      <rect x="52" y="27" width="6" height="12" rx="3" fill="#24303f" stroke="#6cb2ff" stroke-width="2"/>
-      <circle cx="24" cy="31" r="4" fill="#3ddc97"/>
-      <circle cx="40" cy="31" r="4" fill="#3ddc97"/>
-      <path d="M24 40 Q32 45 40 40" stroke="#6cb2ff" stroke-width="3" fill="none" stroke-linecap="round"/>
+      <line x1="32" y1="6" x2="32" y2="16" stroke="#1d5fbf" stroke-width="3"/>
+      <circle cx="32" cy="6" r="4" fill="#177a4c"/>
+      <rect x="12" y="16" width="40" height="34" rx="9" fill="#ffffff" stroke="#1d5fbf" stroke-width="3"/>
+      <rect x="6" y="27" width="6" height="12" rx="3" fill="#eef3fb" stroke="#1d5fbf" stroke-width="2"/>
+      <rect x="52" y="27" width="6" height="12" rx="3" fill="#eef3fb" stroke="#1d5fbf" stroke-width="2"/>
+      <circle cx="24" cy="31" r="4" fill="#177a4c"/>
+      <circle cx="40" cy="31" r="4" fill="#177a4c"/>
+      <path d="M24 40 Q32 45 40 40" stroke="#1d5fbf" stroke-width="3" fill="none" stroke-linecap="round"/>
     </svg>
     <div>
       <h1>Somerville Law Bot <span class="dim">/ ask an AI about Somerville law</span></h1>
@@ -449,15 +463,15 @@
           <textarea
             id="question"
             name="question"
-            rows="2"
+            rows="3"
             maxlength="1000"
             placeholder="Ask about noise rules, permits, snow shoveling, pets, parking…"
             required
           ></textarea>
         </div>
         <div class="form-row">
-          <span class="char-count" id="char-count">0 / 1000</span>
-          <button type="submit" id="ask-button">Run query</button>
+          <span class="char-count" id="char-count" hidden></span>
+          <button type="submit" id="ask-button">Ask</button>
         </div>
       </form>
 
@@ -489,12 +503,12 @@
       from Somerville's published ordinances. It is <strong>not legal
       advice</strong> and may be incomplete or out of date. Always verify
       current requirements against the
-      <a href="https://online.encodeplus.com/regs/somerville-ma-coo/" target="_blank" rel="noopener noreferrer">official Code of Ordinances</a>.
+      <a href="https://online.encodeplus.com/regs/somerville-ma-coo/doc-viewer.aspx?tocid=001" target="_blank" rel="noopener noreferrer">official Code of Ordinances</a>.
       Source code and the underlying law corpus are on
       <a href="https://github.com/r00k/somerville-law-bot" target="_blank" rel="noopener noreferrer">GitHub</a>.
     </p>
     <p class="credit">
-      Proudly made by <a href="https://ben.net" target="_blank" rel="noopener noreferrer">Ben Orenstein</a>.
+      Crafted by <a href="https://ben.net" target="_blank" rel="noopener noreferrer">Ben Orenstein</a> in Somerville.
     </p>
   </footer>
 </div>
@@ -520,9 +534,14 @@
 
   var provisionalAnswer = "";
 
-  textarea.addEventListener("input", function () {
-    charCount.textContent = textarea.value.length + " / 1000";
-  });
+  // The character counter only appears once there is something to count.
+  function updateCharCount() {
+    var len = textarea.value.length;
+    charCount.hidden = len === 0;
+    charCount.textContent = len + " / 1000";
+  }
+
+  textarea.addEventListener("input", updateCharCount);
 
   textarea.addEventListener("keydown", function (e) {
     if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
@@ -535,7 +554,7 @@
     var btn = e.target.closest(".chip");
     if (!btn || btn.disabled) return;
     textarea.value = btn.dataset.question;
-    charCount.textContent = textarea.value.length + " / 1000";
+    updateCharCount();
     form.requestSubmit();
   });
 
@@ -548,7 +567,7 @@
 
   function setBusy(busy) {
     askButton.disabled = busy;
-    askButton.textContent = busy ? "Running…" : "Run query";
+    askButton.textContent = busy ? "Thinking…" : "Ask";
     textarea.disabled = busy;
     var chipButtons = chips.querySelectorAll(".chip");
     for (var i = 0; i < chipButtons.length; i++) {
