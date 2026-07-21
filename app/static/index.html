@@ -72,10 +72,9 @@
 
   .corpus-stat {
     margin: 0.15rem 0 0;
-    font-family: var(--mono);
-    font-size: 0.72rem;
-    color: var(--dim);
-    letter-spacing: 0.05em;
+    font-family: var(--sans);
+    font-size: 0.8rem;
+    color: var(--muted);
   }
   .corpus-stat a {
     color: var(--green);
@@ -444,7 +443,7 @@
     </svg>
     <div>
       <h1>Somerville Law Bot <span class="dim">/ ask an AI about Somerville law</span></h1>
-      <p class="corpus-stat">source: <a href="https://somervillelawbot.com/ordinances">the full Somerville municipal code</a></p>
+      <p class="corpus-stat">Source: <a href="https://somervillelawbot.com/ordinances">the full Somerville municipal code</a></p>
     </div>
   </header>
 
@@ -618,7 +617,8 @@
     confidenceBadge.className = "";
     progressEl.innerHTML = "";
     progressEl.hidden = false;
-    tracePush("Researching…");
+    phaseRank = 0;
+    setPhase("research");
   }
 
   function showError(message) {
@@ -704,13 +704,31 @@
     handleEvent(payload);
   }
 
+  // The trace shows three reader-facing phases rather than per-tool detail:
+  // Researching → Reading the law → Writing the answer. Phases only move
+  // forward (a search after reading doesn't re-add "Researching…"), except
+  // after a citation-guardrail retry, which rewinds so the redo is visible.
+  var PHASE_RANK = { research: 1, read: 2, write: 3 };
+  var PHASE_LABEL = {
+    research: "Researching…",
+    read: "Reading the law…",
+    write: "Writing the answer…"
+  };
+  var phaseRank = 0;
+
+  function setPhase(phase) {
+    if (PHASE_RANK[phase] <= phaseRank) return;
+    phaseRank = PHASE_RANK[phase];
+    tracePush(PHASE_LABEL[phase]);
+  }
+
   function handleEvent(payload) {
     switch (payload.type) {
       case "thinking":
-        tracePush("Researching…");
+        setPhase("research");
         break;
       case "tool":
-        tracePush(describeTool(payload));
+        setPhase(payload.name === "get_sections" ? "read" : "research");
         break;
       case "answer_delta":
         appendAnswerDelta(payload.text || "");
@@ -732,26 +750,12 @@
     }
   }
 
-  function describeTool(payload) {
-    var detail = payload.detail || "";
-    switch (payload.name) {
-      case "search_law":
-        return 'Searching the code for “' + detail + '”';
-      case "get_sections":
-        return "Reading " + detail;
-      case "get_wiki_page":
-        return "Checking the topic guide: " + detail.replace(/-/g, " ");
-      default:
-        return detail ? payload.name + " " + detail : payload.name || "Working…";
-    }
-  }
-
   function appendAnswerDelta(text) {
     // Provisional answer streaming in: reveal the answer area and re-render
     // the accumulated markdown, marked in-progress. The trace stays visible
     // above the answer as a record of the research.
     answerSection.hidden = false;
-    tracePush("Writing the answer…");
+    setPhase("write");
     provisionalAnswer += text;
     answerBody.classList.add("streaming");
     answerBody.innerHTML = renderMarkdown(provisionalAnswer);
@@ -759,10 +763,12 @@
 
   function resetProvisionalAnswer() {
     // A streamed answer was rejected by the citation guardrail — clear it so
-    // the retry streams fresh deltas onto a clean slate.
+    // the retry streams fresh deltas onto a clean slate. Rewind the phase
+    // tracker so the redo's research/read/write steps show again.
     provisionalAnswer = "";
     answerBody.innerHTML = "";
     answerBody.classList.add("streaming");
+    phaseRank = 0;
     tracePush("Double-checking citations…");
   }
 
