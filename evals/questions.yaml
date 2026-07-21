@@ -10,6 +10,15 @@
 #   question                    the question text sent to agent.ask()
 #   expect_answer_contains_any  (optional) case-insensitive substring OR-match
 #                                against answer_markdown
+#   expect_answer_contains_all  (optional) list of groups; each group is a
+#                                string or a list of alternatives. Every group
+#                                must match answer_markdown (AND of ORs).
+#   expect_answer_not_contains  (optional) case-insensitive substrings that
+#                                must NOT appear in answer_markdown
+#   expect_cited_sections_all   (optional) like expect_cited_sections_any but
+#                                every group (string or list of glob
+#                                alternatives) must match some citation —
+#                                for multi-hop lookups
 #   expect_cited_sections_any   (optional) case-insensitive glob OR-match
 #                                against EITHER a citation's section_key or
 #                                its section title (fetched via get_sections)
@@ -223,3 +232,146 @@
   expect_answer_contains_any: ["fine", "penalt", "punished", "1-11"]
   expect_cited_sections_any: ["coo:784", "*abandoned automobiles*"]
   expect_confidence_at_least: medium
+
+# ---------------------------------------------------------------------------
+# Curated 10-question suite (added 2026-07-21). Section keys verified against
+# app/data/sections.json by regex-matching each question's verbatim source
+# text. Q1-Q7 are unequivocal (graded on exactness via contains_all), Q8-Q9
+# require combining provisions, Q10 is a hallucination trap (the code defers
+# to state law / the city clerk and states no dollar amount).
+# ---------------------------------------------------------------------------
+
+- id: council-composition
+  question: How many members does the Somerville City Council have, and how are the seats split between at-large and ward councilors?
+  # coo:2594 (Charter Section 2-1(a)): "a city council consisting of 11
+  # members... Four members... councilors at-large... Seven members...
+  # ward councilors... 1 ward councilor to be elected from each of the 7
+  # wards."
+  expect_answer_contains_all:
+    - ["11", "eleven"]
+    - ["four", "4"]
+    - ["seven", "7"]
+    - ["at-large", "at large"]
+    - ["ward"]
+  expect_cited_sections_any: ["coo:2594", "*composition*"]
+  expect_confidence_at_least: high
+
+- id: veto-override
+  question: If the mayor vetoes an ordinance, how many city council votes are needed to override the veto? And what happens if the mayor neither signs nor returns a measure?
+  # coo:2608 (Charter Section 3-9): override requires "affirmative vote of
+  # not less than 8 members"; a measure neither signed nor returned "within
+  # 10 days following the date it was presented" is deemed approved and in
+  # force.
+  expect_answer_contains_all:
+    - ["8", "eight"]
+    - ["10 days", "ten days"]
+    - ["approved", "in force"]
+  expect_cited_sections_any: ["coo:2608", "*veto*"]
+  expect_confidence_at_least: medium
+
+- id: snow-clearing-details
+  question: After a snowstorm ends, how long does a Somerville property owner have to clear the abutting sidewalk, and how wide must the cleared path be?
+  # coo:981 (Sec. 12-8(a)): no more than "six hours between sunrise and
+  # sunset following the conclusion of a weather event"; cleared path of
+  # travel "with a minimum width of thirty-six inches." Full credit requires
+  # the sunrise-and-sunset (daylight hours) qualifier, hence contains_all
+  # rather than the looser snow-shoveling question above.
+  expect_answer_contains_all:
+    - ["six hours", "6 hours"]
+    - ["sunrise and sunset", "sunrise to sunset", "daylight"]
+    - ["thirty-six", "36"]
+  expect_cited_sections_any: ["coo:981", "*snow and ice on sidewalks*"]
+  expect_confidence_at_least: medium
+
+- id: hens-limit
+  question: What is the maximum number of hens a Somerville resident may keep on a lot, and are roosters allowed?
+  # coo:2180 (BOH Regulations for the Keeping of Hens): "A maximum of six
+  # (6) hens may be kept on a lot. Roosters are not allowed to be kept in
+  # Somerville." (Grandfathering exemption for pre-existing henhouses.)
+  expect_answer_contains_all:
+    - ["six", "6"]
+    - ["rooster"]
+  expect_cited_sections_any: ["coo:2180", "coo:2178", "coo:2179", "*hens*"]
+  expect_confidence_at_least: medium
+
+- id: bee-hive-limits
+  question: How many honey bee colonies may be kept on a single lot in Somerville, and what is the maximum size of each hive?
+  # coo:2177 (BOH Policy Regulations for the Keeping of Honey Bees): "A
+  # maximum of 2 colonies may be kept on a lot." / "Each hive shall not
+  # exceed five (5) feet in height and twenty (20) cubic feet."
+  expect_answer_contains_all:
+    - ["2 colonies", "two colonies", "two (2) colonies"]
+    - ["five (5) feet", "5 feet", "five feet"]
+    - ["twenty (20) cubic feet", "20 cubic feet", "twenty cubic feet"]
+  expect_cited_sections_any: ["coo:2177", "coo:2176", "*honeybees*", "*honey bees*"]
+  expect_confidence_at_least: medium
+
+- id: tobacco-sales
+  question: What is the minimum age to be sold tobacco products in Somerville, and how close to a school may a new tobacco retailer be located?
+  # coo:2159 (BOH Regulation Restricting the Sale of Tobacco Products,
+  # D.1 and E.10.a): no sales to anyone "under twenty-one (21) years old";
+  # no new permit "within five hundred (500) feet of a public or private
+  # elementary or secondary school." Bonus (ungraded): buyers of an existing
+  # permitted business are exempt from the 500-foot rule.
+  expect_answer_contains_all:
+    - ["21", "twenty-one"]
+    - ["500", "five hundred"]
+  expect_cited_sections_any: ["coo:2159", "*tobacco*"]
+  expect_confidence_at_least: medium
+
+- id: linkage-fee
+  question: What is Somerville's affordable housing linkage fee per gross square foot of commercial development, and what size development is fully exempt?
+  # zon:817 (Zoning 12.2.2(c)): "$22.46 per gross square foot"; "Development
+  # with less than fifteen thousand (15,000) gross square feet is exempt."
+  # (Fee adjusts annually for inflation from March 1, 2024 — credit but not
+  # required, so it is not asserted here.)
+  expect_answer_contains_all:
+    - ["22.46", "twenty-two dollars and forty six cents"]
+    - ["15,000", "fifteen thousand"]
+  expect_cited_sections_any: ["zon:817", "*linkage*"]
+  expect_confidence_at_least: medium
+
+- id: late-night-music
+  question: My neighbor is blasting a stereo at 11:30 PM on a Tuesday and it's clearly audible in my apartment. Is that a violation of Somerville's ordinances, and what penalty applies to a first offense?
+  # Judgment leap (two-hop): coo:822 (Sec. 9-116, radios/amplifiers between
+  # 11:00 p.m. and 7:00 a.m.) establishes the violation, but the penalty
+  # lives in coo:184 (Sec. 1-11(b) fine schedule): "1st offense: Warning,
+  # 2nd offense: $100.00, 3rd & subsequent offense: $300.00." A model that
+  # answers "$300" for a first offense fails — hence the required "warning"
+  # and the requirement that BOTH sections be cited.
+  expect_answer_contains_all:
+    - ["warning"]
+    - ["11:00 p.m.", "11 p.m.", "11:00 pm", "11pm", "11 pm"]
+  expect_cited_sections_all:
+    - ["coo:822", "*noise disturbances*"]
+    - ["coo:184", "*penalties and violations*"]
+  expect_confidence_at_least: medium
+
+- id: new-building-parking-permit
+  question: I just moved into an apartment building in Somerville that received its first certificate of occupancy in 2022. Can I get a residential parking permit?
+  # Judgment leap: coo:2374 (Section 15-2.1) prohibits permits for addresses
+  # first occupied on/after January 15, 2020 -- but only "for any property
+  # shown on... Map A" (incorporated by reference, not reproduced in the
+  # text), and the Director of Parking may waive the prohibition
+  # (disabilities, deed-restricted affordable units, extenuating
+  # circumstances). A flat yes or flat no both fail; the answer must flag
+  # the Map A dependency and the waiver path.
+  expect_answer_contains_all:
+    - ["map a"]
+    - ["january 15, 2020", "2020"]
+    - ["waive", "waiver"]
+  expect_cited_sections_any: ["coo:2374", "*residential permit parking*"]
+
+- id: towing-charge-amount
+  question: Exactly how much (in dollars) will Somerville charge me if my car is towed during a snow emergency?
+  # Hallucination trap: no dollar amount exists in the corpus. coo:2321
+  # (Traffic Regs Section 10-3, Fees) caps towing/storage at what state law
+  # authorizes; coo:873 (Sec. 11-2) says the charges "are on file in the
+  # city clerk's office." Any specific dollar figure is a failure, hence the
+  # "$" ban.
+  # No expect_cited_sections_any: citing coo:2321/coo:873 is ideal, but an
+  # honest citation-less "the code doesn't say" is also acceptable, and the
+  # any-check would wrongly fail that shape.
+  expect_answer_contains_any: ["state law", "statute", "city clerk", "on file", "not specified", "does not specify", "does not state"]
+  expect_answer_not_contains: ["$"]
+  allow_no_citations: true

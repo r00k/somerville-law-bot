@@ -5,8 +5,10 @@ result against each question's expectations, prints a pass/fail table with
 failure reasons, and prints a total token usage / cost summary.
 
 Usage:
-    uv run python evals/run.py                    # run all questions
+    uv run python evals/run.py                    # run all questions (4 in parallel)
     uv run python evals/run.py --only leaf-blower-july,mayor-term
+    uv run python evals/run.py --parallel 8        # more concurrency (watch rate limits)
+    uv run python evals/run.py --parallel 1        # sequential
     uv run python evals/run.py --json              # also write logs/eval-results-{date}.json
 
 Exits nonzero if any question fails (or errors).
@@ -140,6 +142,35 @@ def _check_answer_contains(spec: dict, answer_markdown: str) -> str | None:
     return f"answer_markdown did not contain any of {expected!r}"
 
 
+def _check_answer_contains_all(spec: dict, answer_markdown: str) -> list[str]:
+    """expect_answer_contains_all is a list of groups, each a string or a list
+    of alternative strings. Every group must match (AND of ORs)."""
+    expected = spec.get("expect_answer_contains_all")
+    if not expected:
+        return []
+    haystack = (answer_markdown or "").lower()
+    reasons: list[str] = []
+    for group in expected:
+        alternatives = group if isinstance(group, list) else [group]
+        if not any(alt.lower() in haystack for alt in alternatives):
+            reasons.append(
+                f"answer_markdown did not contain any of {alternatives!r} "
+                "(expect_answer_contains_all)"
+            )
+    return reasons
+
+
+def _check_answer_not_contains(spec: dict, answer_markdown: str) -> str | None:
+    banned = spec.get("expect_answer_not_contains")
+    if not banned:
+        return None
+    haystack = (answer_markdown or "").lower()
+    hit = next((n for n in banned if n.lower() in haystack), None)
+    if hit is None:
+        return None
+    return f"answer_markdown contains banned substring {hit!r} (expect_answer_not_contains)"
+
+
 def _titles_for(section_keys: list[str]) -> dict[str, str]:
     if not section_keys:
         return {}
@@ -165,6 +196,33 @@ def _check_cited_sections(spec: dict, citations: list) -> tuple[str | None, list
     if _glob_match_any(expected, candidates):
         return None, keys
     return f"no citation matched any of expect_cited_sections_any={expected!r} (got keys={keys!r})", keys
+
+
+def _check_cited_sections_all(spec: dict, citations: list) -> list[str]:
+    """expect_cited_sections_all is a list of groups, each a string or a list
+    of alternative glob patterns. Every group must match some citation's key
+    or title (AND of ORs) — for questions whose point is a multi-hop lookup."""
+    expected = spec.get("expect_cited_sections_all")
+    if not expected:
+        return []
+    keys = [str(_get(c, "section_key", "")) for c in citations]
+    keys = [k for k in keys if k]
+    titles = _titles_for(keys)
+    candidates: list[str] = []
+    for k in keys:
+        candidates.append(k)
+        title = titles.get(k, "")
+        if title:
+            candidates.append(title)
+    reasons: list[str] = []
+    for group in expected:
+        patterns = group if isinstance(group, list) else [group]
+        if not _glob_match_any(patterns, candidates):
+            reasons.append(
+                f"no citation matched any of {patterns!r} "
+                f"(expect_cited_sections_all, got keys={keys!r})"
+            )
+    return reasons
 
 
 def _check_citation_count(spec: dict, citations: list) -> str | None:
@@ -209,9 +267,16 @@ def evaluate(spec: dict, answer: Any) -> EvalOutcome:
     if reason := _check_answer_contains(spec, answer_markdown):
         reasons.append(reason)
 
+    reasons.extend(_check_answer_contains_all(spec, answer_markdown))
+
+    if reason := _check_answer_not_contains(spec, answer_markdown):
+        reasons.append(reason)
+
     cited_reason, cited_keys = _check_cited_sections(spec, citations)
     if cited_reason:
         reasons.append(cited_reason)
+
+    reasons.extend(_check_cited_sections_all(spec, citations))
 
     if reason := _check_citation_count(spec, citations):
         reasons.append(reason)
@@ -288,11 +353,10 @@ def print_summary(outcomes: list[EvalOutcome]) -> None:
     print(f"estimated cost: ${cost:.4f}")
 
 
-def run_evals(specs: list[dict]) -> list[EvalOutcome]:
+def run_evals(specs: list[dict], parallel: int = 1) -> list[EvalOutcome]:
     from app.agent import ask  # deferred: only needed to actually run evals
 
-    outcomes: list[EvalOutcome] = []
-    for spec in specs:
+    def run_one(spec: dict) -> EvalOutcome:
         t0 = time.monotonic()
         try:
             answer = ask(spec["question"])
@@ -305,10 +369,27 @@ def run_evals(specs: list[dict]) -> list[EvalOutcome]:
                 error=f"{type(exc).__name__}: {exc}",
             )
         outcome.latency_s = round(time.monotonic() - t0, 2)
-        outcomes.append(outcome)
-        status = "PASS" if outcome.passed else "FAIL"
-        print(f"[{status}] {spec['id']}")
-    return outcomes
+        return outcome
+
+    outcomes_by_id: dict[str, EvalOutcome] = {}
+    if parallel <= 1:
+        for spec in specs:
+            outcome = run_one(spec)
+            outcomes_by_id[outcome.id] = outcome
+            print(f"[{'PASS' if outcome.passed else 'FAIL'}] {outcome.id}")
+    else:
+        # ask() is thread-safe: it builds its own Anthropic client per call
+        # and app.law_tools is read-only module state after import.
+        from concurrent.futures import ThreadPoolExecutor, as_completed
+
+        with ThreadPoolExecutor(max_workers=parallel) as pool:
+            futures = [pool.submit(run_one, spec) for spec in specs]
+            for future in as_completed(futures):
+                outcome = future.result()
+                outcomes_by_id[outcome.id] = outcome
+                print(f"[{'PASS' if outcome.passed else 'FAIL'}] {outcome.id}")
+    # Report in questions.yaml order regardless of completion order.
+    return [outcomes_by_id[spec["id"]] for spec in specs]
 
 
 def write_json(outcomes: list[EvalOutcome], path: Path) -> None:
@@ -336,6 +417,12 @@ def main() -> None:
         action="store_true",
         help="Also write results to logs/eval-results-{date}.json",
     )
+    parser.add_argument(
+        "--parallel",
+        type=int,
+        default=4,
+        help="Number of questions to run concurrently (default: 4; use 1 for sequential).",
+    )
     args = parser.parse_args()
 
     only = {s.strip() for s in args.only.split(",")} if args.only else None
@@ -343,7 +430,7 @@ def main() -> None:
     if not specs:
         raise SystemExit("no questions to run")
 
-    outcomes = run_evals(specs)
+    outcomes = run_evals(specs, parallel=max(1, args.parallel))
 
     print()
     print_table(outcomes)
