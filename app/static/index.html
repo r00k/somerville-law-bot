@@ -25,6 +25,9 @@
 
   * { box-sizing: border-box; }
 
+  /* Every size below is in rem, so this single bump scales the whole UI. */
+  html { font-size: 112.5%; }
+
   body {
     margin: 0;
     background: var(--bg);
@@ -406,6 +409,8 @@
 
   .site-footer a { color: var(--muted); }
 
+  .site-footer .credit { margin-top: 0.75rem; color: var(--muted); }
+
   [hidden] { display: none !important; }
 </style>
 </head>
@@ -487,6 +492,9 @@
       <a href="https://online.encodeplus.com/regs/somerville-ma-coo/" target="_blank" rel="noopener noreferrer">official Code of Ordinances</a>.
       Source code and the underlying law corpus are on
       <a href="https://github.com/r00k/somerville-law-bot" target="_blank" rel="noopener noreferrer">GitHub</a>.
+    </p>
+    <p class="credit">
+      Proudly made by <a href="https://ben.net" target="_blank" rel="noopener noreferrer">Ben Orenstein</a>.
     </p>
   </footer>
 </div>
