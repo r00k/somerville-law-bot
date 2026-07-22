@@ -830,7 +830,10 @@
   function handleEvent(payload) {
     switch (payload.type) {
       case "thinking":
-        traceStep("Researching…");
+        // "Researching…" is pushed once when the question is submitted;
+        // later thinking spells don't add lines (the current line's pulse
+        // and the quiet-period fillers carry the sense of activity), so
+        // generic states don't ping-pong around the concrete steps.
         break;
       case "tool":
         traceStep(describeTool(payload));
