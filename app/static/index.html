@@ -411,6 +411,34 @@
     margin: 1rem 0 0.5rem;
   }
 
+  .feedback {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.7rem 1.25rem;
+    border-top: 1px solid var(--line);
+    font-size: 0.8rem;
+    color: var(--muted);
+  }
+
+  .feedback-btn {
+    font-size: 0.95rem;
+    line-height: 1;
+    background: var(--panel-deep);
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: 0.3rem 0.6rem;
+    cursor: pointer;
+    transition: border-color 0.15s ease, transform 0.1s ease;
+  }
+
+  .feedback-btn:hover:not(:disabled) { border-color: var(--blue); }
+  .feedback-btn:active:not(:disabled) { transform: scale(1.1); }
+  .feedback-btn:disabled { opacity: 0.45; cursor: default; }
+  .feedback-btn.chosen { border-color: var(--blue); background: #eef3fb; opacity: 1; }
+
+  .feedback-thanks { color: var(--green); }
+
   .site-footer {
     margin-top: 3rem;
     padding-top: 1.25rem;
@@ -494,6 +522,12 @@
         </div>
         <div class="citations" id="citations"></div>
       </div>
+      <div class="feedback" id="feedback" hidden>
+        <span class="feedback-q">Was this answer helpful?</span>
+        <button type="button" class="feedback-btn" data-verdict="up" aria-label="Yes, helpful">👍</button>
+        <button type="button" class="feedback-btn" data-verdict="down" aria-label="No, not helpful">👎</button>
+        <span class="feedback-thanks" hidden>Thanks — noted!</span>
+      </div>
     </section>
   </main>
 
@@ -531,8 +565,36 @@
   var confidenceBadge = document.getElementById("confidence-badge");
   var charCount = document.getElementById("char-count");
   var chips = document.getElementById("chips");
+  var feedbackEl = document.getElementById("feedback");
 
   var provisionalAnswer = "";
+  var currentRequestId = null;
+
+  feedbackEl.addEventListener("click", function (e) {
+    var btn = e.target.closest(".feedback-btn");
+    if (!btn || btn.disabled || !currentRequestId) return;
+    var buttons = feedbackEl.querySelectorAll(".feedback-btn");
+    for (var i = 0; i < buttons.length; i++) buttons[i].disabled = true;
+    btn.classList.add("chosen");
+    feedbackEl.querySelector(".feedback-thanks").hidden = false;
+    // Fire-and-forget; the thanks message shows regardless.
+    fetch("/api/feedback", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ request_id: currentRequestId, verdict: btn.dataset.verdict })
+    }).catch(function () {});
+  });
+
+  function resetFeedback() {
+    feedbackEl.hidden = true;
+    currentRequestId = null;
+    var buttons = feedbackEl.querySelectorAll(".feedback-btn");
+    for (var i = 0; i < buttons.length; i++) {
+      buttons[i].disabled = false;
+      buttons[i].classList.remove("chosen");
+    }
+    feedbackEl.querySelector(".feedback-thanks").hidden = true;
+  }
 
   // The character counter only appears once there is something to count.
   function updateCharCount() {
@@ -613,6 +675,7 @@
     sourcesSection.hidden = true;
     caveatsEl.hidden = true;
     caveatsEl.textContent = "";
+    resetFeedback();
     confidenceBadge.textContent = "";
     confidenceBadge.className = "";
     progressEl.innerHTML = "";
@@ -818,6 +881,9 @@
     answerSection.hidden = false;
     stopFillerTimer();
     traceCompleteCurrent();
+
+    currentRequestId = typeof answer.request_id === "string" ? answer.request_id : null;
+    feedbackEl.hidden = !currentRequestId;
 
     // Replace any provisional streamed rendering with the authoritative answer.
     provisionalAnswer = "";

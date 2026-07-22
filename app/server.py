@@ -243,6 +243,39 @@ def _log_rejection(*, ip: str, reason: str) -> None:
         f.write(json.dumps(record) + "\n")
 
 
+# Reader feedback (thumbs up/down on answers). Same per-ip-hash hourly cap
+# idea as rejections, just roomier — feedback is cheap but shouldn't be a
+# spam vector either.
+_FEEDBACK_LOG_CAP_PER_HOUR = 20
+_feedback_log_lock = threading.Lock()
+_feedback_log_counts: dict[tuple[str, int], int] = {}
+
+
+def _log_feedback(*, ip: str, request_id: str, verdict: str) -> bool:
+    """Returns False when this ip-hash is over its hourly feedback cap."""
+    hour = int(time.time() // _HOUR_SECONDS)
+    ip_hash = _hash_ip(ip)
+    with _feedback_log_lock:
+        for key in [k for k in _feedback_log_counts if k[1] != hour]:
+            del _feedback_log_counts[key]
+        count = _feedback_log_counts.get((ip_hash, hour), 0)
+        if count >= _FEEDBACK_LOG_CAP_PER_HOUR:
+            return False
+        _feedback_log_counts[(ip_hash, hour)] = count + 1
+    LOG_DIR.mkdir(parents=True, exist_ok=True)
+    today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    path = LOG_DIR / f"feedback-{today}.jsonl"
+    record = {
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "ip_hash": ip_hash,
+        "request_id": request_id,
+        "verdict": verdict,
+    }
+    with path.open("a", encoding="utf-8") as f:
+        f.write(json.dumps(record) + "\n")
+    return True
+
+
 # --- SSE plumbing ---
 
 
@@ -350,7 +383,7 @@ async def _event_stream(ask_fn: Callable[..., Any], question: str, ip: str, requ
                 yield _sse(payload)
             elif kind == "answer":
                 answer_dict = _answer_to_dict(payload)
-                yield _sse({"type": "answer", **answer_dict})
+                yield _sse({"type": "answer", "request_id": request_id, **answer_dict})
             elif kind == "error":
                 error_message = str(payload)
                 yield _sse(
@@ -490,6 +523,31 @@ async def readable_page(page_name: str):
     if filename not in _READABLE_PAGES.values():
         return JSONResponse(status_code=404, content={"error": "not_found"})
     return FileResponse(REPO_ROOT / filename, media_type="text/html")
+
+
+@app.post("/api/feedback")
+async def api_feedback(request: Request):
+    try:
+        body = await request.json()
+    except Exception:
+        return JSONResponse(
+            status_code=400,
+            content={"error": "invalid_json", "message": "Request body must be valid JSON."},
+        )
+    request_id = body.get("request_id")
+    verdict = body.get("verdict")
+    if (
+        not isinstance(request_id, str)
+        or not (1 <= len(request_id) <= 32)
+        or not request_id.isalnum()
+        or verdict not in ("up", "down")
+    ):
+        return JSONResponse(
+            status_code=400,
+            content={"error": "invalid_feedback", "message": "Invalid feedback payload."},
+        )
+    accepted = _log_feedback(ip=_client_ip(request), request_id=request_id, verdict=verdict)
+    return {"ok": accepted}
 
 
 @app.post("/api/ask")
