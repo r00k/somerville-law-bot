@@ -360,7 +360,10 @@ TOOLS = [
             "Every legal claim in answer_markdown must be backed by a citation "
             "whose 'quote' is copied VERBATIM from the fetched section text "
             "(quotes are verified by exact substring match — paraphrases are "
-            "dropped). 'caveats' is displayed as a highlighted note under the "
+            "dropped). Keep each quote to the shortest passage that proves the "
+            "claim — usually one sentence, at most about 40 words; never quote "
+            "a whole subsection when one clause carries the point. "
+            "'caveats' is displayed as a highlighted note under the "
             "answer: omit it unless there is one substantive question-specific "
             "point, and never duplicate it as a closing note inside "
             "answer_markdown."
@@ -841,6 +844,7 @@ def _stream_turn(client, request_params: dict, emit: Callable[[dict], None]):
                     guard = AnswerStreamGuard()
                     submit_index = getattr(event, "index", None)
                     streamed_parts = []
+                    sources_pending_emitted = False
             elif etype == "content_block_delta":
                 if extractor is not None and getattr(event, "index", None) == submit_index:
                     delta = getattr(event, "delta", None)
@@ -851,6 +855,12 @@ def _stream_turn(client, request_params: dict, emit: Callable[[dict], None]):
                         if text:
                             streamed_parts.append(text)
                             emit({"type": "answer_delta", "text": text})
+                        if extractor.done and not sources_pending_emitted:
+                            # The visible answer is fully streamed; the model
+                            # is now generating the citations JSON. Let the UI
+                            # narrate the gap instead of appearing stalled.
+                            sources_pending_emitted = True
+                            emit({"type": "sources_pending"})
         response = stream.get_final_message()
 
     return response, "".join(streamed_parts)

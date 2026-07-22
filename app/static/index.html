@@ -841,6 +841,11 @@
       case "answer_delta":
         appendAnswerDelta(payload.text || "");
         break;
+      case "sources_pending":
+        // The visible answer is complete; the model is producing citations.
+        answerBody.classList.remove("streaming");
+        traceStep("Gathering sources…");
+        break;
       case "answer_reset":
         resetProvisionalAnswer();
         break;
