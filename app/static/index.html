@@ -362,6 +362,15 @@
     margin: 0;
   }
 
+  .sources-loading {
+    margin: 0.9rem 0 0;
+    color: var(--muted);
+    font-size: 0.85rem;
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .sources-loading { animation: trace-pulse 1.4s ease-in-out infinite; }
+  }
+
   .citation-card {
     border: 1px solid var(--line);
     border-radius: 8px;
@@ -843,8 +852,13 @@
         break;
       case "sources_pending":
         // The visible answer is complete; the model is producing citations.
+        // Show a placeholder in the sources area itself — that's where the
+        // reader is looking when the answer text ends.
         answerBody.classList.remove("streaming");
         traceStep("Gathering sources…");
+        sourcesSection.hidden = false;
+        citationsNote.textContent = "";
+        citationsEl.innerHTML = '<p class="sources-loading">Gathering sources…</p>';
         break;
       case "answer_reset":
         resetProvisionalAnswer();
