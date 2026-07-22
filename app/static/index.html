@@ -617,11 +617,13 @@
     confidenceBadge.className = "";
     progressEl.innerHTML = "";
     progressEl.hidden = false;
-    phaseRank = 0;
-    setPhase("research");
+    writing = false;
+    fillerIndex = 0;
+    traceStep("Researching…");
   }
 
   function showError(message) {
+    stopFillerTimer();
     progressEl.hidden = true;
     errorEl.hidden = false;
     errorEl.textContent = message;
@@ -656,6 +658,7 @@
       })
       .finally(function () {
         setBusy(false);
+        stopFillerTimer();
         traceCompleteCurrent();
       });
   }
@@ -708,27 +711,63 @@
   // Researching → Reading the law → Writing the answer. Phases only move
   // forward (a search after reading doesn't re-add "Researching…"), except
   // after a citation-guardrail retry, which rewinds so the redo is visible.
-  var PHASE_RANK = { research: 1, read: 2, write: 3 };
-  var PHASE_LABEL = {
-    research: "Researching…",
-    read: "Reading the law…",
-    write: "Writing the answer…"
-  };
-  var phaseRank = 0;
+  // Trace lines are law-facing, not plumbing-facing: searches show what's
+  // being looked for and reads show which section of law is open, but
+  // internal machinery (the topic wiki) stays generic. A filler ticker adds
+  // a line when the agent goes quiet, so silence never looks like a hang.
+  var FILLERS = [
+    "Cross-referencing sections…",
+    "Comparing related provisions…",
+    "Checking definitions…",
+    "Re-reading the fine print…"
+  ];
+  var fillerIndex = 0;
+  var fillerTimer = null;
+  var writing = false;
 
-  function setPhase(phase) {
-    if (PHASE_RANK[phase] <= phaseRank) return;
-    phaseRank = PHASE_RANK[phase];
-    tracePush(PHASE_LABEL[phase]);
+  function stopFillerTimer() {
+    if (fillerTimer !== null) {
+      clearTimeout(fillerTimer);
+      fillerTimer = null;
+    }
+  }
+
+  function armFillerTimer() {
+    stopFillerTimer();
+    if (writing || fillerIndex >= FILLERS.length) return;
+    fillerTimer = setTimeout(function () {
+      tracePush(FILLERS[fillerIndex]);
+      fillerIndex += 1;
+      armFillerTimer();
+    }, 7000);
+  }
+
+  function traceStep(text) {
+    tracePush(text);
+    armFillerTimer();
+  }
+
+  function describeTool(payload) {
+    var detail = payload.detail || "";
+    switch (payload.name) {
+      case "search_law":
+        return detail ? "Searching the ordinances for “" + detail + "”" : "Searching the ordinances…";
+      case "get_sections":
+        return detail ? "Reading " + detail : "Reading the law…";
+      case "get_wiki_page":
+        return "Gathering background…";
+      default:
+        return "Digging deeper…";
+    }
   }
 
   function handleEvent(payload) {
     switch (payload.type) {
       case "thinking":
-        setPhase("research");
+        traceStep("Researching…");
         break;
       case "tool":
-        setPhase(payload.name === "get_sections" ? "read" : "research");
+        traceStep(describeTool(payload));
         break;
       case "answer_delta":
         appendAnswerDelta(payload.text || "");
@@ -743,6 +782,7 @@
         showError(payload.message || "Something went wrong while answering your question.");
         break;
       case "done":
+        stopFillerTimer();
         traceCompleteCurrent();
         break;
       default:
@@ -755,7 +795,9 @@
     // the accumulated markdown, marked in-progress. The trace stays visible
     // above the answer as a record of the research.
     answerSection.hidden = false;
-    setPhase("write");
+    writing = true;
+    stopFillerTimer();
+    tracePush("Writing the answer…");
     provisionalAnswer += text;
     answerBody.classList.add("streaming");
     answerBody.innerHTML = renderMarkdown(provisionalAnswer);
@@ -763,17 +805,18 @@
 
   function resetProvisionalAnswer() {
     // A streamed answer was rejected by the citation guardrail — clear it so
-    // the retry streams fresh deltas onto a clean slate. Rewind the phase
-    // tracker so the redo's research/read/write steps show again.
+    // the retry streams fresh deltas onto a clean slate. The redo's research
+    // and reading steps show again like a fresh pass.
     provisionalAnswer = "";
     answerBody.innerHTML = "";
     answerBody.classList.add("streaming");
-    phaseRank = 0;
-    tracePush("Double-checking citations…");
+    writing = false;
+    traceStep("Double-checking citations…");
   }
 
   function renderAnswer(answer) {
     answerSection.hidden = false;
+    stopFillerTimer();
     traceCompleteCurrent();
 
     // Replace any provisional streamed rendering with the authoritative answer.
