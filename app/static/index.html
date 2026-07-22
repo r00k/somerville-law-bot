@@ -829,7 +829,15 @@
 
     if (answer.caveats) {
       caveatsEl.hidden = false;
-      caveatsEl.innerHTML = "<strong>Note:</strong> " + escapeHtml(answer.caveats);
+      var caveatHtml = "<strong>Note:</strong> " + escapeHtml(answer.caveats);
+      // Zoning caveats get a pointer to the official zoning publication,
+      // which includes the district maps and figures our text-only readable
+      // edition can't show.
+      if (/zoning/i.test(answer.caveats)) {
+        caveatHtml +=
+          ' <a href="https://online.encodeplus.com/regs/somerville-ma/" target="_blank" rel="noopener noreferrer">See the official zoning ordinance&nbsp;↗</a>';
+      }
+      caveatsEl.innerHTML = caveatHtml;
     } else {
       caveatsEl.hidden = true;
     }

@@ -149,8 +149,29 @@ def _client_ip(request: Request) -> str:
 # --- logging ---
 
 
+# Salting makes the hashes impractical to brute-force back to addresses
+# (the IPv4 space is small) while keeping same-client correlation. Set
+# IP_HASH_SALT to a long random value in production; unset, hashes are
+# unsalted and therefore reversible by enumeration.
+_IP_HASH_SALT = os.environ.get("IP_HASH_SALT", "")
+
+
 def _hash_ip(ip: str) -> str:
-    return hashlib.sha256(ip.encode("utf-8")).hexdigest()[:16]
+    return hashlib.sha256((_IP_HASH_SALT + ip).encode("utf-8")).hexdigest()[:16]
+
+
+def _version_stamp() -> dict:
+    """Model + deploy identifiers so log records are attributable."""
+    try:
+        from app.agent import MODEL  # lazy: agent import is deferred elsewhere too
+
+        model = MODEL
+    except Exception:
+        model = os.environ.get("LAW_QA_MODEL")
+    return {
+        "model": model,
+        "git_sha": (os.environ.get("RAILWAY_GIT_COMMIT_SHA") or "")[:12] or None,
+    }
 
 
 def _log_qa(
@@ -167,6 +188,7 @@ def _log_qa(
     latency_ms: int,
     error: str | None,
     client_disconnected: bool = False,
+    tool_trace: list[dict] | None = None,
 ) -> None:
     LOG_DIR.mkdir(parents=True, exist_ok=True)
     today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
@@ -175,7 +197,9 @@ def _log_qa(
         "timestamp": datetime.now(timezone.utc).isoformat(),
         "request_id": request_id,
         "ip_hash": _hash_ip(ip),
+        **_version_stamp(),
         "question": question,
+        "tool_trace": tool_trace or [],
         "answer_markdown": answer_markdown,
         "caveats": caveats,
         "citations": citations,
@@ -188,6 +212,35 @@ def _log_qa(
     }
     with path.open("a", encoding="utf-8") as f:
         f.write(json.dumps(record, ensure_ascii=False, default=str) + "\n")
+
+
+# Rejected requests are logged too (abuse is invisible otherwise), but capped
+# per ip-hash per hour so a flood can't spam the log file itself.
+_REJECTION_LOG_CAP_PER_HOUR = 5
+_rejection_log_lock = threading.Lock()
+_rejection_log_counts: dict[tuple[str, int], int] = {}
+
+
+def _log_rejection(*, ip: str, reason: str) -> None:
+    hour = int(time.time() // _HOUR_SECONDS)
+    ip_hash = _hash_ip(ip)
+    with _rejection_log_lock:
+        for key in [k for k in _rejection_log_counts if k[1] != hour]:
+            del _rejection_log_counts[key]
+        count = _rejection_log_counts.get((ip_hash, hour), 0)
+        if count >= _REJECTION_LOG_CAP_PER_HOUR:
+            return
+        _rejection_log_counts[(ip_hash, hour)] = count + 1
+    LOG_DIR.mkdir(parents=True, exist_ok=True)
+    today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    path = LOG_DIR / f"rejections-{today}.jsonl"
+    record = {
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "ip_hash": ip_hash,
+        "reason": reason,
+    }
+    with path.open("a", encoding="utf-8") as f:
+        f.write(json.dumps(record) + "\n")
 
 
 # --- SSE plumbing ---
@@ -256,6 +309,10 @@ def _run_agent(
         loop.call_soon_threadsafe(async_queue.put_nowait, item)
 
     def on_event(evt: dict) -> None:
+        if evt.get("type") == "tool":
+            holder.setdefault("tool_trace", []).append(
+                {"name": evt.get("name"), "detail": evt.get("detail")}
+            )
         deliver(("event", evt))
 
     try:
@@ -340,6 +397,7 @@ async def _event_stream(ask_fn: Callable[..., Any], question: str, ip: str, requ
             latency_ms=latency_ms,
             error=error_message,
             client_disconnected=not completed,
+            tool_trace=holder.get("tool_trace"),
         )
 
 
@@ -501,6 +559,7 @@ async def api_ask(request: Request):
             )
         else:
             message = "This service has reached its daily question limit. Please try again tomorrow."
+        _log_rejection(ip=ip, reason=reason or "rate_limited")
         return JSONResponse(status_code=429, content={"error": reason, "message": message})
 
     request_id = uuid.uuid4().hex[:12]

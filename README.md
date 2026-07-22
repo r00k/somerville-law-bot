@@ -53,6 +53,7 @@ Service configuration (Railway environment variables):
 - `ANTHROPIC_API_KEY` — required.
 - `TRUST_PROXY=1` — required behind Railway's proxy so per-IP rate limiting keys on real client IPs.
 - `RATE_LIMIT_PER_HOUR` (default 10) and `DAILY_QUESTION_CAP` (default 200) — abuse/cost caps.
+- `IP_HASH_SALT` — long random value; salts the hashed IPs in logs so they can't be brute-forced back to addresses.
 
 A Railway volume mounted at `/app/logs` persists the JSONL Q&A logs across deploys.
 
