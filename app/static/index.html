@@ -855,10 +855,10 @@
         // Show a placeholder in the sources area itself — that's where the
         // reader is looking when the answer text ends.
         answerBody.classList.remove("streaming");
-        traceStep("Gathering sources…");
+        traceStep("Citing sources…");
         sourcesSection.hidden = false;
         citationsNote.textContent = "";
-        citationsEl.innerHTML = '<p class="sources-loading">Gathering sources…</p>';
+        citationsEl.innerHTML = '<p class="sources-loading">Citing sources…</p>';
         break;
       case "answer_reset":
         resetProvisionalAnswer();
