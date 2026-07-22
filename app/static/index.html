@@ -605,8 +605,9 @@
 
   textarea.addEventListener("input", updateCharCount);
 
+  // Enter submits (chat convention); Shift+Enter inserts a newline.
   textarea.addEventListener("keydown", function (e) {
-    if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
+    if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       form.requestSubmit();
     }
