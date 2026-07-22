@@ -422,20 +422,22 @@
   }
 
   .feedback-btn {
-    font-size: 0.95rem;
+    font: inherit;
+    font-size: 0.78rem;
+    font-weight: 600;
     line-height: 1;
+    color: var(--muted);
     background: var(--panel-deep);
     border: 1px solid var(--line);
     border-radius: 999px;
-    padding: 0.3rem 0.6rem;
+    padding: 0.35rem 0.85rem;
     cursor: pointer;
-    transition: border-color 0.15s ease, transform 0.1s ease;
+    transition: border-color 0.15s ease, color 0.15s ease;
   }
 
-  .feedback-btn:hover:not(:disabled) { border-color: var(--blue); }
-  .feedback-btn:active:not(:disabled) { transform: scale(1.1); }
+  .feedback-btn:hover:not(:disabled) { border-color: var(--blue); color: var(--blue); }
   .feedback-btn:disabled { opacity: 0.45; cursor: default; }
-  .feedback-btn.chosen { border-color: var(--blue); background: #eef3fb; opacity: 1; }
+  .feedback-btn.chosen { border-color: var(--blue); background: #eef3fb; color: var(--blue); opacity: 1; }
 
   .feedback-thanks { color: var(--green); }
 
@@ -524,8 +526,8 @@
       </div>
       <div class="feedback" id="feedback" hidden>
         <span class="feedback-q">Was this answer helpful?</span>
-        <button type="button" class="feedback-btn" data-verdict="up" aria-label="Yes, helpful">👍</button>
-        <button type="button" class="feedback-btn" data-verdict="down" aria-label="No, not helpful">👎</button>
+        <button type="button" class="feedback-btn" data-verdict="up">Yes</button>
+        <button type="button" class="feedback-btn" data-verdict="down">No</button>
         <span class="feedback-thanks" hidden>Thanks — noted!</span>
       </div>
     </section>
