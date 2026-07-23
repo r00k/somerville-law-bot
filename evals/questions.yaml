@@ -24,6 +24,10 @@
 #                                its section title (fetched via get_sections)
 #   expect_confidence_at_least  (optional) low < medium < high
 #   expect_confidence_at_most   (optional) low < medium < high
+#   expect_table_citation       (optional, default false) require >=1 verified
+#                                table-lookup citation (row + value present) —
+#                                for questions whose governing law is a table
+#                                cell
 #   allow_no_citations          (optional, default false) skip the "≥1
 #                                verified citation" check
 
@@ -384,8 +388,9 @@
   # Backyard Cottage. Parallel tables exist per district (zon:484 for UR,
   # etc.), so a correct answer is conditional on district/building type.
   # This is the flagship table-lookup-citation question: the governing law
-  # is a table cell, so at least one citation should land on a Building
-  # Components section.
+  # is a table cell, so at least one citation should be a verified
+  # table-lookup (not just prose quoted from a Building Components section).
+  expect_table_citation: true
   expect_answer_contains_any: ["permitted", "allowed", "building component"]
   expect_answer_contains_all:
     - ["porch"]
@@ -398,5 +403,22 @@
     - "zon:523"
     - "zon:536"
     - "zon:549"
+    - "*building components*"
+  expect_confidence_at_least: medium
+
+- id: bay-window-duplex
+  question: I own a duplex in Somerville — am I allowed to add a bay window?
+  # zon:471 (3.1.13 Building Components) Table 3.1.13: "Bay" is P for
+  # Duplex (and Cottage/Detached/Semi-Detached House), N for Backyard
+  # Cottage. Second table-lookup question so table-citation coverage
+  # doesn't hang on a single question's flakes; the duplex framing makes
+  # the specific cell (Bay x Duplex) the natural citation.
+  expect_table_citation: true
+  expect_answer_contains_any: ["permitted", "allowed"]
+  expect_answer_contains_all:
+    - ["bay"]
+  expect_cited_sections_any:
+    - "zon:471"
+    - "zon:484"
     - "*building components*"
   expect_confidence_at_least: medium

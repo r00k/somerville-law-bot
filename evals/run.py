@@ -243,6 +243,18 @@ def _check_cited_sections_all(spec: dict, citations: list) -> list[str]:
     return reasons
 
 
+def _check_table_citation(spec: dict, citations: list) -> str | None:
+    """expect_table_citation: true requires at least one verified table-lookup
+    citation (row + value present) — for questions whose governing law is a
+    table cell, so a regression to prose-only quoting is visible."""
+    if not spec.get("expect_table_citation"):
+        return None
+    for c in citations:
+        if _get(c, "row", None) and _get(c, "value", None) and _get(c, "verified", True):
+            return None
+    return "expected >=1 verified table-lookup citation (expect_table_citation)"
+
+
 def _check_citation_count(spec: dict, citations: list) -> str | None:
     if spec.get("allow_no_citations"):
         return None
@@ -295,6 +307,9 @@ def evaluate(spec: dict, answer: Any) -> EvalOutcome:
         reasons.append(cited_reason)
 
     reasons.extend(_check_cited_sections_all(spec, citations))
+
+    if reason := _check_table_citation(spec, citations):
+        reasons.append(reason)
 
     if reason := _check_citation_count(spec, citations):
         reasons.append(reason)
