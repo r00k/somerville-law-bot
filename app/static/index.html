@@ -428,6 +428,18 @@
     color: #4a5a68;
   }
 
+  /* A verified table-cell check ("Checked Table 3.1.13 — …") or a short
+     label/value fragment from a dimensional-standards grid. */
+  .citation-card .table-check {
+    margin: 0 0 0.9rem;
+    padding-left: 0.85rem;
+    border-left: 2px solid #cfe0d3;
+    font-size: 0.85rem;
+    line-height: 1.65;
+    color: #4a5a68;
+  }
+  .citation-card .table-check .cell-value { font-weight: 650; color: var(--ink); }
+
   .answer-body h3 {
     font-size: 1.05rem;
     font-weight: 700;
@@ -957,7 +969,7 @@
       p.textContent = "No verified citations were found for this answer.";
       citationsEl.appendChild(p);
     } else {
-      citationsNote.textContent = "Quoted directly from Somerville's municipal law.";
+      citationsNote.textContent = "Quoted or checked directly against Somerville's municipal law.";
       var groups = groupCitationsBySection(citations);
       for (var i = 0; i < groups.length; i++) {
         citationsEl.appendChild(renderCitationCard(groups[i]));
@@ -988,8 +1000,8 @@
     return id ? corpusName + " — Sec. " + id : key;
   }
 
-  // One card per section of law: citations that quote different passages of
-  // the same section stack inside a single card instead of repeating it.
+  // One card per section of law: citations that reference different passages
+  // (or table cells) of the same section stack inside a single card.
   function groupCitationsBySection(citations) {
     var order = [];
     var byKey = {};
@@ -1001,15 +1013,75 @@
           section_key: c.section_key,
           section_title: c.section_title,
           url: c.url,
-          quotes: []
+          items: []
         };
         order.push(key);
       }
-      if (c.quote) {
-        byKey[key].quotes.push(c.quote);
+      if (c.row && c.value) {
+        byKey[key].items.push({
+          kind: "table",
+          table: c.table,
+          row: c.row,
+          column: c.column,
+          value: c.value
+        });
+      } else if (c.quote) {
+        byKey[key].items.push({ kind: "quote", quote: c.quote });
       }
     }
     return order.map(function (k) { return byKey[k]; });
+  }
+
+  // The ordinance's own legend for building-component / use tables
+  // (confirmed in the table footers: "P - Permitted • SP - Special Permit
+  // Required • N - Not Permitted"). Unknown values render as-is.
+  var TABLE_LEGEND = {
+    "P": "permitted",
+    "SP": "special permit required",
+    "N": "not permitted"
+  };
+
+  function renderTableCheck(item) {
+    var p = document.createElement("p");
+    p.className = "table-check";
+    var value = (item.value || "").trim();
+    var legend = TABLE_LEGEND[value.toUpperCase()];
+
+    p.appendChild(document.createTextNode("Checked " + (item.table || "the table") + " — the "));
+    var rowEm = document.createElement("strong");
+    rowEm.textContent = "“" + item.row + "”";
+    p.appendChild(rowEm);
+    p.appendChild(document.createTextNode(" row shows "));
+    var valueSpan = document.createElement("span");
+    valueSpan.className = "cell-value";
+    valueSpan.textContent = "“" + value + "”" + (legend ? " (" + legend + ")" : "");
+    p.appendChild(valueSpan);
+    if (item.column) {
+      p.appendChild(document.createTextNode(" for " + item.column));
+    }
+    p.appendChild(document.createTextNode("."));
+    return p;
+  }
+
+  function renderQuote(quoteText) {
+    // A short "label | value" fragment from a dimensional-standards grid
+    // reads better as "label: value" than as raw pipes.
+    if (quoteText.indexOf("|") !== -1) {
+      var parts = quoteText.split("|").map(function (s) { return s.trim(); }).filter(Boolean);
+      if (parts.length === 2) {
+        var p = document.createElement("p");
+        p.className = "table-check";
+        p.appendChild(document.createTextNode(parts[0] + ": "));
+        var v = document.createElement("span");
+        v.className = "cell-value";
+        v.textContent = parts[1];
+        p.appendChild(v);
+        return p;
+      }
+    }
+    var quote = document.createElement("blockquote");
+    quote.textContent = "“" + quoteText + "”";
+    return quote;
   }
 
   function renderCitationCard(group) {
@@ -1037,10 +1109,9 @@
 
     card.appendChild(refline);
 
-    for (var i = 0; i < group.quotes.length; i++) {
-      var quote = document.createElement("blockquote");
-      quote.textContent = "“" + group.quotes[i] + "”";
-      card.appendChild(quote);
+    for (var i = 0; i < group.items.length; i++) {
+      var item = group.items[i];
+      card.appendChild(item.kind === "table" ? renderTableCheck(item) : renderQuote(item.quote));
     }
 
     return card;

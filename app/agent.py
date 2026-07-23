@@ -24,7 +24,7 @@ from typing import Callable
 import anthropic
 import httpx
 
-from . import law_tools
+from . import law_tools, tables
 
 # --- API usage constants (see app/DESIGN.md Component 3) ---
 # LAW_QA_MODEL overrides the answering model (e.g. for A/B testing).
@@ -50,6 +50,12 @@ class VerifiedCitation:
     section_key: str
     url: str | None
     verified: bool
+    # Table-lookup citations name a cell instead of quoting text. For those,
+    # quote is "" and these four fields identify the verified cell.
+    table: str | None = None
+    row: str | None = None
+    column: str | None = None
+    value: str | None = None
 
 
 @dataclass
@@ -60,6 +66,8 @@ class Answer:
     caveats: str | None
     dropped_citations: int
     usage: dict = field(default_factory=dict)
+    # One human-readable reason per dropped citation (for logs/debugging).
+    dropped_detail: list[str] = field(default_factory=list)
 
 
 # ---------------------------------------------------------------------------
@@ -260,10 +268,14 @@ SUBMIT_ANSWER_SCHEMA = {
             "items": {
                 "type": "object",
                 "additionalProperties": False,
-                "required": ["quote", "section_key"],
+                "required": ["section_key"],
                 "properties": {
                     "quote": {"type": "string"},
                     "section_key": {"type": "string"},
+                    "table": {"type": "string"},
+                    "row": {"type": "string"},
+                    "column": {"type": "string"},
+                    "value": {"type": "string"},
                 },
             },
         },
@@ -357,12 +369,28 @@ TOOLS = [
             "'answer_markdown' field FIRST, before 'citations', 'confidence', "
             "and 'caveats' — the answer text is streamed to the reader as you "
             "write it, so emitting it first lets them start reading sooner. "
-            "Every legal claim in answer_markdown must be backed by a citation "
-            "whose 'quote' is copied VERBATIM from the fetched section text "
-            "(quotes are verified by exact substring match — paraphrases are "
-            "dropped). Keep each quote to the shortest passage that proves the "
-            "claim — usually one sentence, at most about 40 words; never quote "
-            "a whole subsection when one clause carries the point. "
+            "Every legal claim in answer_markdown must be backed by a citation. "
+            "Citations come in two forms. (1) Quote citations: 'quote' is copied "
+            "VERBATIM from the fetched section text (verified by exact substring "
+            "match — paraphrases are dropped). Keep each quote to the shortest "
+            "passage that proves the claim — usually one sentence, at most about "
+            "40 words; never quote a whole subsection when one clause carries "
+            "the point. (2) Table-lookup citations: when the governing rule is a "
+            "cell in a titled table (e.g. a Building Components or use table), "
+            "cite the cell with 'table' (the table's title, e.g. 'Table 3.1.13'), "
+            "'row' (the row label), 'column' (the column header), and 'value' "
+            "(the cell's exact contents, e.g. 'P') — omit 'quote'. The cell is "
+            "verified against the actual parsed table; a wrong row/column/value "
+            "is dropped, so double-check the cell before citing it. NEVER paste "
+            "raw '|'-delimited rows from a titled table as a quote — use a "
+            "table-lookup citation. Table lookups work ONLY on titled tables "
+            "whose rows are labeled in the first column (like Table 3.1.13). "
+            "The Dimensions/Standards panels beneath such tables are separate "
+            "UNTITLED layout grids, not rows of the titled table — never cite "
+            "those as table lookups; use a short verbatim fragment quote "
+            "instead, e.g. 'Projection (max) | 3 ft'. Every citation must "
+            "carry either a 'quote' or all four table fields; a bare "
+            "section_key verifies nothing and is dropped. "
             "'caveats' is displayed as a highlighted note under the "
             "answer: omit it unless there is one substantive question-specific "
             "point, and never duplicate it as a closing note inside "
@@ -403,13 +431,21 @@ from provisions that govern a DIFFERENT scenario (e.g. concluding a use is \
 banned from a rule about displays or businesses when the question is about \
 private conduct) is adjacent context, not coverage — that is "low", no \
 matter how confident the practical conclusion.
-- Every legal claim you make MUST be supported by a citation containing an \
-EXACT, verbatim quote copied from the text of a section you have fetched. \
+- Every legal claim you make MUST be supported by a citation. For prose, cite \
+an EXACT, verbatim quote copied from the text of a section you have fetched. \
 Quotes are checked by exact substring match against the section text; a \
 paraphrased or approximate quote will be dropped and will not support your \
 answer. Quote only from complete section text you have actually retrieved — \
 the full 'text' field returned by search_law or get_wiki_page, or a \
 get_sections result. Never quote from a search snippet.
+- Much of the Zoning Ordinance's operative law lives in tables (permitted \
+uses, building components, dimensional standards). When a claim rests on a \
+table cell — "X is permitted for building type Y", "the maximum is Z" — cite \
+the cell itself with a table-lookup citation (table title + row + column + \
+value); it is verified against the parsed table, and the reader is shown the \
+exact cell you checked. Every specific number or permitted/not-permitted \
+claim in your answer should be traceable to a citation that contains that \
+value.
 - Write for residents: clear, direct, plain language. Lead with the bottom-line \
 answer, then the supporting detail.
 - Be brief. Lead with the bottom line, and keep the whole answer under about \
@@ -551,31 +587,74 @@ def _normalize(text: str) -> str:
     return text
 
 
+def _is_table_citation(cite: dict) -> bool:
+    return bool((cite.get("row") or "").strip() and (cite.get("value") or "").strip())
+
+
 def _verify_citations(
     raw_citations: list[dict],
-) -> tuple[list[VerifiedCitation], int]:
-    """Verify each citation's quote against the cited section text.
+) -> tuple[list[VerifiedCitation], int, list[str]]:
+    """Verify each citation against the cited section.
 
-    Returns (kept_citations, dropped_count). A citation is kept iff the
-    normalized quote is a substring of the normalized text of its cited
-    section. The section's url is attached to kept citations.
+    Returns (kept_citations, dropped_count, dropped_details). Quote citations
+    are kept iff the normalized quote is a substring of the normalized section
+    text. Table-lookup citations are kept iff the named (table, row, column)
+    cell exists in the section's parsed tables and holds the cited value.
+    A citation with both lookup fields and a quote falls back to quote
+    verification when the lookup fails. dropped_details carries one
+    human-readable reason per dropped citation, for logs.
     """
     kept: list[VerifiedCitation] = []
-    dropped = 0
+    details: list[str] = []
     for cite in raw_citations:
         quote = (cite.get("quote") or "").strip()
         section_key = (cite.get("section_key") or "").strip()
 
         section = law_tools.SECTIONS.get(section_key)
-        verified = False
-        url = None
-        if section is not None:
-            url = section.get("url")
-            norm_quote = _normalize(quote)
-            norm_text = _normalize(section.get("text", "") or "")
-            verified = bool(norm_quote) and norm_quote in norm_text
+        if section is None:
+            details.append(f"{section_key or '(no section_key)'}: unknown section key")
+            continue
+        url = section.get("url")
+        text = section.get("text", "") or ""
 
-        if verified:
+        if _is_table_citation(cite):
+            table = (cite.get("table") or "").strip()
+            row = (cite.get("row") or "").strip()
+            column = (cite.get("column") or "").strip()
+            value = (cite.get("value") or "").strip()
+            result = tables.lookup_cell(text, table, row, column)
+            if result.value is not None and _normalize(result.value).casefold() == _normalize(
+                value
+            ).casefold():
+                kept.append(
+                    VerifiedCitation(
+                        quote="",
+                        section_key=section_key,
+                        url=url,
+                        verified=True,
+                        table=result.table_title or table,
+                        row=row,
+                        column=column,
+                        value=result.value,
+                    )
+                )
+                continue
+            if result.value is None:
+                reason = f"table lookup failed ({result.reason})"
+            else:
+                reason = (
+                    f"table value mismatch (cell holds {result.value!r}, cited {value!r})"
+                )
+            lookup_detail = f"{section_key}: {reason} for ({table!r}, {row!r}, {column!r})"
+            # Fall back to the quote path if the model also supplied one.
+            if not quote:
+                details.append(lookup_detail)
+                continue
+        else:
+            lookup_detail = None
+
+        norm_quote = _normalize(quote)
+        if norm_quote and norm_quote in _normalize(text):
             kept.append(
                 VerifiedCitation(
                     quote=quote,
@@ -584,9 +663,16 @@ def _verify_citations(
                     verified=True,
                 )
             )
+        elif lookup_detail is not None:
+            details.append(lookup_detail + "; quote fallback also failed")
         else:
-            dropped += 1
-    return kept, dropped
+            details.append(
+                f"{section_key}: quote not found verbatim in section text"
+                if quote
+                else f"{section_key}: empty quote"
+            )
+    dropped = len(raw_citations) - len(kept)
+    return kept, dropped, details
 
 
 def _salvage_spilled_payload(payload: dict) -> dict:
@@ -624,10 +710,14 @@ def _salvage_spilled_payload(payload: dict) -> dict:
     recovered = [c for c in (pseudo.get("citations") or []) if isinstance(c, dict)]
     if recovered:
         existing = [c for c in (merged.get("citations") or []) if isinstance(c, dict)]
-        seen = {(c.get("section_key"), c.get("quote")) for c in existing}
-        merged["citations"] = existing + [
-            c for c in recovered if (c.get("section_key"), c.get("quote")) not in seen
-        ]
+
+        def cite_key(c: dict) -> tuple:
+            return tuple(
+                c.get(f) for f in ("section_key", "quote", "table", "row", "column", "value")
+            )
+
+        seen = {cite_key(c) for c in existing}
+        merged["citations"] = existing + [c for c in recovered if cite_key(c) not in seen]
     if not merged.get("caveats") and pseudo.get("caveats"):
         merged["caveats"] = pseudo["caveats"]
     # _parse_pseudo_submit defaults confidence to "low"; only take its value
@@ -671,7 +761,7 @@ def _build_answer_from_submit(payload: dict, usage: dict) -> Answer:
         elif _normalize(trailing_note).lower() not in _normalize(caveats).lower():
             caveats = f"{caveats}\n\n{trailing_note}"
 
-    citations, dropped = _verify_citations(raw_citations)
+    citations, dropped, dropped_detail = _verify_citations(raw_citations)
 
     # Hard floor: no verified citation, no confidence. Whether the model
     # offered none (and survived the one rejection retry) or all of them
@@ -700,6 +790,7 @@ def _build_answer_from_submit(payload: dict, usage: dict) -> Answer:
         caveats=caveats,
         dropped_citations=dropped,
         usage=usage,
+        dropped_detail=dropped_detail,
     )
 
 
@@ -973,8 +1064,9 @@ def ask(
                         "much more concisely: keep the answer under 250 "
                         "words, cite only the few sections that directly "
                         "answer the question, and keep each citation quote "
-                        "to a single short sentence or clause. Do not "
-                        "re-fetch sections you have already read."
+                        "to a single short sentence or clause (table-lookup "
+                        "citations are already compact). Do not re-fetch "
+                        "sections you have already read."
                     ),
                 }
             )
@@ -1057,15 +1149,18 @@ def ask(
                                     "citations array. If your answer makes "
                                     "legal claims — especially if it quotes "
                                     "section text — call submit_answer again "
-                                    "with the same answer plus those verbatim "
-                                    "quotes in the citations array (not "
-                                    "embedded in the answer text), and keep "
-                                    "your original confidence. Lowering "
-                                    "confidence is NOT a substitute for "
-                                    "citing text you have already read. Only "
-                                    "if the corpus genuinely does not address "
-                                    "the question should you resubmit with "
-                                    "no citations and confidence 'low'."
+                                    "with the same answer plus citations in "
+                                    "the citations array (not embedded in "
+                                    "the answer text): verbatim quotes for "
+                                    "prose, or table/row/column/value "
+                                    "lookups for claims that rest on a "
+                                    "table cell. Keep your original "
+                                    "confidence. Lowering confidence is NOT "
+                                    "a substitute for citing text you have "
+                                    "already read. Only if the corpus "
+                                    "genuinely does not address the "
+                                    "question should you resubmit with no "
+                                    "citations and confidence 'low'."
                                 ),
                                 "is_error": True,
                             }
@@ -1247,7 +1342,14 @@ def _pretty_print(answer: Answer) -> None:
     for c in answer.citations:
         mark = "✓" if c.verified else "✗"
         print(f"\n{mark} [{c.section_key}] {c.url or ''}")
-        print(f"  “{c.quote}”")
+        if c.row and c.value:
+            print(f"  {c.table} — row “{c.row}”, column “{c.column}”: “{c.value}”")
+        else:
+            print(f"  “{c.quote}”")
+    if answer.dropped_detail:
+        print("\nDropped:")
+        for detail in answer.dropped_detail:
+            print(f"  ✗ {detail}")
 
     print("\n" + "-" * 72)
     print(f"Confidence: {answer.confidence}")

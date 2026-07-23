@@ -151,11 +151,14 @@ Tools exposed to the model:
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["quote", "section_key", "why_relevant"],
+        "required": ["section_key"],
         "properties": {
           "quote": {"type": "string"},
           "section_key": {"type": "string"},
-          "why_relevant": {"type": "string"}
+          "table": {"type": "string"},
+          "row": {"type": "string"},
+          "column": {"type": "string"},
+          "value": {"type": "string"}
         }
       }
     },
@@ -191,7 +194,7 @@ Public interface:
 @dataclass
 class Answer:
     answer_markdown: str
-    citations: list[VerifiedCitation]  # quote, section_key, why_relevant, url, verified: bool
+    citations: list[VerifiedCitation]  # quote OR table/row/column/value, section_key, url, verified
     confidence: str
     caveats: str | None
     dropped_citations: int            # citations that failed verification
@@ -205,13 +208,25 @@ def ask(question: str, history: list[dict] | None = None,
 `{"type": "tool", "name": "search_law", "detail": "<query or keys>"}` and
 `{"type": "thinking"}` at loop starts. Keep payloads small.
 
-Citation verification (in agent.py, deterministic, no LLM):
-- Normalize both quote and section text: collapse all whitespace runs to a
-  single space, unify curly/straight quotes and dashes, casefold.
-- Verified iff normalized quote is a substring of the normalized text of the
-  cited section. Failing citations are dropped from the returned list;
-  `dropped_citations` counts them. If ALL citations fail, downgrade
-  confidence to "low" and append a caveat.
+Citation verification (in agent.py, deterministic, no LLM). Two citation
+forms, distinguished by whether `row` + `value` are present:
+- Quote citations: normalize both quote and section text (collapse whitespace
+  runs, unify curly/straight quotes and dashes). Verified iff the normalized
+  quote is a substring of the normalized text of the cited section.
+- Table-lookup citations (`table` + `row` + `column` + `value`): app/tables.py
+  parses the section's markdown pipe tables (title row, header row, data rows,
+  legend footers) and the citation is verified iff the named cell exists and
+  holds the cited value (loose label matching, exact-normalized value match).
+  Titled matrices (e.g. Table 3.1.13 Building Components) resolve; untitled
+  layout grids (the Dimensions panels) intentionally don't — the agent quotes
+  short `label | value` fragments there instead, which the frontend renders
+  as "label: value".
+- A citation carrying both lookup fields and a quote falls back to quote
+  verification when the lookup fails.
+- Failing citations are dropped from the returned list; `dropped_citations`
+  counts them and `dropped_detail` records one reason per drop (logged to the
+  qa JSONL). If ALL citations fail, downgrade confidence to "low" and append
+  a caveat.
 - Attach `url` from the section record to each verified citation.
 
 CLI for manual testing: `python -m app.agent "question here"` pretty-prints

@@ -375,3 +375,28 @@
   expect_answer_contains_any: ["state law", "statute", "city clerk", "on file", "not specified", "does not specify", "does not state"]
   expect_answer_not_contains: ["$"]
   allow_no_citations: true
+
+- id: back-porch
+  question: Can I add a back porch to my house?
+  # zon:471 (3.1.13 Building Components, NR district) Table 3.1.13:
+  # "Projecting Porch" is Permitted for Cottage/Detached House/Semi-Detached
+  # House/Duplex; "Engaged Porch" is N for Detached Triple Decker and
+  # Backyard Cottage. Parallel tables exist per district (zon:484 for UR,
+  # etc.), so a correct answer is conditional on district/building type.
+  # This is the flagship table-lookup-citation question: the governing law
+  # is a table cell, so at least one citation should land on a Building
+  # Components section.
+  expect_answer_contains_any: ["permitted", "allowed", "building component"]
+  expect_answer_contains_all:
+    - ["porch"]
+    - ["district", "building type", "depends"]
+  expect_cited_sections_any:
+    - "zon:471"
+    - "zon:484"
+    - "zon:497"
+    - "zon:510"
+    - "zon:523"
+    - "zon:536"
+    - "zon:549"
+    - "*building components*"
+  expect_confidence_at_least: medium

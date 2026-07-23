@@ -1,6 +1,6 @@
 # Somerville Law Bot
 
-**[somervillelawbot.com](https://somervillelawbot.com)** — ask plain-language questions about Somerville, MA municipal law ("Can I raise chickens?", "How soon do I have to shovel my sidewalk?") and get answers grounded in the actual ordinance text. Every legal claim carries a citation whose quote is verified verbatim against the corpus before display, deep-linked into a readable edition of the law.
+**[somervillelawbot.com](https://somervillelawbot.com)** — ask plain-language questions about Somerville, MA municipal law ("Can I raise chickens?", "How soon do I have to shovel my sidewalk?") and get answers grounded in the actual ordinance text. Every legal claim carries a citation that is verified against the corpus before display — verbatim-quote checks for prose, and structural cell lookups for rules that live in the zoning ordinance's tables (e.g. "Projecting Porch → Detached House → P") — deep-linked into a readable edition of the law.
 
 This repo contains the whole thing: the pipeline that fetches and normalizes the law from Somerville's official enCodePlus publications, the section index and search tools, the Claude-powered Q&A agent, the web app, and the eval suite that keeps the answers honest.
 
@@ -10,7 +10,7 @@ This repo contains the whole thing: the pipeline that fetches and normalizes the
 - `app/indexer.py` parses both corpora into a 3,346-section index (`app/data/sections.json`).
 - `app/law_tools.py` provides BM25 search and section fetch as agent tools.
 - `app/wiki/` holds 44 pregenerated topic pages that map resident vocabulary ("chickens") to legal vocabulary ("domestic fowl") and route the agent across corpora.
-- `app/agent.py` runs the tool loop (Claude Sonnet 5 by default, override with `LAW_QA_MODEL`) and rejects any citation whose quote doesn't appear verbatim in the cited section.
+- `app/agent.py` runs the tool loop (Claude Sonnet 5 by default, override with `LAW_QA_MODEL`) and rejects any citation that doesn't verify: quotes must appear verbatim in the cited section, and table-lookup citations must name a real cell (parsed by `app/tables.py`) holding the cited value.
 - `app/server.py` serves the frontend with SSE progress streaming, per-IP and global rate limits, JSONL question logging, and the readable corpus pages themselves.
 
 See `app/DESIGN.md` for the full spec.

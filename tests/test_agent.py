@@ -241,3 +241,124 @@ def test_stream_guard_false_alarm_prefix_is_released():
     out, guard = _feed_chunks(["a </an", "gle> b"])
     assert out == "a </angle> b"
     assert not guard.tripped
+
+
+# --- table-lookup citation verification (2026-07: table-citations feature) ---
+
+_FAKE_SECTION_TEXT = (
+    "1. Components are permitted as specified on Table 1.1.\n"
+    "\n"
+    "| Table 1.1 Things |  |  |\n"
+    "| --- | --- | --- |\n"
+    "|  | Small Lot | Large Lot |\n"
+    "| Foo Porch | P | N |\n"
+    "| P - Permitted • N - Not Permitted |  |  |\n"
+)
+
+_FAKE_SECTIONS = {
+    "test:1": {
+        "key": "test:1",
+        "corpus": "test",
+        "heading_path": ["Things"],
+        "title": "1.1 Things",
+        "text": _FAKE_SECTION_TEXT,
+        "url": "https://example.test/#secid-1",
+    }
+}
+
+
+def _patched_verify(monkeypatch, citations):
+    from app import law_tools
+    from app.agent import _verify_citations
+
+    monkeypatch.setattr(law_tools, "SECTIONS", _FAKE_SECTIONS)
+    return _verify_citations(citations)
+
+
+def test_table_citation_verifies_against_parsed_table(monkeypatch):
+    kept, dropped, details = _patched_verify(
+        monkeypatch,
+        [
+            {
+                "section_key": "test:1",
+                "table": "Table 1.1",
+                "row": "Foo Porch",
+                "column": "Small Lot",
+                "value": "P",
+            }
+        ],
+    )
+    assert dropped == 0 and details == []
+    (cite,) = kept
+    assert cite.verified
+    assert cite.quote == ""
+    # The full table title from the corpus is attached for display.
+    assert cite.table == "Table 1.1 Things"
+    assert (cite.row, cite.column, cite.value) == ("Foo Porch", "Small Lot", "P")
+
+
+def test_table_citation_value_mismatch_is_dropped(monkeypatch):
+    kept, dropped, details = _patched_verify(
+        monkeypatch,
+        [
+            {
+                "section_key": "test:1",
+                "table": "Table 1.1",
+                "row": "Foo Porch",
+                "column": "Large Lot",
+                "value": "P",  # cell actually holds N
+            }
+        ],
+    )
+    assert kept == [] and dropped == 1
+    assert "value mismatch" in details[0]
+
+
+def test_table_citation_unknown_table_is_dropped_with_reason(monkeypatch):
+    kept, dropped, details = _patched_verify(
+        monkeypatch,
+        [
+            {
+                "section_key": "test:1",
+                "table": "Table 9.9",
+                "row": "Foo Porch",
+                "column": "Small Lot",
+                "value": "P",
+            }
+        ],
+    )
+    assert kept == [] and dropped == 1
+    assert "table_not_found" in details[0]
+
+
+def test_failed_lookup_falls_back_to_quote(monkeypatch):
+    kept, dropped, details = _patched_verify(
+        monkeypatch,
+        [
+            {
+                "section_key": "test:1",
+                "table": "Table 9.9",  # wrong table -> lookup fails
+                "row": "Foo Porch",
+                "column": "Small Lot",
+                "value": "P",
+                "quote": "Components are permitted as specified on Table 1.1.",
+            }
+        ],
+    )
+    assert dropped == 0
+    (cite,) = kept
+    assert cite.verified and cite.quote.startswith("Components are permitted")
+
+
+def test_quote_citations_still_verify(monkeypatch):
+    kept, dropped, details = _patched_verify(
+        monkeypatch,
+        [
+            {"section_key": "test:1", "quote": "permitted as specified on Table 1.1"},
+            {"section_key": "test:1", "quote": "this text does not appear"},
+            {"section_key": "test:404", "quote": "whatever"},
+        ],
+    )
+    assert len(kept) == 1 and dropped == 2
+    assert any("not found verbatim" in d for d in details)
+    assert any("unknown section key" in d for d in details)
