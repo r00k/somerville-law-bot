@@ -151,7 +151,7 @@ Tools exposed to the model:
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["section_key"],
+        "required": ["quote", "section_key"],
         "properties": {
           "quote": {"type": "string"},
           "section_key": {"type": "string"},

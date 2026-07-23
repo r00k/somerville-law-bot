@@ -268,7 +268,13 @@ SUBMIT_ANSWER_SCHEMA = {
             "items": {
                 "type": "object",
                 "additionalProperties": False,
-                "required": ["section_key"],
+                # 'quote' stays required even though table-lookup citations
+                # don't use it (they pass ""): making it optional taught the
+                # model to omit quotes from ordinary prose citations too,
+                # which collapsed verification across the board (2026-07-23
+                # eval run: 4/31). Required-ness is a stronger signal than
+                # the prompt.
+                "required": ["quote", "section_key"],
                 "properties": {
                     "quote": {"type": "string"},
                     "section_key": {"type": "string"},
@@ -379,7 +385,8 @@ TOOLS = [
             "cell in a titled table (e.g. a Building Components or use table), "
             "cite the cell with 'table' (the table's title, e.g. 'Table 3.1.13'), "
             "'row' (the row label), 'column' (the column header), and 'value' "
-            "(the cell's exact contents, e.g. 'P') — omit 'quote'. The cell is "
+            "(the cell's exact contents, e.g. 'P'), and set 'quote' to the "
+            "empty string \"\". The cell is "
             "verified against the actual parsed table; a wrong row/column/value "
             "is dropped, so double-check the cell before citing it. NEVER paste "
             "raw '|'-delimited rows from a titled table as a quote — use a "
@@ -389,8 +396,9 @@ TOOLS = [
             "UNTITLED layout grids, not rows of the titled table — never cite "
             "those as table lookups; use a short verbatim fragment quote "
             "instead, e.g. 'Projection (max) | 3 ft'. Every citation must "
-            "carry either a 'quote' or all four table fields; a bare "
-            "section_key verifies nothing and is dropped. "
+            "carry either a non-empty 'quote' or all four table fields; an "
+            "empty quote with no table fields verifies nothing and is "
+            "dropped. "
             "'caveats' is displayed as a highlighted note under the "
             "answer: omit it unless there is one substantive question-specific "
             "point, and never duplicate it as a closing note inside "
