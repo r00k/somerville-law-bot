@@ -321,6 +321,20 @@
   .answer-body ul { margin: 0 0 0.85rem 1.2rem; padding: 0; }
   .answer-body li { margin: 0.2rem 0; }
   .answer-body strong { color: var(--ink); font-weight: 700; }
+  .answer-body blockquote {
+    margin: 0 0 0.85rem;
+    padding: 0.65rem 1rem;
+    border-left: 3px solid var(--amber);
+    border-radius: 0 8px 8px 0;
+    background: var(--panel-deep);
+    font-family: var(--serif);
+    font-style: italic;
+    font-size: 0.95em;
+    line-height: 1.65;
+    color: #4a5a68;
+  }
+  .answer-body blockquote p { margin: 0; }
+  .answer-body blockquote p + p { margin-top: 0.5rem; }
   .answer-body code {
     font-family: var(--mono);
     background: var(--panel-deep);
@@ -1046,7 +1060,7 @@
     return card;
   }
 
-  // --- minimal markdown renderer: paragraphs, **bold**, *em*, `code`, - lists, [links](...) ---
+  // --- minimal markdown renderer: paragraphs, **bold**, *em*, `code`, - lists, > quotes, [links](...) ---
 
   function escapeHtml(text) {
     return String(text)
@@ -1098,6 +1112,25 @@
         flushParagraph();
         html += "<h3>" + renderInline(heading[1]) + "</h3>";
         i += 1;
+        continue;
+      }
+      if (/^\s*&gt;/.test(line)) {
+        flushParagraph();
+        var quoteParas = [];
+        var quoteLines = [];
+        while (i < lines.length && /^\s*&gt;/.test(lines[i])) {
+          var stripped = lines[i].replace(/^\s*&gt;\s?/, "");
+          if (/^\s*$/.test(stripped)) {
+            if (quoteLines.length) { quoteParas.push(quoteLines.join(" ")); quoteLines = []; }
+          } else {
+            quoteLines.push(stripped);
+          }
+          i += 1;
+        }
+        if (quoteLines.length) quoteParas.push(quoteLines.join(" "));
+        html += "<blockquote>" + quoteParas.map(function (p) {
+          return "<p>" + renderInline(p) + "</p>";
+        }).join("") + "</blockquote>";
         continue;
       }
       if (/^-\s+/.test(line)) {
