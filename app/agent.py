@@ -60,6 +60,8 @@ class Answer:
     caveats: str | None
     dropped_citations: int
     usage: dict = field(default_factory=dict)
+    # The raw {"section_key", "quote"} of each dropped citation, for logging.
+    dropped_citation_details: list[dict] = field(default_factory=list)
 
 
 # ---------------------------------------------------------------------------
@@ -360,7 +362,9 @@ TOOLS = [
             "Every legal claim in answer_markdown must be backed by a citation "
             "whose 'quote' is copied VERBATIM from the fetched section text "
             "(quotes are verified by exact substring match — paraphrases are "
-            "dropped). Keep each quote to the shortest passage that proves the "
+            "dropped). Put the bare passage in 'quote' — do not wrap it in "
+            "quotation marks of your own. "
+            "Keep each quote to the shortest passage that proves the "
             "claim — usually one sentence, at most about 40 words; never quote "
             "a whole subsection when one clause carries the point. "
             "'caveats' is displayed as a highlighted note under the "
@@ -540,7 +544,10 @@ def _normalize(text: str) -> str:
     (curly quotes/apostrophes, dashes/hyphens, and non-breaking spaces mapped
     to their plain-ASCII equivalents via NFKC plus an explicit char map), and
     stripped markdown emphasis markers (* _ `). Case is NOT normalized —
-    quotes must match the section text's original casing.
+    quotes must match the section text's original casing. When the exact
+    match fails, _verify_citations retries once with enclosing punctuation
+    (quotation marks, ellipses, brackets) stripped from the quote's ends —
+    see _strip_enclosing.
     """
     if not text:
         return ""
@@ -551,17 +558,40 @@ def _normalize(text: str) -> str:
     return text
 
 
+# Enclosing punctuation the model sometimes wraps a quote in (seen live
+# 2026-07: '"(c) Eligibility – Any voter…"' with quotation marks of its own).
+# Applied to the NORMALIZED quote, so curly quotes are already straight and
+# an ellipsis (…) is already "..." (via NFKC). A bare "." is deliberately
+# absent — a trailing period is legitimately part of a sentence.
+_ENCLOSING_PUNCT = "\"'()[] "
+
+
+def _strip_enclosing(text: str) -> str:
+    """Strip enclosing punctuation from the ends of a normalized quote,
+    including whole leading/trailing "..." ellipsis tokens."""
+    text = text.strip(_ENCLOSING_PUNCT)
+    if text.startswith("..."):
+        text = text[3:].lstrip(_ENCLOSING_PUNCT)
+    if text.endswith("..."):
+        text = text[:-3].rstrip(_ENCLOSING_PUNCT)
+    return text
+
+
 def _verify_citations(
     raw_citations: list[dict],
-) -> tuple[list[VerifiedCitation], int]:
+) -> tuple[list[VerifiedCitation], list[dict]]:
     """Verify each citation's quote against the cited section text.
 
-    Returns (kept_citations, dropped_count). A citation is kept iff the
-    normalized quote is a substring of the normalized text of its cited
-    section. The section's url is attached to kept citations.
+    Returns (kept_citations, dropped). A citation is kept iff the normalized
+    quote is a substring of the normalized text of its cited section — or,
+    failing that, once enclosing punctuation the model wrapped the quote in
+    is stripped from the quote's ends (the kept citation still displays the
+    original quote). The section's url is attached to kept citations.
+    ``dropped`` holds each failed citation as {"section_key", "quote"}
+    (quote truncated) for logging.
     """
     kept: list[VerifiedCitation] = []
-    dropped = 0
+    dropped: list[dict] = []
     for cite in raw_citations:
         quote = (cite.get("quote") or "").strip()
         section_key = (cite.get("section_key") or "").strip()
@@ -574,6 +604,9 @@ def _verify_citations(
             norm_quote = _normalize(quote)
             norm_text = _normalize(section.get("text", "") or "")
             verified = bool(norm_quote) and norm_quote in norm_text
+            if not verified:
+                trimmed = _strip_enclosing(norm_quote)
+                verified = bool(trimmed) and trimmed in norm_text
 
         if verified:
             kept.append(
@@ -585,7 +618,7 @@ def _verify_citations(
                 )
             )
         else:
-            dropped += 1
+            dropped.append({"section_key": section_key, "quote": quote[:300]})
     return kept, dropped
 
 
@@ -698,8 +731,9 @@ def _build_answer_from_submit(payload: dict, usage: dict) -> Answer:
         citations=citations,
         confidence=confidence,
         caveats=caveats,
-        dropped_citations=dropped,
+        dropped_citations=len(dropped),
         usage=usage,
+        dropped_citation_details=dropped,
     )
 
 

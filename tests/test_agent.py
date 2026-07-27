@@ -12,12 +12,14 @@ Run with: uv run pytest
 
 from __future__ import annotations
 
+from app import law_tools
 from app.agent import (
     AnswerStreamGuard,
     _build_answer_from_submit,
     _extract_trailing_note,
     _parse_pseudo_submit,
     _salvage_spilled_payload,
+    _verify_citations,
 )
 
 # Mirrors the real 2026-07-10 incident payload: closing </answer_markdown>
@@ -203,6 +205,74 @@ def test_extract_trailing_note_leaves_normal_answers_alone():
     # A lone-paragraph answer is never emptied, even if it looks like a note.
     lone = "Note: the corpus does not address this."
     assert _extract_trailing_note(lone) == (lone, None)
+
+
+# --- citation verification: enclosing-punctuation fallback -----------------
+
+_HEN_TEXT = "No person shall keep hens without a permit from the Board of Health."
+
+
+def _stub_section(monkeypatch, key: str = "test:1", text: str = _HEN_TEXT):
+    monkeypatch.setitem(law_tools.SECTIONS, key, {"text": text, "url": "http://x"})
+
+
+def test_verify_quote_wrapped_in_straight_quotes(monkeypatch):
+    _stub_section(monkeypatch)
+    kept, dropped = _verify_citations(
+        [{"section_key": "test:1", "quote": f'"{_HEN_TEXT}"'}]
+    )
+    assert dropped == []
+    assert len(kept) == 1 and kept[0].verified
+    # The displayed quote stays as the model wrote it (wrapping included).
+    assert kept[0].quote == f'"{_HEN_TEXT}"'
+
+
+def test_verify_quote_wrapped_in_curly_quotes(monkeypatch):
+    _stub_section(monkeypatch)
+    kept, dropped = _verify_citations(
+        [{"section_key": "test:1", "quote": f"“{_HEN_TEXT}”"}]
+    )
+    assert dropped == []
+    assert len(kept) == 1 and kept[0].verified
+
+
+def test_verify_quote_wrapped_in_ellipses(monkeypatch):
+    _stub_section(monkeypatch)
+    kept, dropped = _verify_citations(
+        [{"section_key": "test:1", "quote": f"…{_HEN_TEXT[:-1]}…"}]
+    )
+    assert dropped == []
+    assert len(kept) == 1 and kept[0].verified
+
+
+def test_verify_paraphrase_still_dropped(monkeypatch):
+    _stub_section(monkeypatch)
+    kept, dropped = _verify_citations(
+        [{"section_key": "test:1", "quote": "Hens require a health permit."}]
+    )
+    assert kept == []
+    assert dropped == [
+        {"section_key": "test:1", "quote": "Hens require a health permit."}
+    ]
+
+
+def test_verify_regression_coo_2594_wrapped_quote():
+    # Real 2026-07 prod failure: the model wrapped its (otherwise verbatim)
+    # quote in quotation marks, the only citation was dropped, and the answer
+    # was forced to "low" confidence. Runs against the in-repo sections.json.
+    assert "coo:2594" in law_tools.SECTIONS
+    quote = (
+        '"(c) Eligibility – Any voter shall be eligible to hold the office '
+        "of councilor at-large. Any voter residing in the ward from which "
+        "election is sought shall be eligible to hold the office of ward "
+        'councilor."'
+    )
+    kept, dropped = _verify_citations(
+        [{"section_key": "coo:2594", "quote": quote}]
+    )
+    assert dropped == []
+    assert len(kept) == 1 and kept[0].verified
+    assert kept[0].quote == quote
 
 
 def _feed_chunks(chunks: list[str]) -> tuple[str, AnswerStreamGuard]:

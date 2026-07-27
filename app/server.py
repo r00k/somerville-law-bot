@@ -184,6 +184,7 @@ def _log_qa(
     citations: list[dict],
     confidence: str | None,
     dropped_citations: int | None,
+    dropped_citation_details: list[dict] | None = None,
     usage: dict | None,
     latency_ms: int,
     error: str | None,
@@ -205,6 +206,7 @@ def _log_qa(
         "citations": citations,
         "confidence": confidence,
         "dropped_citations": dropped_citations,
+        "dropped_citation_details": dropped_citation_details or [],
         "usage": usage,
         "latency_ms": latency_ms,
         "error": error,
@@ -414,7 +416,13 @@ async def _event_stream(ask_fn: Callable[..., Any], question: str, ip: str, requ
         for c in (answer_dict or {}).get("citations", []) or []:
             if isinstance(c, dict):
                 log_citations.append(
-                    {"section_key": c.get("section_key"), "verified": c.get("verified")}
+                    {
+                        "section_key": c.get("section_key"),
+                        "verified": c.get("verified"),
+                        # Truncated quote so two citations of the same section
+                        # don't read as duplicate entries in the log.
+                        "quote": (c.get("quote") or "")[:200],
+                    }
                 )
 
         _log_qa(
@@ -426,6 +434,9 @@ async def _event_stream(ask_fn: Callable[..., Any], question: str, ip: str, requ
             citations=log_citations,
             confidence=(answer_dict or {}).get("confidence"),
             dropped_citations=(answer_dict or {}).get("dropped_citations"),
+            dropped_citation_details=(answer_dict or {}).get(
+                "dropped_citation_details"
+            ),
             usage=(answer_dict or {}).get("usage"),
             latency_ms=latency_ms,
             error=error_message,
