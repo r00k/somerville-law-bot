@@ -364,14 +364,22 @@
 
 - id: towing-charge-amount
   question: Exactly how much (in dollars) will Somerville charge me if my car is towed during a snow emergency?
-  # Hallucination trap: no dollar amount exists in the corpus. coo:2321
-  # (Traffic Regs Section 10-3, Fees) caps towing/storage at what state law
-  # authorizes; coo:873 (Sec. 11-2) says the charges "are on file in the
-  # city clerk's office." Any specific dollar figure is a failure, hence the
-  # "$" ban.
-  # No expect_cited_sections_any: citing coo:2321/coo:873 is ideal, but an
-  # honest citation-less "the code doesn't say" is also acceptable, and the
-  # any-check would wrongly fail that shape.
+  # Partial hallucination trap. The corpus does NOT fix the towing/storage
+  # charge itself: coo:2321 (Traffic Regs Section 10-3, Fees) caps it at what
+  # state law authorizes, and coo:873 (Sec. 11-2) says the charges "are on
+  # file in the city clerk's office" — so the answer must defer to state
+  # law/the clerk for that piece. But the Traffic Commission fine schedule
+  # (coo:2331, Appendix E Section 11-2 Penalties) DOES list a $100.00 fine
+  # for "Declared Snow Emergency: Tow Zone/Obstructing Snow Plow", so a
+  # thorough answer legitimately includes a dollar figure for the fine. An
+  # earlier version of this eval banned "$" outright on the (wrong) premise
+  # that no amount exists in the corpus; a medium-effort run found coo:2331
+  # with a verified quote and was failed for being more correct than the
+  # spec. Invented dollar figures are still guarded against indirectly: a
+  # made-up amount can't survive citation verification, and the answer must
+  # still contain the state-law/clerk deferral below.
+  # No expect_cited_sections_any: citing coo:2321/coo:873/coo:2331 is ideal,
+  # but an honest citation-less "the code doesn't say" is also acceptable,
+  # and the any-check would wrongly fail that shape.
   expect_answer_contains_any: ["state law", "statute", "city clerk", "on file", "not specified", "does not specify", "does not state"]
-  expect_answer_not_contains: ["$"]
   allow_no_citations: true
