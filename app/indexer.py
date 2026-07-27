@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import json
 import re
+from datetime import date
 from pathlib import Path
 from typing import NamedTuple
 
@@ -166,6 +167,12 @@ def main() -> None:
         json.dumps(sections_json, indent=2, ensure_ascii=False), encoding="utf-8"
     )
     toc_path.write_text(toc_text, encoding="utf-8")
+    # Stamp the rebuild date so the site footer's "ordinance text as of ..."
+    # line updates automatically whenever the corpus is refreshed.
+    (DATA_DIR / "corpus_meta.json").write_text(
+        json.dumps({"corpus_updated": date.today().isoformat()}) + "\n",
+        encoding="utf-8",
+    )
 
     per_corpus_counts = {}
     for sec in sections.values():

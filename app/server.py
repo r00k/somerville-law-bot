@@ -495,16 +495,39 @@ async def dev_reload_state():
     return {"token": _static_mtime_token()}
 
 
+def _corpus_date_clause() -> str:
+    """Footer clause like " (text as retrieved July 9, 2026)".
+
+    The date comes from app/data/corpus_meta.json, which app.indexer rewrites
+    on every corpus rebuild — so the footer stays current without a manual
+    step. Empty string when the meta file is missing or malformed.
+    """
+    try:
+        raw = (APP_DIR / "data" / "corpus_meta.json").read_text(encoding="utf-8")
+        stamp = datetime.strptime(json.loads(raw)["corpus_updated"], "%Y-%m-%d")
+    except Exception:  # noqa: BLE001 - a broken meta file must not break the page
+        return ""
+    return f" (text as retrieved {stamp:%B} {stamp.day}, {stamp.year})"
+
+
+def _render_index() -> str:
+    html = (STATIC_DIR / "index.html").read_text(encoding="utf-8")
+    return html.replace("{{CORPUS_DATE_CLAUSE}}", _corpus_date_clause(), 1)
+
+
+_INDEX_HTML = _render_index()
+
+
 @app.get("/")
 async def index():
     if DEV_RELOAD:
-        html = (STATIC_DIR / "index.html").read_text(encoding="utf-8")
+        html = _render_index()
         if "</body>" in html:
             html = html.replace("</body>", _DEV_RELOAD_SCRIPT + "</body>", 1)
         else:
             html += _DEV_RELOAD_SCRIPT
         return HTMLResponse(html)
-    return FileResponse(STATIC_DIR / "index.html")
+    return HTMLResponse(_INDEX_HTML)
 
 
 # The readable corpus pages that citation URLs point to (/ordinances#secid-N

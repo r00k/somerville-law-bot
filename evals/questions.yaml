@@ -300,7 +300,7 @@
   # maximum of 2 colonies may be kept on a lot." / "Each hive shall not
   # exceed five (5) feet in height and twenty (20) cubic feet."
   expect_answer_contains_all:
-    - ["2 colonies", "two colonies", "two (2) colonies"]
+    - ["2 colonies", "two colonies", "two (2) colonies", "2 honey bee colonies", "two honey bee colonies"]
     - ["five (5) feet", "5 feet", "five feet"]
     - ["twenty (20) cubic feet", "20 cubic feet", "twenty cubic feet"]
   expect_cited_sections_any: ["coo:2177", "coo:2176", "*honeybees*", "*honey bees*"]
