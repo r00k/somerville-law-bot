@@ -224,9 +224,9 @@ forms, distinguished by whether `row` + `value` are present:
 - A citation carrying both lookup fields and a quote falls back to quote
   verification when the lookup fails.
 - Failing citations are dropped from the returned list; `dropped_citations`
-  counts them and `dropped_detail` records one reason per drop (logged to the
-  qa JSONL). If ALL citations fail, downgrade confidence to "low" and append
-  a caveat.
+  counts them and `dropped_citation_details` records one
+  {section_key, quote, reason} per drop (logged to the qa JSONL). If ALL
+  citations fail, downgrade confidence to "low" and append a caveat.
 - Attach `url` from the section record to each verified citation.
 
 CLI for manual testing: `python -m app.agent "question here"` pretty-prints

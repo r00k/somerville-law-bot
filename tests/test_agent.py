@@ -12,12 +12,14 @@ Run with: uv run pytest
 
 from __future__ import annotations
 
+from app import law_tools
 from app.agent import (
     AnswerStreamGuard,
     _build_answer_from_submit,
     _extract_trailing_note,
     _parse_pseudo_submit,
     _salvage_spilled_payload,
+    _verify_citations,
 )
 
 # Mirrors the real 2026-07-10 incident payload: closing </answer_markdown>
@@ -205,6 +207,78 @@ def test_extract_trailing_note_leaves_normal_answers_alone():
     assert _extract_trailing_note(lone) == (lone, None)
 
 
+# --- citation verification: enclosing-punctuation fallback -----------------
+
+_HEN_TEXT = "No person shall keep hens without a permit from the Board of Health."
+
+
+def _stub_section(monkeypatch, key: str = "test:1", text: str = _HEN_TEXT):
+    monkeypatch.setitem(law_tools.SECTIONS, key, {"text": text, "url": "http://x"})
+
+
+def test_verify_quote_wrapped_in_straight_quotes(monkeypatch):
+    _stub_section(monkeypatch)
+    kept, dropped = _verify_citations(
+        [{"section_key": "test:1", "quote": f'"{_HEN_TEXT}"'}]
+    )
+    assert dropped == []
+    assert len(kept) == 1 and kept[0].verified
+    # The displayed quote stays as the model wrote it (wrapping included).
+    assert kept[0].quote == f'"{_HEN_TEXT}"'
+
+
+def test_verify_quote_wrapped_in_curly_quotes(monkeypatch):
+    _stub_section(monkeypatch)
+    kept, dropped = _verify_citations(
+        [{"section_key": "test:1", "quote": f"“{_HEN_TEXT}”"}]
+    )
+    assert dropped == []
+    assert len(kept) == 1 and kept[0].verified
+
+
+def test_verify_quote_wrapped_in_ellipses(monkeypatch):
+    _stub_section(monkeypatch)
+    kept, dropped = _verify_citations(
+        [{"section_key": "test:1", "quote": f"…{_HEN_TEXT[:-1]}…"}]
+    )
+    assert dropped == []
+    assert len(kept) == 1 and kept[0].verified
+
+
+def test_verify_paraphrase_still_dropped(monkeypatch):
+    _stub_section(monkeypatch)
+    kept, dropped = _verify_citations(
+        [{"section_key": "test:1", "quote": "Hens require a health permit."}]
+    )
+    assert kept == []
+    assert dropped == [
+        {
+            "section_key": "test:1",
+            "quote": "Hens require a health permit.",
+            "reason": "quote not found verbatim in section text",
+        }
+    ]
+
+
+def test_verify_regression_coo_2594_wrapped_quote():
+    # Real 2026-07 prod failure: the model wrapped its (otherwise verbatim)
+    # quote in quotation marks, the only citation was dropped, and the answer
+    # was forced to "low" confidence. Runs against the in-repo sections.json.
+    assert "coo:2594" in law_tools.SECTIONS
+    quote = (
+        '"(c) Eligibility – Any voter shall be eligible to hold the office '
+        "of councilor at-large. Any voter residing in the ward from which "
+        "election is sought shall be eligible to hold the office of ward "
+        'councilor."'
+    )
+    kept, dropped = _verify_citations(
+        [{"section_key": "coo:2594", "quote": quote}]
+    )
+    assert dropped == []
+    assert len(kept) == 1 and kept[0].verified
+    assert kept[0].quote == quote
+
+
 def _feed_chunks(chunks: list[str]) -> tuple[str, AnswerStreamGuard]:
     guard = AnswerStreamGuard()
     return "".join(guard.feed(c) for c in chunks), guard
@@ -276,7 +350,7 @@ def _patched_verify(monkeypatch, citations):
 
 
 def test_table_citation_verifies_against_parsed_table(monkeypatch):
-    kept, dropped, details = _patched_verify(
+    kept, dropped = _patched_verify(
         monkeypatch,
         [
             {
@@ -288,7 +362,7 @@ def test_table_citation_verifies_against_parsed_table(monkeypatch):
             }
         ],
     )
-    assert dropped == 0 and details == []
+    assert dropped == []
     (cite,) = kept
     assert cite.verified
     assert cite.quote == ""
@@ -298,7 +372,7 @@ def test_table_citation_verifies_against_parsed_table(monkeypatch):
 
 
 def test_table_citation_value_mismatch_is_dropped(monkeypatch):
-    kept, dropped, details = _patched_verify(
+    kept, dropped = _patched_verify(
         monkeypatch,
         [
             {
@@ -310,12 +384,12 @@ def test_table_citation_value_mismatch_is_dropped(monkeypatch):
             }
         ],
     )
-    assert kept == [] and dropped == 1
-    assert "value mismatch" in details[0]
+    assert kept == [] and len(dropped) == 1
+    assert "value mismatch" in dropped[0]["reason"]
 
 
 def test_table_citation_unknown_table_is_dropped_with_reason(monkeypatch):
-    kept, dropped, details = _patched_verify(
+    kept, dropped = _patched_verify(
         monkeypatch,
         [
             {
@@ -327,12 +401,12 @@ def test_table_citation_unknown_table_is_dropped_with_reason(monkeypatch):
             }
         ],
     )
-    assert kept == [] and dropped == 1
-    assert "table_not_found" in details[0]
+    assert kept == [] and len(dropped) == 1
+    assert "table_not_found" in dropped[0]["reason"]
 
 
 def test_failed_lookup_falls_back_to_quote(monkeypatch):
-    kept, dropped, details = _patched_verify(
+    kept, dropped = _patched_verify(
         monkeypatch,
         [
             {
@@ -345,13 +419,13 @@ def test_failed_lookup_falls_back_to_quote(monkeypatch):
             }
         ],
     )
-    assert dropped == 0
+    assert dropped == []
     (cite,) = kept
     assert cite.verified and cite.quote.startswith("Components are permitted")
 
 
 def test_quote_citations_still_verify(monkeypatch):
-    kept, dropped, details = _patched_verify(
+    kept, dropped = _patched_verify(
         monkeypatch,
         [
             {"section_key": "test:1", "quote": "permitted as specified on Table 1.1"},
@@ -359,6 +433,6 @@ def test_quote_citations_still_verify(monkeypatch):
             {"section_key": "test:404", "quote": "whatever"},
         ],
     )
-    assert len(kept) == 1 and dropped == 2
-    assert any("not found verbatim" in d for d in details)
-    assert any("unknown section key" in d for d in details)
+    assert len(kept) == 1 and len(dropped) == 2
+    assert any("not found verbatim" in d["reason"] for d in dropped)
+    assert any("unknown section key" in d["reason"] for d in dropped)

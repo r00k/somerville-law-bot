@@ -184,7 +184,7 @@ def _log_qa(
     citations: list[dict],
     confidence: str | None,
     dropped_citations: int | None,
-    dropped_detail: list[str] | None,
+    dropped_citation_details: list[dict] | None = None,
     usage: dict | None,
     latency_ms: int,
     error: str | None,
@@ -206,7 +206,7 @@ def _log_qa(
         "citations": citations,
         "confidence": confidence,
         "dropped_citations": dropped_citations,
-        "dropped_detail": dropped_detail or [],
+        "dropped_citation_details": dropped_citation_details or [],
         "usage": usage,
         "latency_ms": latency_ms,
         "error": error,
@@ -416,7 +416,13 @@ async def _event_stream(ask_fn: Callable[..., Any], question: str, ip: str, requ
         for c in (answer_dict or {}).get("citations", []) or []:
             if isinstance(c, dict):
                 log_citations.append(
-                    {"section_key": c.get("section_key"), "verified": c.get("verified")}
+                    {
+                        "section_key": c.get("section_key"),
+                        "verified": c.get("verified"),
+                        # Truncated quote so two citations of the same section
+                        # don't read as duplicate entries in the log.
+                        "quote": (c.get("quote") or "")[:200],
+                    }
                 )
 
         _log_qa(
@@ -428,7 +434,9 @@ async def _event_stream(ask_fn: Callable[..., Any], question: str, ip: str, requ
             citations=log_citations,
             confidence=(answer_dict or {}).get("confidence"),
             dropped_citations=(answer_dict or {}).get("dropped_citations"),
-            dropped_detail=(answer_dict or {}).get("dropped_detail"),
+            dropped_citation_details=(answer_dict or {}).get(
+                "dropped_citation_details"
+            ),
             usage=(answer_dict or {}).get("usage"),
             latency_ms=latency_ms,
             error=error_message,
@@ -487,16 +495,39 @@ async def dev_reload_state():
     return {"token": _static_mtime_token()}
 
 
+def _corpus_date_clause() -> str:
+    """Footer clause like " (text as retrieved July 9, 2026)".
+
+    The date comes from app/data/corpus_meta.json, which app.indexer rewrites
+    on every corpus rebuild — so the footer stays current without a manual
+    step. Empty string when the meta file is missing or malformed.
+    """
+    try:
+        raw = (APP_DIR / "data" / "corpus_meta.json").read_text(encoding="utf-8")
+        stamp = datetime.strptime(json.loads(raw)["corpus_updated"], "%Y-%m-%d")
+    except Exception:  # noqa: BLE001 - a broken meta file must not break the page
+        return ""
+    return f" (text as retrieved {stamp:%B} {stamp.day}, {stamp.year})"
+
+
+def _render_index() -> str:
+    html = (STATIC_DIR / "index.html").read_text(encoding="utf-8")
+    return html.replace("{{CORPUS_DATE_CLAUSE}}", _corpus_date_clause(), 1)
+
+
+_INDEX_HTML = _render_index()
+
+
 @app.get("/")
 async def index():
     if DEV_RELOAD:
-        html = (STATIC_DIR / "index.html").read_text(encoding="utf-8")
+        html = _render_index()
         if "</body>" in html:
             html = html.replace("</body>", _DEV_RELOAD_SCRIPT + "</body>", 1)
         else:
             html += _DEV_RELOAD_SCRIPT
         return HTMLResponse(html)
-    return FileResponse(STATIC_DIR / "index.html")
+    return HTMLResponse(_INDEX_HTML)
 
 
 # The readable corpus pages that citation URLs point to (/ordinances#secid-N

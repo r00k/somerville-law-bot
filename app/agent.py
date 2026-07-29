@@ -66,8 +66,9 @@ class Answer:
     caveats: str | None
     dropped_citations: int
     usage: dict = field(default_factory=dict)
-    # One human-readable reason per dropped citation (for logs/debugging).
-    dropped_detail: list[str] = field(default_factory=list)
+    # One {"section_key", "quote", "reason"} record per dropped citation,
+    # for logging.
+    dropped_citation_details: list[dict] = field(default_factory=list)
 
 
 # ---------------------------------------------------------------------------
@@ -378,7 +379,8 @@ TOOLS = [
             "Every legal claim in answer_markdown must be backed by a citation. "
             "Citations come in two forms. (1) Quote citations: 'quote' is copied "
             "VERBATIM from the fetched section text (verified by exact substring "
-            "match — paraphrases are dropped). Keep each quote to the shortest "
+            "match — paraphrases are dropped). Put the bare passage in 'quote' — "
+            "do not wrap it in quotation marks of your own. Keep each quote to the shortest "
             "passage that proves the claim — usually one sentence, at most about "
             "40 words; never quote a whole subsection when one clause carries "
             "the point. (2) Table-lookup citations: when the governing rule is a "
@@ -456,9 +458,9 @@ claim in your answer should be traceable to a citation that contains that \
 value.
 - Write for residents: clear, direct, plain language. Lead with the bottom-line \
 answer, then the supporting detail.
-- Be brief. Lead with the bottom line, and keep the whole answer under about \
-250 words unless the law genuinely requires more detail. Do not restate the \
-question or pad the answer with generic advice.
+- Be as brief as the law allows: lead with the bottom line, then only the \
+supporting detail that changes the answer. Do not restate the question or pad \
+the answer with generic advice.
 - Do NOT append a legal-advice disclaimer or a "verify against the official \
 code" reminder to your answers — the site already displays that disclaimer \
 alongside every answer.
@@ -486,7 +488,9 @@ index is empty or nothing matches, go straight to search_law.
 the code says "domestic fowl", not "chickens"; "leaf blowers", not "yard \
 equipment"). Search with legal synonyms, and run several searches if needed. \
 Relevant rules may span the Code of Ordinances, appendices, and the Zoning \
-Ordinance — check across corpora.
+Ordinance — check across corpora. Before concluding the corpus does not \
+address a question, run at least two differently-worded searches using \
+distinct legal vocabulary.
 3. Make sure you have the FULL text of every section you rely on. search_law \
 and get_wiki_page already inline the complete text of their top results — if \
 that text answers the question, do NOT re-fetch it; only call get_sections \
@@ -584,7 +588,10 @@ def _normalize(text: str) -> str:
     (curly quotes/apostrophes, dashes/hyphens, and non-breaking spaces mapped
     to their plain-ASCII equivalents via NFKC plus an explicit char map), and
     stripped markdown emphasis markers (* _ `). Case is NOT normalized —
-    quotes must match the section text's original casing.
+    quotes must match the section text's original casing. When the exact
+    match fails, _verify_citations retries once with enclosing punctuation
+    (quotation marks, ellipses, brackets) stripped from the quote's ends —
+    see _strip_enclosing.
     """
     if not text:
         return ""
@@ -599,28 +606,57 @@ def _is_table_citation(cite: dict) -> bool:
     return bool((cite.get("row") or "").strip() and (cite.get("value") or "").strip())
 
 
+# Enclosing punctuation the model sometimes wraps a quote in (seen live
+# 2026-07: '"(c) Eligibility – Any voter…"' with quotation marks of its own).
+# Applied to the NORMALIZED quote, so curly quotes are already straight and
+# an ellipsis (…) is already "..." (via NFKC). A bare "." is deliberately
+# absent — a trailing period is legitimately part of a sentence.
+_ENCLOSING_PUNCT = "\"'()[] "
+
+
+def _strip_enclosing(text: str) -> str:
+    """Strip enclosing punctuation from the ends of a normalized quote,
+    including whole leading/trailing "..." ellipsis tokens."""
+    text = text.strip(_ENCLOSING_PUNCT)
+    if text.startswith("..."):
+        text = text[3:].lstrip(_ENCLOSING_PUNCT)
+    if text.endswith("..."):
+        text = text[:-3].rstrip(_ENCLOSING_PUNCT)
+    return text
+
+
 def _verify_citations(
     raw_citations: list[dict],
-) -> tuple[list[VerifiedCitation], int, list[str]]:
+) -> tuple[list[VerifiedCitation], list[dict]]:
     """Verify each citation against the cited section.
 
-    Returns (kept_citations, dropped_count, dropped_details). Quote citations
-    are kept iff the normalized quote is a substring of the normalized section
-    text. Table-lookup citations are kept iff the named (table, row, column)
-    cell exists in the section's parsed tables and holds the cited value.
-    A citation with both lookup fields and a quote falls back to quote
-    verification when the lookup fails. dropped_details carries one
-    human-readable reason per dropped citation, for logs.
+    Returns (kept_citations, dropped). Quote citations are kept iff the
+    normalized quote is a substring of the normalized text of its cited
+    section — or, failing that, once enclosing punctuation the model wrapped
+    the quote in is stripped from the quote's ends (the kept citation still
+    displays the original quote). Table-lookup citations are kept iff the
+    named (table, row, column) cell exists in the section's parsed tables and
+    holds the cited value. A citation with both lookup fields and a quote
+    falls back to quote verification when the lookup fails. The section's url
+    is attached to kept citations. ``dropped`` holds one
+    {"section_key", "quote", "reason"} record per failed citation (quote
+    truncated) for logging.
     """
     kept: list[VerifiedCitation] = []
-    details: list[str] = []
+    dropped: list[dict] = []
     for cite in raw_citations:
         quote = (cite.get("quote") or "").strip()
         section_key = (cite.get("section_key") or "").strip()
 
         section = law_tools.SECTIONS.get(section_key)
         if section is None:
-            details.append(f"{section_key or '(no section_key)'}: unknown section key")
+            dropped.append(
+                {
+                    "section_key": section_key,
+                    "quote": quote[:300],
+                    "reason": "unknown section key",
+                }
+            )
             continue
         url = section.get("url")
         text = section.get("text", "") or ""
@@ -653,16 +689,23 @@ def _verify_citations(
                 reason = (
                     f"table value mismatch (cell holds {result.value!r}, cited {value!r})"
                 )
-            lookup_detail = f"{section_key}: {reason} for ({table!r}, {row!r}, {column!r})"
+            lookup_reason = f"{reason} for ({table!r}, {row!r}, {column!r})"
             # Fall back to the quote path if the model also supplied one.
             if not quote:
-                details.append(lookup_detail)
+                dropped.append(
+                    {"section_key": section_key, "quote": "", "reason": lookup_reason}
+                )
                 continue
         else:
-            lookup_detail = None
+            lookup_reason = None
 
         norm_quote = _normalize(quote)
-        if norm_quote and norm_quote in _normalize(text):
+        norm_text = _normalize(text)
+        verified = bool(norm_quote) and norm_quote in norm_text
+        if not verified:
+            trimmed = _strip_enclosing(norm_quote)
+            verified = bool(trimmed) and trimmed in norm_text
+        if verified:
             kept.append(
                 VerifiedCitation(
                     quote=quote,
@@ -671,16 +714,17 @@ def _verify_citations(
                     verified=True,
                 )
             )
-        elif lookup_detail is not None:
-            details.append(lookup_detail + "; quote fallback also failed")
         else:
-            details.append(
-                f"{section_key}: quote not found verbatim in section text"
-                if quote
-                else f"{section_key}: empty quote"
+            if lookup_reason is not None:
+                reason = lookup_reason + "; quote fallback also failed"
+            elif quote:
+                reason = "quote not found verbatim in section text"
+            else:
+                reason = "empty quote"
+            dropped.append(
+                {"section_key": section_key, "quote": quote[:300], "reason": reason}
             )
-    dropped = len(raw_citations) - len(kept)
-    return kept, dropped, details
+    return kept, dropped
 
 
 def _salvage_spilled_payload(payload: dict) -> dict:
@@ -769,7 +813,7 @@ def _build_answer_from_submit(payload: dict, usage: dict) -> Answer:
         elif _normalize(trailing_note).lower() not in _normalize(caveats).lower():
             caveats = f"{caveats}\n\n{trailing_note}"
 
-    citations, dropped, dropped_detail = _verify_citations(raw_citations)
+    citations, dropped = _verify_citations(raw_citations)
 
     # Hard floor: no verified citation, no confidence. Whether the model
     # offered none (and survived the one rejection retry) or all of them
@@ -796,9 +840,9 @@ def _build_answer_from_submit(payload: dict, usage: dict) -> Answer:
         citations=citations,
         confidence=confidence,
         caveats=caveats,
-        dropped_citations=dropped,
+        dropped_citations=len(dropped),
         usage=usage,
-        dropped_detail=dropped_detail,
+        dropped_citation_details=dropped,
     )
 
 
@@ -1014,7 +1058,7 @@ def ask(
                     "model": MODEL,
                     "max_tokens": MAX_TOKENS,
                     "thinking": {"type": "adaptive"},
-                    "output_config": {"effort": "low"},
+                    "output_config": {"effort": "medium"},
                     "system": system_blocks,
                     "tools": TOOLS,
                     "messages": messages,
@@ -1354,10 +1398,13 @@ def _pretty_print(answer: Answer) -> None:
             print(f"  {c.table} — row “{c.row}”, column “{c.column}”: “{c.value}”")
         else:
             print(f"  “{c.quote}”")
-    if answer.dropped_detail:
+    if answer.dropped_citation_details:
         print("\nDropped:")
-        for detail in answer.dropped_detail:
-            print(f"  ✗ {detail}")
+        for d in answer.dropped_citation_details:
+            line = f"  ✗ [{d.get('section_key')}] {d.get('reason', '')}"
+            if d.get("quote"):
+                line += f": “{d['quote'][:80]}”"
+            print(line)
 
     print("\n" + "-" * 72)
     print(f"Confidence: {answer.confidence}")
