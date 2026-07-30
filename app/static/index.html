@@ -226,7 +226,16 @@
   .trace-line.done .tm { color: var(--green); }
   .trace-line.current { color: var(--muted); }
 
+  /* Once the answer starts streaming, the research log folds away so only
+     the active line ("Writing the answer…") stays under the input. */
+  .trace.collapsed .trace-line.done {
+    max-height: 0;
+    opacity: 0;
+    overflow: hidden;
+  }
+
   @media (prefers-reduced-motion: no-preference) {
+    .trace-line { max-height: 4em; transition: max-height 0.35s ease, opacity 0.35s ease; }
     .trace-line.current { animation: trace-pulse 1.4s ease-in-out infinite; }
     @keyframes trace-pulse {
       0%, 100% { opacity: 0.55; }
@@ -734,6 +743,7 @@
     confidenceBadge.className = "";
     progressEl.innerHTML = "";
     progressEl.hidden = false;
+    progressEl.classList.remove("collapsed");
     writing = false;
     fillerIndex = 0;
     traceStep("Researching…");
@@ -928,6 +938,7 @@
     writing = true;
     stopFillerTimer();
     tracePush("Writing the answer…");
+    progressEl.classList.add("collapsed");
     provisionalAnswer += text;
     answerBody.classList.add("streaming");
     answerBody.innerHTML = renderMarkdown(provisionalAnswer);
@@ -941,6 +952,8 @@
     answerBody.innerHTML = "";
     answerBody.classList.add("streaming");
     writing = false;
+    // The retry re-runs research, so unfold the trace for the fresh pass.
+    progressEl.classList.remove("collapsed");
     traceStep("Double-checking citations…");
   }
 
