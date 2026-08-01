@@ -9,7 +9,7 @@ This repo contains the whole thing: the pipeline that fetches and normalizes the
 - `fetch_somerville_law.py` / `fetch_somerville_zoning.py` fetch official content from enCodePlus and normalize it into Markdown; `render_markdown_html.py` produces the readable HTML editions that citations link into.
 - `app/indexer.py` parses both corpora into a 3,346-section index (`app/data/sections.json`).
 - `app/law_tools.py` provides BM25 search and section fetch as agent tools.
-- `app/wiki/` holds 44 pregenerated topic pages that map resident vocabulary ("chickens") to legal vocabulary ("domestic fowl") and route the agent across corpora.
+- `app/wiki/` holds 45 pregenerated topic pages that map resident vocabulary ("chickens") to legal vocabulary ("domestic fowl") and route the agent across corpora.
 - `app/agent.py` runs the tool loop (Claude Sonnet 5 by default, override with `LAW_QA_MODEL`) and rejects any citation that doesn't verify: quotes must appear verbatim in the cited section, and table-lookup citations must name a real cell (parsed by `app/tables.py`) holding the cited value.
 - `app/server.py` serves the frontend with SSE progress streaming, per-IP and global rate limits, JSONL question logging, and the readable corpus pages themselves.
 

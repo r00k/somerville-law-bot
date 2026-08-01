@@ -579,12 +579,17 @@ _CHAR_MAP = {
 }
 _TRANSLATION = {ord(k): v for k, v in _CHAR_MAP.items()}
 
+# Applied after whitespace-run collapse, so any run is a single space.
+_PRE_PUNCT_SPACE = re.compile(r" ([.,;:!?])")
+
 
 def _normalize(text: str) -> str:
     """Normalize for substring comparison.
 
     A citation counts as "verified" iff its quote matches the section text
-    verbatim, modulo: whitespace-run collapse, punctuation-glyph unification
+    verbatim, modulo: whitespace-run collapse, removal of spaces before
+    closing punctuation (the corpus has OCR-style "party wall ." spacing that
+    models rightly clean up when quoting), punctuation-glyph unification
     (curly quotes/apostrophes, dashes/hyphens, and non-breaking spaces mapped
     to their plain-ASCII equivalents via NFKC plus an explicit char map), and
     stripped markdown emphasis markers (* _ `). Case is NOT normalized —
@@ -599,6 +604,7 @@ def _normalize(text: str) -> str:
     text = text.translate(_TRANSLATION)
     text = text.translate(_EMPHASIS_CHARS)
     text = " ".join(text.split())
+    text = _PRE_PUNCT_SPACE.sub(r"\1", text)
     return text
 
 

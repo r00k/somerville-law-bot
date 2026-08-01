@@ -245,6 +245,26 @@ def test_verify_quote_wrapped_in_ellipses(monkeypatch):
     assert len(kept) == 1 and kept[0].verified
 
 
+def test_verify_quote_survives_corpus_pre_punctuation_spacing(monkeypatch):
+    # The corpus has OCR-style spaces before punctuation ("Building Official .");
+    # models clean these up when quoting. Seen live 2026-07-30: three true
+    # quotes dropped over exactly this (zon:705, coo:952, zon:874).
+    _stub_section(
+        monkeypatch,
+        text="No real property may be occupied until a certificate has been issued by the Building Official .",
+    )
+    kept, dropped = _verify_citations(
+        [
+            {
+                "section_key": "test:1",
+                "quote": "No real property may be occupied until a certificate has been issued by the Building Official.",
+            }
+        ]
+    )
+    assert dropped == []
+    assert len(kept) == 1 and kept[0].verified
+
+
 def test_verify_paraphrase_still_dropped(monkeypatch):
     _stub_section(monkeypatch)
     kept, dropped = _verify_citations(
