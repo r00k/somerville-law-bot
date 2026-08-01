@@ -199,6 +199,33 @@ def test_trailing_note_not_duplicated_into_matching_caveats():
     assert answer.caveats == "Check your zoning district."
 
 
+def test_stray_schema_tag_stripped_from_caveats():
+    # Seen live 2026-07-30 (request 1d112bf2cbec): the model closed its
+    # caveats JSON value with the pseudo-XML tag, which rendered literally.
+    answer = _build_answer_from_submit(
+        {
+            "answer_markdown": "Answer body.\n\nSecond paragraph.",
+            "citations": [],
+            "confidence": "low",
+            "caveats": "Check your lease; house rules are outside this corpus.</caveats>\n",
+        },
+        usage={},
+    )
+    assert answer.caveats == "Check your lease; house rules are outside this corpus."
+
+
+def test_stray_schema_tag_stripped_from_answer_body():
+    answer = _build_answer_from_submit(
+        {
+            "answer_markdown": "Answer body.\n\nSecond paragraph.</answer_markdown>",
+            "citations": [],
+            "confidence": "low",
+        },
+        usage={},
+    )
+    assert answer.answer_markdown == "Answer body.\n\nSecond paragraph."
+
+
 def test_extract_trailing_note_leaves_normal_answers_alone():
     body = "First paragraph.\n\nSecond paragraph with note-taking advice."
     assert _extract_trailing_note(body) == (body, None)
@@ -240,6 +267,35 @@ def test_verify_quote_wrapped_in_ellipses(monkeypatch):
     _stub_section(monkeypatch)
     kept, dropped = _verify_citations(
         [{"section_key": "test:1", "quote": f"…{_HEN_TEXT[:-1]}…"}]
+    )
+    assert dropped == []
+    assert len(kept) == 1 and kept[0].verified
+
+
+def test_verify_stub_quote_dropped_even_when_text_matches(monkeypatch):
+    # Seen live 2026-07-29 (request fbd499d4bf6f): quote literally
+    # "placeholder". It failed the substring check only by luck — a stub or
+    # tiny quote that happens to appear in the section must not earn a
+    # "verified" badge either.
+    _stub_section(monkeypatch)
+    kept, dropped = _verify_citations(
+        [
+            {"section_key": "test:1", "quote": "placeholder"},
+            # Two words, present verbatim in _HEN_TEXT — still too thin.
+            {"section_key": "test:1", "quote": "keep hens"},
+        ]
+    )
+    assert kept == []
+    assert [d["reason"] for d in dropped] == [
+        "degenerate quote (stub text or too short to verify)",
+        "degenerate quote (stub text or too short to verify)",
+    ]
+
+
+def test_verify_short_but_real_quote_still_verifies(monkeypatch):
+    _stub_section(monkeypatch)
+    kept, dropped = _verify_citations(
+        [{"section_key": "test:1", "quote": "shall keep hens"}]
     )
     assert dropped == []
     assert len(kept) == 1 and kept[0].verified

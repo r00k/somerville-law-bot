@@ -612,6 +612,21 @@ def _is_table_citation(cite: dict) -> bool:
     return bool((cite.get("row") or "").strip() and (cite.get("value") or "").strip())
 
 
+# Stub strings the model has emitted as a "quote" (seen live 2026-07-29:
+# literally "placeholder"). That one failed the substring check by luck; a
+# stub that happened to appear in the section text would have rendered as a
+# verified citation. Quotes this thin can match by coincidence, so they are
+# rejected outright rather than searched for.
+_STUB_QUOTES = {"placeholder", "todo", "tbd", "n/a", "none", "quote"}
+
+
+def _is_degenerate_quote(norm_quote: str) -> bool:
+    core = _strip_enclosing(norm_quote).strip(".")
+    if core.lower() in _STUB_QUOTES:
+        return True
+    return len(core.split()) < 3
+
+
 # Enclosing punctuation the model sometimes wraps a quote in (seen live
 # 2026-07: '"(c) Eligibility – Any voter…"' with quotation marks of its own).
 # Applied to the NORMALIZED quote, so curly quotes are already straight and
@@ -707,8 +722,9 @@ def _verify_citations(
 
         norm_quote = _normalize(quote)
         norm_text = _normalize(text)
-        verified = bool(norm_quote) and norm_quote in norm_text
-        if not verified:
+        degenerate = bool(quote) and _is_degenerate_quote(norm_quote)
+        verified = not degenerate and bool(norm_quote) and norm_quote in norm_text
+        if not verified and not degenerate:
             trimmed = _strip_enclosing(norm_quote)
             verified = bool(trimmed) and trimmed in norm_text
         if verified:
@@ -723,6 +739,8 @@ def _verify_citations(
         else:
             if lookup_reason is not None:
                 reason = lookup_reason + "; quote fallback also failed"
+            elif degenerate:
+                reason = "degenerate quote (stub text or too short to verify)"
             elif quote:
                 reason = "quote not found verbatim in section text"
             else:
@@ -785,6 +803,19 @@ def _salvage_spilled_payload(payload: dict) -> dict:
     return merged
 
 
+# The submit_answer schema's field names, as pseudo-XML tags. The model
+# sometimes lets one bleed into a field VALUE (seen live 2026-07-30: a
+# caveats string ending "…outside this corpus.</caveats>"). These names
+# never legitimately appear in answer text, so stray tags are junk anywhere.
+_STRAY_SCHEMA_TAGS = re.compile(
+    r"\s*</?(?:answer_markdown|citations|confidence|caveats)>\s*"
+)
+
+
+def _strip_stray_tags(text: str) -> str:
+    return _STRAY_SCHEMA_TAGS.sub(" ", text).strip()
+
+
 def _extract_trailing_note(answer_markdown: str) -> tuple[str, str | None]:
     """Split off a closing "Note:"/"Caveat:" paragraph from the answer body.
 
@@ -805,9 +836,9 @@ def _extract_trailing_note(answer_markdown: str) -> tuple[str, str | None]:
 
 def _build_answer_from_submit(payload: dict, usage: dict) -> Answer:
     """Turn a validated submit_answer payload into a verified Answer."""
-    answer_markdown = payload.get("answer_markdown", "") or ""
+    answer_markdown = _strip_stray_tags(payload.get("answer_markdown", "") or "")
     confidence = payload.get("confidence", "low") or "low"
-    caveats = payload.get("caveats") or None
+    caveats = _strip_stray_tags(payload.get("caveats") or "") or None
     raw_citations = payload.get("citations") or []
 
     # A closing Note:/Caveat: paragraph belongs in the caveats field — move it

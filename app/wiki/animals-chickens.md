@@ -2,7 +2,7 @@
 slug: animals-chickens
 title: Animals & Chickens
 synonyms: chickens, domestic fowl, backyard chickens, roosters, livestock, pets
-sections: coo:1000, coo:1154, coo:1354, coo:1355, coo:1497, coo:2178, coo:2179, coo:2180, coo:2473, coo:2474, coo:2475, coo:415, coo:416, coo:417, coo:418, coo:419, coo:420, coo:421, coo:422, coo:423, coo:424, coo:425, coo:426, coo:427, coo:428, coo:429, coo:430, coo:552, zon:154, zon:156, zon:242, zon:27, zon:46, zon:709, zon:79
+sections: coo:1000, coo:1154, coo:1354, coo:1355, coo:1497, coo:2178, coo:2179, coo:2180, coo:2473, coo:2474, coo:2475, coo:415, coo:416, coo:417, coo:418, coo:419, coo:420, coo:421, coo:422, coo:423, coo:424, coo:425, coo:426, coo:427, coo:428, coo:429, coo:430, coo:552, zon:154, zon:156, zon:242, zon:27, zon:46, zon:709, zon:710, zon:79
 ---
 Somerville's animal rules are split across the Code of Ordinances Chapter 3 (Animals), Board of Health regulations (Appendix D), and the Zoning Ordinance.
 
@@ -14,6 +14,8 @@ Somerville's animal rules are split across the Code of Ordinances Chapter 3 (Ani
 
 **Dogs** are covered by their own rules (Secs. 3-31 through 3-38, plus Secs. 12-51 and 6-24) — see a related dogs topic for leash, at-large, nuisance, and off-leash area details.
 
-**Gotchas:** The corpus doesn't spell out zoning limits on where hens/aviculture are permitted beyond referencing the Urban Agriculture use category (Zoning §§ 9.2.13, 9.2.14) — check zoning for your district. Selling farm-fresh eggs must comply with state storage rules (eggs kept at 45°F).
+**Zoning layer — citywide aviculture standards.** On top of the Board of Health permit, the Zoning Ordinance regulates hen-keeping as "Aviculture," a specific use under the Urban Agriculture accessory category, with citywide performance standards (§ 9.2.14.c.ii): only the common domestic chicken (Gallus gallus domesticus), specifically hens; roosters prohibited; up to six hens per lot; ownership, care, and control must be the responsibility of a resident of a dwelling unit on the lot; and **hens are not permitted within 20 feet of a front lot line** — a real siting constraint for coops on small Somerville lots. On-site sale of eggs produced on site is permitted 7:00am–9:00pm, May 1 through October 31, up to three days per week and 25 days per year. Whether the Urban Agriculture category is permitted at all varies by district — check the use table for the asker's district.
+
+**Gotchas:** Selling farm-fresh eggs must also comply with the Board of Health storage rule (eggs kept at 45°F).
 
 *This summary is for general orientation only. The cited section text above is authoritative — always verify anything that matters against the linked sections, not this summary.*
