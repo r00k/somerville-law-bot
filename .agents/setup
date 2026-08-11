@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+if command -v uv >/dev/null 2>&1; then
+  uv_bin="$(command -v uv)"
+else
+  python3 -m pip install --user uv
+  uv_bin="$HOME/.local/bin/uv"
+fi
+
+"$uv_bin" sync --frozen
